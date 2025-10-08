@@ -1,1 +1,10 @@
 project_id = "yruxfucwryumxlonzahs"
+
+[functions.parse-resume]
+verify_jwt = true
+
+[functions.generate-shortlist]
+verify_jwt = true
+
+[functions.analyze-video]
+verify_jwt = true

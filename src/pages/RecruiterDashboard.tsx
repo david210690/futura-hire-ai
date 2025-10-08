@@ -161,7 +161,7 @@ export default function RecruiterDashboard() {
             <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">{company?.name}</p>
           </div>
-          <Button onClick={() => navigate('/jobs/new')} className="gap-2">
+          <Button onClick={() => navigate('/create-job')} className="gap-2">
             <Plus className="w-4 h-4" />
             Create Job
           </Button>

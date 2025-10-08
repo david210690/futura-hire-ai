@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import { AuthPage } from "./components/auth/AuthPage";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
+import CreateJob from "./pages/CreateJob";
+import JobDetail from "./pages/JobDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/dashboard" element={<RecruiterDashboard />} />
           <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+          <Route path="/create-job" element={<CreateJob />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
