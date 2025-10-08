@@ -14,16 +14,16 @@ const Index = () => {
         return;
       }
 
-      const { data: userData } = await supabase
-        .from('users')
+      const { data: userRole } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', session.user.id)
-        .single();
+        .eq('user_id', session.user.id)
+        .maybeSingle();
 
-      if (userData?.role === 'recruiter') {
+      if (userRole?.role === 'recruiter') {
         navigate('/dashboard');
       } else {
-        navigate('/dashboard');
+        navigate('/candidate/dashboard');
       }
     };
 

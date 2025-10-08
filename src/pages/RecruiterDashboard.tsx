@@ -129,7 +129,7 @@ export default function RecruiterDashboard() {
   if (!hasCompany) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar userName={user?.name} userRole={user?.role} />
+        <Navbar userName={user?.name} userRole="recruiter" />
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center space-y-6">
             <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary mx-auto">
@@ -153,7 +153,7 @@ export default function RecruiterDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar userName={user?.name} userRole={user?.role} />
+      <Navbar userName={user?.name} userRole="recruiter" />
       
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">

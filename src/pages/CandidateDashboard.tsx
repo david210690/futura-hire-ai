@@ -1,0 +1,115 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Navbar } from "@/components/layout/Navbar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileUp, Video, BriefcaseIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+export default function CandidateDashboard() {
+  const [user, setUser] = useState<any>(null);
+  const [candidate, setCandidate] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+      setUser(user);
+
+      const { data: candidateData } = await supabase
+        .from('candidates')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      setCandidate(candidateData);
+    };
+
+    fetchData();
+  }, [navigate]);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar userName={user?.user_metadata?.name} userRole="candidate" />
+      
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Welcome, {user?.user_metadata?.name || 'Candidate'}</h1>
+          <p className="text-muted-foreground">Manage your profile, applications, and AI assessments</p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Profile Completeness</CardTitle>
+              <FileUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{candidate ? '100%' : '0%'}</div>
+              <p className="text-xs text-muted-foreground">
+                {candidate ? 'Profile complete' : 'Create your profile'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Video Intro</CardTitle>
+              <Video className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground">Upload intro video</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Applications</CardTitle>
+              <BriefcaseIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground">Active applications</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile & Resume</CardTitle>
+              <CardDescription>Complete your profile and upload your resume for AI analysis</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button className="w-full" onClick={() => navigate('/candidate/profile')}>
+                {candidate ? 'Edit Profile' : 'Create Profile'}
+              </Button>
+              <Button variant="outline" className="w-full">
+                <FileUp className="w-4 h-4 mr-2" />
+                Upload Resume
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Intro Video</CardTitle>
+              <CardDescription>Record a short video to boost your culture-fit score</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                <Video className="w-4 h-4 mr-2" />
+                Record Video
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}
