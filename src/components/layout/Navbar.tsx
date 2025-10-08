@@ -1,0 +1,61 @@
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Sparkles, LogOut } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface NavbarProps {
+  userName?: string;
+  userRole?: string;
+}
+
+export const Navbar = ({ userName, userRole }: NavbarProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    } else {
+      navigate('/auth');
+    }
+  };
+
+  return (
+    <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            FuturaHire
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          {userName && (
+            <div className="flex flex-col items-end">
+              <span className="text-sm font-medium">{userName}</span>
+              <span className="text-xs text-muted-foreground capitalize">{userRole}</span>
+            </div>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleSignOut}
+            className="gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
+        </div>
+      </div>
+    </nav>
+  );
+};
