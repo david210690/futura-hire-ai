@@ -14,38 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_runs: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          error_message: string | null
+          id: string
+          input_hash: string | null
+          input_ref: string | null
+          kind: string
+          latency_ms: number | null
+          model_name: string | null
+          output_json: Json | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          input_hash?: string | null
+          input_ref?: string | null
+          kind: string
+          latency_ms?: number | null
+          model_name?: string | null
+          output_json?: Json | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          input_hash?: string | null
+          input_ref?: string | null
+          kind?: string
+          latency_ms?: number | null
+          model_name?: string | null
+          output_json?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
+          ai_version: string | null
           candidate_id: string
           created_at: string | null
           culture_fit_score: number | null
+          explanations: Json | null
           id: string
           job_id: string
           overall_score: number | null
           shortlist_reason: string | null
           skill_fit_score: number | null
+          stage: string | null
           status: Database["public"]["Enums"]["application_status"]
         }
         Insert: {
+          ai_version?: string | null
           candidate_id: string
           created_at?: string | null
           culture_fit_score?: number | null
+          explanations?: Json | null
           id?: string
           job_id: string
           overall_score?: number | null
           shortlist_reason?: string | null
           skill_fit_score?: number | null
+          stage?: string | null
           status?: Database["public"]["Enums"]["application_status"]
         }
         Update: {
+          ai_version?: string | null
           candidate_id?: string
           created_at?: string | null
           culture_fit_score?: number | null
+          explanations?: Json | null
           id?: string
           job_id?: string
           overall_score?: number | null
           shortlist_reason?: string | null
           skill_fit_score?: number | null
+          stage?: string | null
           status?: Database["public"]["Enums"]["application_status"]
         }
         Relationships: [
@@ -64,6 +115,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          meta_json: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          meta_json?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          meta_json?: Json | null
+        }
+        Relationships: []
       }
       candidates: {
         Row: {
@@ -108,24 +189,33 @@ export type Database = {
       }
       companies: {
         Row: {
+          country: string | null
           created_at: string | null
           created_by: string
           id: string
           name: string
+          size_band: string | null
+          values_text: string | null
           website: string | null
         }
         Insert: {
+          country?: string | null
           created_at?: string | null
           created_by: string
           id?: string
           name: string
+          size_band?: string | null
+          values_text?: string | null
           website?: string | null
         }
         Update: {
+          country?: string | null
           created_at?: string | null
           created_by?: string
           id?: string
           name?: string
+          size_band?: string | null
+          values_text?: string | null
           website?: string | null
         }
         Relationships: [
@@ -179,8 +269,11 @@ export type Database = {
           id: string
           jd_text: string
           location: string
+          remote_mode: string | null
+          salary_range: string | null
           seniority: Database["public"]["Enums"]["seniority_level"]
           status: Database["public"]["Enums"]["job_status"]
+          tags: string[] | null
           title: string
         }
         Insert: {
@@ -191,8 +284,11 @@ export type Database = {
           id?: string
           jd_text: string
           location: string
+          remote_mode?: string | null
+          salary_range?: string | null
           seniority?: Database["public"]["Enums"]["seniority_level"]
           status?: Database["public"]["Enums"]["job_status"]
+          tags?: string[] | null
           title: string
         }
         Update: {
@@ -203,8 +299,11 @@ export type Database = {
           id?: string
           jd_text?: string
           location?: string
+          remote_mode?: string | null
+          salary_range?: string | null
           seniority?: Database["public"]["Enums"]["seniority_level"]
           status?: Database["public"]["Enums"]["job_status"]
+          tags?: string[] | null
           title?: string
         }
         Relationships: [
@@ -228,6 +327,7 @@ export type Database = {
         Row: {
           candidate_id: string
           created_at: string | null
+          file_hash: string | null
           file_url: string
           id: string
           parsed_text: string | null
@@ -235,6 +335,7 @@ export type Database = {
         Insert: {
           candidate_id: string
           created_at?: string | null
+          file_hash?: string | null
           file_url: string
           id?: string
           parsed_text?: string | null
@@ -242,6 +343,7 @@ export type Database = {
         Update: {
           candidate_id?: string
           created_at?: string | null
+          file_hash?: string | null
           file_url?: string
           id?: string
           parsed_text?: string | null
@@ -316,6 +418,7 @@ export type Database = {
           created_at: string | null
           highlights: string | null
           id: string
+          rationale: string | null
           red_flags: string | null
           summary: string | null
           transcript: string | null
@@ -327,6 +430,7 @@ export type Database = {
           created_at?: string | null
           highlights?: string | null
           id?: string
+          rationale?: string | null
           red_flags?: string | null
           summary?: string | null
           transcript?: string | null
@@ -338,6 +442,7 @@ export type Database = {
           created_at?: string | null
           highlights?: string | null
           id?: string
+          rationale?: string | null
           red_flags?: string | null
           summary?: string | null
           transcript?: string | null
@@ -403,6 +508,15 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_audit: {
+        Args: {
+          p_action: string
+          p_entity_id: string
+          p_entity_type: string
+          p_meta_json?: Json
+        }
+        Returns: string
       }
     }
     Enums: {

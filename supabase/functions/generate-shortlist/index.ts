@@ -6,20 +6,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limit: 5 shortlist requests per recruiter per hour
+const rateLimitMap = new Map<string, number[]>();
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const hourAgo = now - 3600000;
+  
+  const timestamps = rateLimitMap.get(userId) || [];
+  const recentCalls = timestamps.filter(t => t > hourAgo);
+  
+  if (recentCalls.length >= 5) {
+    return false;
+  }
+  
+  recentCalls.push(now);
+  rateLimitMap.set(userId, recentCalls);
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  let supabase;
+
   try {
     const { jobId } = await req.json();
     
     const authHeader = req.headers.get('Authorization')!;
-    const supabase = createClient(
+    const token = authHeader.replace('Bearer ', '');
+    
+    supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } }
     );
+
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) throw new Error('Unauthorized');
+
+    // Rate limit check
+    if (!checkRateLimit(user.id)) {
+      throw new Error('Rate limit exceeded. Maximum 5 shortlists per hour.');
+    }
 
     // Get job details
     const { data: job, error: jobError } = await supabase
@@ -45,6 +78,10 @@ serve(async (req) => {
 
     if (candidatesError) throw candidatesError;
 
+    if (!candidates || candidates.length === 0) {
+      throw new Error('No candidates found in the system');
+    }
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     // Generate shortlist
@@ -55,7 +92,6 @@ serve(async (req) => {
       years: c.years_experience,
       skills: c.skills,
       summary: c.summary,
-      resume: c.resumes?.[0]?.parsed_text
     }));
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -69,24 +105,32 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a recruitment AI. Analyze job requirements and rank candidates. Return ONLY valid JSON.'
+            content: 'You are a recruitment AI. Analyze job requirements and rank candidates. Return ONLY valid JSON with no markdown.'
           },
           {
             role: 'user',
-            content: `Job Description:\n${job.jd_text}\n\nCandidates:\n${JSON.stringify(candidateProfiles, null, 2)}\n\nReturn top 5 matches as JSON array with: candidate_id, skill_fit_score (0-100), shortlist_reason (1-2 sentences), key_matching_skills (array). Also generate 3-5 interview questions for this role as 'interview_questions' array.`
+            content: `Job: ${job.title}\nLocation: ${job.location}\nSeniority: ${job.seniority}\n\nDescription:\n${job.jd_text}\n\nCandidates:\n${JSON.stringify(candidateProfiles, null, 2)}\n\nReturn JSON with:\n- "matches": array of top 5 candidates with {candidate_id, skill_fit_score (0-100), shortlist_reason (2 sentences), key_matching_skills (array)}\n- "interview_questions": array of 5 tailored interview questions as strings\n\nEnsure valid JSON only, no markdown.`
           }
         ],
-        temperature: 0.4,
+        temperature: 0.3,
       }),
     });
 
+    const latency = Date.now() - startTime;
+
+    if (!aiResponse.ok) {
+      throw new Error(`AI API error: ${aiResponse.status}`);
+    }
+
     const aiData = await aiResponse.json();
     const content = aiData.choices?.[0]?.message?.content;
+    
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const result = JSON.parse(jsonMatch ? jsonMatch[0] : content);
 
     // Insert applications
-    for (const match of result.matches || result.top_matches || []) {
+    const matches = result.matches || result.top_matches || [];
+    for (const match of matches.slice(0, 5)) {
       await supabase.from('applications').insert({
         job_id: jobId,
         candidate_id: match.candidate_id,
@@ -94,12 +138,15 @@ serve(async (req) => {
         culture_fit_score: 0,
         overall_score: Math.round(match.skill_fit_score * 0.6),
         shortlist_reason: match.shortlist_reason,
-        status: 'shortlisted'
+        stage: 'shortlisted',
+        status: 'shortlisted',
+        explanations: { key_skills: match.key_matching_skills },
+        ai_version: 'gemini-2.5-flash'
       });
     }
 
     // Insert interview questions
-    for (const q of result.interview_questions || []) {
+    for (const q of (result.interview_questions || []).slice(0, 5)) {
       await supabase.from('interview_questions').insert({
         job_id: jobId,
         question: typeof q === 'string' ? q : q.question,
@@ -107,16 +154,52 @@ serve(async (req) => {
       });
     }
 
+    // Log AI run
+    await supabase.from('ai_runs').insert({
+      kind: 'shortlist',
+      input_ref: jobId,
+      output_json: result,
+      latency_ms: latency,
+      model_name: 'google/gemini-2.5-flash',
+      status: 'ok',
+      created_by: user.id
+    });
+
+    // Log audit
+    await supabase.rpc('log_audit', {
+      p_action: 'generate_shortlist',
+      p_entity_type: 'job',
+      p_entity_id: jobId,
+      p_meta_json: { candidates_shortlisted: matches.length }
+    });
+
     return new Response(
-      JSON.stringify({ success: true, shortlisted: result.matches?.length || 0 }),
+      JSON.stringify({ success: true, shortlisted: matches.length }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: any) {
+    const latency = Date.now() - startTime;
     console.error('Error in generate-shortlist:', error);
+
+    // Log failed AI run if we have supabase client
+    if (supabase) {
+      try {
+        await supabase.from('ai_runs').insert({
+          kind: 'shortlist',
+          status: 'error',
+          error_message: error.message,
+          latency_ms: latency,
+          model_name: 'google/gemini-2.5-flash'
+        });
+      } catch (logError) {
+        console.error('Failed to log error:', logError);
+      }
+    }
+
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: error.message.includes('Rate limit') ? 429 : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
