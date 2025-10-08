@@ -29,26 +29,59 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) throw new Error('Unauthorized');
 
+    // Rate limit: 2 runs per hour per job
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from('bias_reports')
+      .select('*', { count: 'exact', head: true })
+      .eq('job_id', jobId)
+      .gte('created_at', hourAgo);
+
+    if (count && count >= 2) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Try again in an hour.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get shortlisted candidates for this job
     const { data: applications } = await supabase
       .from('applications')
       .select(`
+        id,
+        candidate_id,
         candidates (
           full_name,
-          headline,
           skills,
-          years_experience,
-          summary
+          summary,
+          years_experience
         )
       `)
       .eq('job_id', jobId)
-      .eq('stage', 'shortlisted');
+      .eq('stage', 'shortlist')
+      .limit(50);
 
     if (!applications || applications.length === 0) {
       throw new Error('No shortlisted candidates found');
     }
 
-    const candidateProfiles = applications.map((app: any) => app.candidates);
+    // Get resume data for candidates
+    const candidateIds = applications.map((app: any) => app.candidate_id);
+    const { data: resumes } = await supabase
+      .from('resumes')
+      .select('candidate_id, parsed_text')
+      .in('candidate_id', candidateIds);
+
+    const resumeMap = new Map(resumes?.map(r => [r.candidate_id, r.parsed_text]) || []);
+
+    // Build candidate array with all available info
+    const candidatesData = applications.map((app: any) => ({
+      name: app.candidates?.full_name,
+      skills: app.candidates?.skills,
+      summary: app.candidates?.summary,
+      years_experience: app.candidates?.years_experience,
+      resume_text: resumeMap.get(app.candidate_id) || ''
+    }));
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -63,11 +96,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You analyze candidate shortlists for diversity and fairness. Return ONLY JSON.'
+            content: 'You analyze hiring shortlists for diversity/fairness patterns. Return ONLY JSON.'
           },
           {
             role: 'user',
-            content: `Analyze this shortlist for diversity and potential biases. Return ONLY valid JSON.
+            content: `Given these candidates (with any available gender hints from names, education hints from resume text, and skills), estimate a diversity snapshot. If unknown, label as "unknown". Score 0–100 where 100 is healthiest mix. Return ONLY valid JSON.
 
 Schema:
 {
@@ -78,18 +111,11 @@ Schema:
   "issues": ["string"]
 }
 
-Shortlisted Candidates:
-${JSON.stringify(candidateProfiles, null, 2)}
-
-Provide:
-- diversity_score: 0-100 score for overall diversity
-- gender_balance: Distribution analysis (infer from names if needed)
-- education_balance: College/university variety (if mentioned in profiles)
-- skill_balance: Technical skill diversity analysis
-- issues: Array of potential bias red flags or areas lacking diversity`
+Candidates JSON:
+${JSON.stringify(candidatesData, null, 2)}`
           }
         ],
-        temperature: 0.3,
+        temperature: 0.4,
       }),
     });
 
@@ -116,7 +142,7 @@ Provide:
 
     // Log AI run
     await supabase.from('ai_runs').insert({
-      kind: 'shortlist',
+      kind: 'bias',
       input_ref: jobId,
       output_json: report,
       latency_ms: latency,
@@ -137,7 +163,7 @@ Provide:
     if (supabase) {
       try {
         await supabase.from('ai_runs').insert({
-          kind: 'shortlist',
+          kind: 'bias',
           status: 'error',
           error_message: error.message,
           latency_ms: latency,
