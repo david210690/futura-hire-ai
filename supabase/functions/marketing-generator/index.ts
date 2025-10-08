@@ -29,10 +29,33 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) throw new Error('Unauthorized');
 
-    // Get job details
+    // Rate limit: 3 runs per day per job
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentRuns } = await supabase
+      .from('ai_runs')
+      .select('id')
+      .eq('kind', 'marketing')
+      .eq('input_ref', jobId)
+      .gte('created_at', dayAgo);
+
+    if (recentRuns && recentRuns.length >= 3) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. You can generate marketing assets 3 times per day.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get job details with company values
     const { data: job } = await supabase
       .from('jobs')
-      .select('title, jd_text, location, seniority, companies!inner(name)')
+      .select(`
+        title,
+        jd_text,
+        companies!inner(
+          name,
+          values_text
+        )
+      `)
       .eq('id', jobId)
       .single();
 
@@ -40,6 +63,7 @@ serve(async (req) => {
 
     const companies = job.companies as any;
     const companyName = companies?.name || 'our company';
+    const companyValues = companies?.values_text || 'innovation and teamwork';
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -54,11 +78,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You create compelling talent marketing content. Return ONLY JSON.'
+            content: 'You are a recruitment marketing copywriter. Output ONLY valid JSON. Be crisp, human, and high-conversion.'
           },
           {
             role: 'user',
-            content: `Create marketing content for this job posting. Return ONLY valid JSON.
+            content: `Create a LinkedIn post, an outreach email to passive candidates, and a short DM for direct messages. Use the job & company context. Avoid buzzwords; be specific. Return ONLY valid JSON.
 
 Schema:
 {
@@ -67,18 +91,10 @@ Schema:
   "candidate_message": "string"
 }
 
+Job: ${job.title}
+JD: ${job.jd_text}
 Company: ${companyName}
-Job Title: ${job.title}
-Location: ${job.location}
-Seniority: ${job.seniority}
-
-Job Description:
-${job.jd_text}
-
-Provide:
-- linkedin_post: Engaging LinkedIn post (100-150 words) with emojis and call-to-action
-- outreach_email: Professional email template (use [Name] placeholder, 150-200 words)
-- candidate_message: Short, friendly message for direct outreach (50-75 words, use [Name])`
+Values: ${companyValues}`
           }
         ],
         temperature: 0.7,
@@ -123,7 +139,7 @@ Provide:
 
     // Log AI run
     await supabase.from('ai_runs').insert({
-      kind: 'shortlist',
+      kind: 'marketing',
       input_ref: jobId,
       output_json: assets,
       latency_ms: latency,
@@ -144,7 +160,7 @@ Provide:
     if (supabase) {
       try {
         await supabase.from('ai_runs').insert({
-          kind: 'shortlist',
+          kind: 'marketing',
           status: 'error',
           error_message: error.message,
           latency_ms: latency,

@@ -38,7 +38,16 @@ export const MarketingAssets = ({ jobId }: MarketingAssetsProps) => {
         body: { jobId }
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('Rate limit')) {
+          toast({
+            title: "Rate limit reached",
+            description: "You can generate marketing assets 3 times per day. Please try again tomorrow.",
+            variant: "destructive"
+          });
+        }
+        throw error;
+      }
 
       await loadAssets();
 
@@ -47,11 +56,7 @@ export const MarketingAssets = ({ jobId }: MarketingAssetsProps) => {
         description: "AI has created LinkedIn posts, emails, and outreach messages.",
       });
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || 'Failed to generate assets',
-      });
+      console.error('Failed to generate marketing assets:', error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +95,12 @@ export const MarketingAssets = ({ jobId }: MarketingAssetsProps) => {
             )}
           </Button>
         </div>
-        <CardDescription>AI-generated content for talent marketing</CardDescription>
+        <CardDescription>
+          AI-generated content for talent marketing
+          <span className="block text-xs mt-1 text-muted-foreground">
+            Tweak and personalize before posting
+          </span>
+        </CardDescription>
       </CardHeader>
 
       {assets && (
@@ -123,8 +133,8 @@ export const MarketingAssets = ({ jobId }: MarketingAssetsProps) => {
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Perfect for posting on your company LinkedIn page
+              <p className="text-xs text-muted-foreground mt-2">
+                Share on your company LinkedIn page or personal profile
               </p>
             </TabsContent>
 
@@ -149,8 +159,8 @@ export const MarketingAssets = ({ jobId }: MarketingAssetsProps) => {
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Professional email template - replace [Name] with candidate name
+              <p className="text-xs text-muted-foreground mt-2">
+                Use [Name] as a placeholder - personalize for each candidate
               </p>
             </TabsContent>
 
@@ -175,8 +185,8 @@ export const MarketingAssets = ({ jobId }: MarketingAssetsProps) => {
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Short message for LinkedIn/email outreach - personalize with candidate name
+              <p className="text-xs text-muted-foreground mt-2">
+                Quick DM for LinkedIn InMail or direct messages
               </p>
             </TabsContent>
           </Tabs>
