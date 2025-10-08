@@ -3,12 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CareerCoachCard } from "@/components/career/CareerCoachCard";
 import { FileUp, Video, BriefcaseIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function CandidateDashboard() {
   const [user, setUser] = useState<any>(null);
   const [candidate, setCandidate] = useState<any>(null);
+  const [resumeText, setResumeText] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +29,21 @@ export default function CandidateDashboard() {
         .maybeSingle();
 
       setCandidate(candidateData);
+
+      // Load resume text if available
+      if (candidateData) {
+        const { data: resumeData } = await supabase
+          .from('resumes')
+          .select('parsed_text')
+          .eq('candidate_id', candidateData.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (resumeData?.parsed_text) {
+          setResumeText(resumeData.parsed_text);
+        }
+      }
     };
 
     fetchData();
@@ -80,6 +97,13 @@ export default function CandidateDashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
+          {/* AI Career Coach */}
+          {candidate && (
+            <div className="md:col-span-2">
+              <CareerCoachCard candidateId={candidate.id} resumeText={resumeText} />
+            </div>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Profile & Resume</CardTitle>

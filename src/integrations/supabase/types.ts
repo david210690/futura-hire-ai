@@ -146,6 +146,47 @@ export type Database = {
         }
         Relationships: []
       }
+      bias_reports: {
+        Row: {
+          created_at: string | null
+          diversity_score: number | null
+          education_balance: string | null
+          gender_balance: string | null
+          id: string
+          issues: string[] | null
+          job_id: string
+          skill_balance: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          diversity_score?: number | null
+          education_balance?: string | null
+          gender_balance?: string | null
+          id?: string
+          issues?: string[] | null
+          job_id: string
+          skill_balance?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          diversity_score?: number | null
+          education_balance?: string | null
+          gender_balance?: string | null
+          id?: string
+          issues?: string[] | null
+          job_id?: string
+          skill_balance?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bias_reports_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidates: {
         Row: {
           created_at: string | null
@@ -183,6 +224,51 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      career_coach_feedback: {
+        Row: {
+          candidate_id: string
+          created_at: string | null
+          id: string
+          interview_questions: string[] | null
+          job_id: string | null
+          missing_skills: string[] | null
+          resume_suggestions: string[] | null
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string | null
+          id?: string
+          interview_questions?: string[] | null
+          job_id?: string | null
+          missing_skills?: string[] | null
+          resume_suggestions?: string[] | null
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string | null
+          id?: string
+          interview_questions?: string[] | null
+          job_id?: string | null
+          missing_skills?: string[] | null
+          resume_suggestions?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_coach_feedback_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_coach_feedback_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
         ]
@@ -319,6 +405,41 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_assets: {
+        Row: {
+          candidate_message: string | null
+          created_at: string | null
+          id: string
+          job_id: string
+          linkedin_post: string | null
+          outreach_email: string | null
+        }
+        Insert: {
+          candidate_message?: string | null
+          created_at?: string | null
+          id?: string
+          job_id: string
+          linkedin_post?: string | null
+          outreach_email?: string | null
+        }
+        Update: {
+          candidate_message?: string | null
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          linkedin_post?: string | null
+          outreach_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_assets_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
         ]

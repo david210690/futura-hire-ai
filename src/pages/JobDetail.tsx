@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScoreBadge } from "@/components/shared/ScoreBadge";
+import { BiasReport } from "@/components/recruiter/BiasReport";
+import { MarketingAssets } from "@/components/recruiter/MarketingAssets";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 
@@ -143,6 +145,9 @@ export default function JobDetail() {
               </CardContent>
             </Card>
 
+            {/* Marketing Assets */}
+            <MarketingAssets jobId={id!} />
+
             {applications.length > 0 && (
               <Card>
                 <CardHeader>
@@ -196,7 +201,11 @@ export default function JobDetail() {
             )}
           </div>
 
-          <div>
+          <div className="space-y-6">
+            {/* Bias Report */}
+            {applications.length > 0 && <BiasReport jobId={id!} />}
+
+            {/* Interview Questions */}
             <Card>
               <CardHeader>
                 <CardTitle>Interview Questions</CardTitle>

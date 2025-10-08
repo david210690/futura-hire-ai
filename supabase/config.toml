@@ -8,3 +8,12 @@ verify_jwt = true
 
 [functions.analyze-video]
 verify_jwt = true
+
+[functions.career-coach]
+verify_jwt = true
+
+[functions.bias-analyzer]
+verify_jwt = true
+
+[functions.marketing-generator]
+verify_jwt = true
