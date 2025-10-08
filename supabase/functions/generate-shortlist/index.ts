@@ -105,11 +105,29 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a recruitment AI. Analyze job requirements and rank candidates. Return ONLY valid JSON with no markdown.'
+            content: 'You rank candidates for a job using skills, experience, and domain context. Return ONLY JSON.'
           },
           {
             role: 'user',
-            content: `Job: ${job.title}\nLocation: ${job.location}\nSeniority: ${job.seniority}\n\nDescription:\n${job.jd_text}\n\nCandidates:\n${JSON.stringify(candidateProfiles, null, 2)}\n\nReturn JSON with:\n- "matches": array of top 5 candidates with {candidate_id, skill_fit_score (0-100), shortlist_reason (2 sentences), key_matching_skills (array)}\n- "interview_questions": array of 5 tailored interview questions as strings\n\nEnsure valid JSON only, no markdown.`
+            content: `Given the JD and candidate profiles, return the best 5 matches with scores and reasons, plus 3-5 tailored interview questions. Keep reasons to 1-2 lines.
+
+Schema:
+{
+  "top": [
+    {
+      "candidate_id": "uuid",
+      "skill_fit_score": 0,
+      "shortlist_reason": "string",
+      "key_matching_skills": ["string"]
+    }
+  ],
+  "interview_questions": ["string"]
+}
+
+JD: ${job.jd_text}
+
+Candidates:
+${JSON.stringify(candidateProfiles, null, 2)}`
           }
         ],
         temperature: 0.3,
@@ -128,8 +146,8 @@ serve(async (req) => {
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const result = JSON.parse(jsonMatch ? jsonMatch[0] : content);
 
-    // Insert applications
-    const matches = result.matches || result.top_matches || [];
+    // Insert applications (use "top" key from schema)
+    const matches = result.top || result.matches || result.top_matches || [];
     for (const match of matches.slice(0, 5)) {
       await supabase.from('applications').insert({
         job_id: jobId,

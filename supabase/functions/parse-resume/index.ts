@@ -33,14 +33,25 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Extract structured candidate data from resume text. Return ONLY valid JSON with no markdown formatting.'
+            content: 'You are a precise resume parser. Output ONLY valid JSON matching the schema. No extra text.'
           },
           {
             role: 'user',
-            content: `Parse this resume and return JSON with: skills (array of strings), years_experience (number), summary (brief 2-3 sentences), experience_points (array of 3-5 key achievements/responsibilities), headline (job title/role).\n\nResume:\n${resumeText}`
+            content: `Extract structured data from this resume text. Normalize skills to lowercase single tokens. Estimate years_experience to one decimal.
+
+Schema:
+{
+  "skills": ["string"],
+  "years_experience": 0.0,
+  "seniority": "junior|mid|senior",
+  "exp_points": ["string"],
+  "primary_stack": "string"
+}
+
+Resume Text: ${resumeText}`
           }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
       }),
     });
 
