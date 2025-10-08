@@ -29,6 +29,21 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) throw new Error('Unauthorized');
 
+    // Rate limit: 2 runs per hour
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from('career_coach_feedback')
+      .select('*', { count: 'exact', head: true })
+      .eq('candidate_id', candidateId)
+      .gte('created_at', hourAgo);
+
+    if (count && count >= 2) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Try again in an hour.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get optional job description
     let jdText = '';
     if (jobId) {
@@ -56,11 +71,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI career coach. Provide actionable resume feedback. Return ONLY JSON.'
+            content: 'You are an expert career coach for tech roles. Output ONLY valid JSON.'
           },
           {
             role: 'user',
-            content: `Analyze this resume and provide career coaching feedback. Return ONLY valid JSON.
+            content: `Using the candidate resume${jdText ? ' and the job description' : ''}, list missing skills, 3–6 resume improvement suggestions, and 5–8 practice interview questions. Be specific and concise. Return ONLY valid JSON.
 
 Schema:
 {
@@ -69,13 +84,8 @@ Schema:
   "interview_questions": ["string"]
 }
 
-${jdText ? `${jdText}\n\n` : ''}Resume:
-${resumeText}
-
-Provide:
-- missing_skills: Skills needed for target roles (or general market skills)
-- resume_suggestions: 3-5 specific improvements with examples
-- interview_questions: 3-5 practice questions for target role`
+${jdText ? `Job Description:\n${jdText}\n\n` : ''}Resume:
+${resumeText}`
           }
         ],
         temperature: 0.4,
