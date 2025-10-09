@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.marketing-generator]
 verify_jwt = true
+
+[functions.check-professional-attire]
+verify_jwt = true

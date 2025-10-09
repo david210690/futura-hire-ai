@@ -3,14 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Video, StopCircle, Upload } from "lucide-react";
+import { Loader2, Video, StopCircle, Upload, AlertCircle, CheckCircle2, Camera } from "lucide-react";
 
 export default function CandidateVideo() {
   const [user, setUser] = useState<any>(null);
   const [candidate, setCandidate] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [checkingCamera, setCheckingCamera] = useState(false);
+  const [checkingAttire, setCheckingAttire] = useState(false);
+  const [cameraValid, setCameraValid] = useState(false);
+  const [attireValid, setAttireValid] = useState(false);
+  const [attireResult, setAttireResult] = useState<any>(null);
   const [recording, setRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -55,16 +61,142 @@ export default function CandidateVideo() {
     fetchData();
   }, [navigate, toast]);
 
-  const startRecording = async () => {
+  const checkCameraResolution = async () => {
+    setCheckingCamera(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
-        audio: true 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
       });
       
+      const videoTrack = stream.getVideoTracks()[0];
+      const settings = videoTrack.getSettings();
+      
+      console.log('Camera settings:', settings);
+      
+      const width = settings.width || 0;
+      const height = settings.height || 0;
+      
+      // Check if resolution is at least 720p (1280x720)
+      const isHD = height >= 720 && width >= 1280;
+      
+      if (!isHD) {
+        stream.getTracks().forEach(track => track.stop());
+        toast({
+          title: "Camera resolution too low",
+          description: `Your camera resolution is ${width}x${height}. Minimum required is 1280x720 (HD).`,
+          variant: "destructive",
+        });
+        setCameraValid(false);
+        return;
+      }
+      
+      // Camera is valid, keep stream for preview
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
+      }
+      
+      setCameraValid(true);
+      toast({
+        title: "Camera validated",
+        description: `Camera resolution: ${width}x${height} ✓`,
+      });
+    } catch (error: any) {
+      console.error('Error checking camera:', error);
+      toast({
+        title: "Camera error",
+        description: "Failed to access camera. Please ensure you have an HD webcam connected.",
+        variant: "destructive",
+      });
+      setCameraValid(false);
+    } finally {
+      setCheckingCamera(false);
+    }
+  };
+
+  const captureSnapshot = (): string => {
+    if (!videoRef.current) return '';
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    
+    ctx.drawImage(videoRef.current, 0, 0);
+    return canvas.toDataURL('image/jpeg', 0.8);
+  };
+
+  const checkAttire = async () => {
+    if (!cameraValid) {
+      toast({
+        title: "Camera not ready",
+        description: "Please check your camera first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCheckingAttire(true);
+    try {
+      const snapshot = captureSnapshot();
+      
+      if (!snapshot) {
+        throw new Error('Failed to capture snapshot');
+      }
+
+      const { data, error } = await supabase.functions.invoke('check-professional-attire', {
+        body: { image_data: snapshot }
+      });
+
+      if (error) throw error;
+
+      setAttireResult(data);
+      setAttireValid(data.is_professional && data.confidence >= 70);
+
+      if (data.is_professional && data.confidence >= 70) {
+        toast({
+          title: "Professional attire confirmed",
+          description: data.feedback,
+        });
+      } else {
+        toast({
+          title: "Attire needs improvement",
+          description: data.feedback,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error checking attire:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to check attire",
+        variant: "destructive",
+      });
+      setAttireValid(false);
+    } finally {
+      setCheckingAttire(false);
+    }
+  };
+
+  const startRecording = async () => {
+    if (!cameraValid || !attireValid) {
+      toast({
+        title: "Requirements not met",
+        description: "Please ensure camera is HD and attire is professional",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const stream = videoRef.current?.srcObject as MediaStream;
+      if (!stream) {
+        throw new Error('No video stream available');
       }
 
       const mediaRecorder = new MediaRecorder(stream, {
@@ -85,12 +217,6 @@ export default function CandidateVideo() {
         setRecordedBlob(blob);
         const url = URL.createObjectURL(blob);
         setPreviewUrl(url);
-        
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
-        if (videoRef.current) {
-          videoRef.current.srcObject = null;
-        }
       };
 
       mediaRecorder.start();
@@ -104,7 +230,7 @@ export default function CandidateVideo() {
       console.error('Error starting recording:', error);
       toast({
         title: "Error",
-        description: "Failed to access camera/microphone",
+        description: "Failed to start recording",
         variant: "destructive",
       });
     }
@@ -185,6 +311,15 @@ export default function CandidateVideo() {
     }
     setRecordedBlob(null);
     setPreviewUrl('');
+    setCameraValid(false);
+    setAttireValid(false);
+    setAttireResult(null);
+    
+    // Stop current stream
+    const stream = videoRef.current?.srcObject as MediaStream;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
   };
 
   if (loading) {
@@ -212,17 +347,96 @@ export default function CandidateVideo() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Video Recording</CardTitle>
+            <CardTitle>Video Recording Requirements</CardTitle>
             <CardDescription>
-              {recording ? 
-                "Recording in progress... Click stop when done (max 2 minutes)" : 
-                recordedBlob ? 
-                  "Preview your recording below" : 
-                  "Click start to begin recording your intro video"
-              }
+              Before recording, please ensure your setup meets our requirements
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Step 1: Camera Check */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  <h3 className="font-semibold">Step 1: Camera Resolution Check</h3>
+                </div>
+                {cameraValid && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+              </div>
+              
+              {!cameraValid && !checkingCamera && (
+                <Button onClick={checkCameraResolution} variant="outline" className="w-full">
+                  Check Camera
+                </Button>
+              )}
+              
+              {checkingCamera && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking camera resolution...
+                </div>
+              )}
+              
+              {cameraValid && (
+                <Alert>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertTitle>Camera Validated</AlertTitle>
+                  <AlertDescription>
+                    Your camera meets the HD requirements (minimum 1280x720)
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
+            {/* Step 2: Attire Check */}
+            {cameraValid && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5" />
+                    <h3 className="font-semibold">Step 2: Professional Attire Check</h3>
+                  </div>
+                  {attireValid && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                </div>
+                
+                {!attireValid && !checkingAttire && (
+                  <Button onClick={checkAttire} variant="outline" className="w-full">
+                    Check My Attire
+                  </Button>
+                )}
+                
+                {checkingAttire && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Analyzing your professional attire...
+                  </div>
+                )}
+                
+                {attireResult && (
+                  <Alert variant={attireValid ? "default" : "destructive"}>
+                    {attireValid ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                    <AlertTitle>
+                      {attireValid ? "Professional Attire Confirmed" : "Attire Needs Improvement"}
+                    </AlertTitle>
+                    <AlertDescription>
+                      <p className="mb-2">{attireResult.feedback}</p>
+                      {attireResult.suggestions && attireResult.suggestions.length > 0 && (
+                        <div className="mt-2">
+                          <p className="font-semibold text-sm">Suggestions:</p>
+                          <ul className="list-disc list-inside space-y-1 text-sm mt-1">
+                            {attireResult.suggestions.map((suggestion: string, i: number) => (
+                              <li key={i}>{suggestion}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <p className="text-xs mt-2">Confidence: {attireResult.confidence}%</p>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+
+            {/* Video Preview */}
             <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
               {previewUrl ? (
                 <video
@@ -251,7 +465,23 @@ export default function CandidateVideo() {
             </div>
 
             <div className="flex gap-4 justify-center">
-              {!recording && !recordedBlob && (
+              {!recording && !recordedBlob && !cameraValid && (
+                <Button onClick={checkCameraResolution} size="lg" disabled={checkingCamera}>
+                  {checkingCamera ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Checking Camera...
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="mr-2 h-5 w-5" />
+                      Start Setup
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {!recording && !recordedBlob && cameraValid && attireValid && (
                 <Button onClick={startRecording} size="lg">
                   <Video className="mr-2 h-5 w-5" />
                   Start Recording
@@ -287,14 +517,22 @@ export default function CandidateVideo() {
               )}
             </div>
 
-            <div className="bg-muted p-4 rounded-lg">
-              <h3 className="font-semibold mb-2">Tips for a great intro video:</h3>
+            <div className="bg-muted p-4 rounded-lg space-y-3">
+              <h3 className="font-semibold">Requirements for recording:</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                <li>Keep it under 2 minutes</li>
-                <li>Introduce yourself and your background</li>
-                <li>Mention your key skills and experience</li>
-                <li>Share what you're passionate about</li>
-                <li>Ensure good lighting and audio quality</li>
+                <li>HD webcam (minimum 1280x720 resolution)</li>
+                <li>Professional business attire</li>
+                <li>Good lighting and quiet environment</li>
+                <li>Keep video under 2 minutes</li>
+              </ul>
+              
+              <h3 className="font-semibold mt-4">Professional attire guidelines:</h3>
+              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                <li>Business formal or business casual preferred</li>
+                <li>Collared shirts, blouses, or blazers</li>
+                <li>Avoid t-shirts, hoodies, or casual wear</li>
+                <li>No visible graphics or logos</li>
+                <li>Clean, well-fitted clothing</li>
               </ul>
             </div>
           </CardContent>
