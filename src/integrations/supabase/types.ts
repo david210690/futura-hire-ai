@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["achievement_kind"]
+          label: string
+          org_id: string
+          points: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["achievement_kind"]
+          label: string
+          org_id: string
+          points?: number
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["achievement_kind"]
+          label?: string
+          org_id?: string
+          points?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_runs: {
         Row: {
           created_at: string | null
@@ -193,6 +234,44 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidate_progress: {
+        Row: {
+          candidate_id: string
+          has_resume: boolean
+          has_video: boolean
+          id: string
+          profile_completion: number
+          skills_count: number
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          has_resume?: boolean
+          has_video?: boolean
+          id?: string
+          profile_completion?: number
+          skills_count?: number
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          has_resume?: boolean
+          has_video?: boolean
+          id?: string
+          profile_completion?: number
+          skills_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_progress_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: true
+            referencedRelation: "candidates"
             referencedColumns: ["id"]
           },
         ]
@@ -528,6 +607,47 @@ export type Database = {
           },
         ]
       }
+      leaderboards: {
+        Row: {
+          board: string
+          computed_at: string
+          id: string
+          org_id: string
+          period: Database["public"]["Enums"]["leaderboard_period"]
+          rank: number
+          score: number
+          user_id: string
+        }
+        Insert: {
+          board: string
+          computed_at?: string
+          id?: string
+          org_id: string
+          period: Database["public"]["Enums"]["leaderboard_period"]
+          rank?: number
+          score?: number
+          user_id: string
+        }
+        Update: {
+          board?: string
+          computed_at?: string
+          id?: string
+          org_id?: string
+          period?: Database["public"]["Enums"]["leaderboard_period"]
+          rank?: number
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leaderboards_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_assets: {
         Row: {
           candidate_message: string | null
@@ -616,6 +736,47 @@ export type Database = {
         }
         Relationships: []
       }
+      recruiter_metrics: {
+        Row: {
+          avg_time_to_shortlist: number | null
+          diversity_champion_count: number
+          id: string
+          jobs_created: number
+          org_id: string
+          shortlists_run: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_time_to_shortlist?: number | null
+          diversity_champion_count?: number
+          id?: string
+          jobs_created?: number
+          org_id: string
+          shortlists_run?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_time_to_shortlist?: number | null
+          diversity_champion_count?: number
+          id?: string
+          jobs_created?: number
+          org_id?: string
+          shortlists_run?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recruiter_metrics_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resumes: {
         Row: {
           candidate_id: string
@@ -647,6 +808,50 @@ export type Database = {
             columns: ["candidate_id"]
             isOneToOne: false
             referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      streaks: {
+        Row: {
+          current_streak: number
+          id: string
+          kind: Database["public"]["Enums"]["streak_kind"]
+          last_action_date: string | null
+          longest_streak: number
+          metric: string
+          org_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          id?: string
+          kind: Database["public"]["Enums"]["streak_kind"]
+          last_action_date?: string | null
+          longest_streak?: number
+          metric: string
+          org_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          id?: string
+          kind?: Database["public"]["Enums"]["streak_kind"]
+          last_action_date?: string | null
+          longest_streak?: number
+          metric?: string
+          org_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streaks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
         ]
@@ -830,6 +1035,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      compute_candidate_progress: {
+        Args: { _candidate_id: string }
+        Returns: undefined
+      }
       get_entitlement: {
         Args: { _feature: string; _org_id: string }
         Returns: {
@@ -883,13 +1092,16 @@ export type Database = {
       }
     }
     Enums: {
+      achievement_kind: "candidate" | "recruiter"
       app_role: "recruiter" | "candidate" | "admin"
       application_status: "shortlisted" | "review" | "rejected" | "hired"
       employment_type: "full-time" | "part-time" | "contract" | "internship"
       job_status: "open" | "closed"
+      leaderboard_period: "weekly" | "monthly"
       org_role: "owner" | "admin" | "recruiter" | "viewer"
       question_source: "auto" | "manual"
       seniority_level: "entry" | "mid" | "senior" | "lead" | "executive"
+      streak_kind: "candidate" | "recruiter"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1017,13 +1229,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      achievement_kind: ["candidate", "recruiter"],
       app_role: ["recruiter", "candidate", "admin"],
       application_status: ["shortlisted", "review", "rejected", "hired"],
       employment_type: ["full-time", "part-time", "contract", "internship"],
       job_status: ["open", "closed"],
+      leaderboard_period: ["weekly", "monthly"],
       org_role: ["owner", "admin", "recruiter", "viewer"],
       question_source: ["auto", "manual"],
       seniority_level: ["entry", "mid", "senior", "lead", "executive"],
+      streak_kind: ["candidate", "recruiter"],
     },
   },
 } as const
