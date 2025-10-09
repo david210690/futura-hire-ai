@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Assessments from "./pages/Assessments";
+import AssessmentDetail from "./pages/AssessmentDetail";
 import { AuthPage } from "./components/auth/AuthPage";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/assessments" element={<Assessments />} />
+          <Route path="/assessments/:id" element={<AssessmentDetail />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/dashboard" element={<RecruiterDashboard />} />
           <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
