@@ -3,10 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Briefcase, Users, TrendingUp, Building2, Settings } from "lucide-react";
+import { Plus, Briefcase, Users, TrendingUp, Building2, Settings, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { CopilotPanel } from "@/components/recruiter/CopilotPanel";
 
 export default function RecruiterDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -14,6 +15,7 @@ export default function RecruiterDashboard() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
   const [hasCompany, setHasCompany] = useState(false);
+  const [showCopilot, setShowCopilot] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentOrg, loading: orgLoading } = useCurrentOrg();
@@ -173,12 +175,26 @@ export default function RecruiterDashboard() {
               <Settings className="w-4 h-4" />
               Team
             </Button>
+            <Button 
+              variant={showCopilot ? "secondary" : "outline"}
+              onClick={() => setShowCopilot(!showCopilot)} 
+              className="gap-2"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Copilot
+            </Button>
             <Button onClick={() => navigate('/create-job')} className="gap-2">
               <Plus className="w-4 h-4" />
               Create Job
             </Button>
           </div>
         </div>
+
+        {showCopilot && (
+          <div className="mb-8">
+            <CopilotPanel />
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
