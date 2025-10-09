@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Sparkles, LogOut } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Sparkles, LogOut, Briefcase, LayoutDashboard, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OrgSwitcher } from "@/components/org/OrgSwitcher";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -13,6 +13,7 @@ interface NavbarProps {
 
 export const Navbar = ({ userName, userRole }: NavbarProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { currentOrg } = useCurrentOrg();
 
@@ -32,7 +33,7 @@ export const Navbar = ({ userName, userRole }: NavbarProps) => {
   return (
     <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary">
               <Sparkles className="w-5 h-5 text-white" />
@@ -41,6 +42,30 @@ export const Navbar = ({ userName, userRole }: NavbarProps) => {
               FuturaHire
             </span>
           </div>
+          
+          {userRole === 'recruiter' && (
+            <nav className="flex items-center gap-1">
+              <Button
+                variant={location.pathname === '/dashboard' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="gap-2"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Button>
+              <Button
+                variant={location.pathname === '/role-designer' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => navigate('/role-designer')}
+                className="gap-2"
+              >
+                <Briefcase className="w-4 h-4" />
+                Role Designer
+              </Button>
+            </nav>
+          )}
+          
           {currentOrg && (
             <span className="text-sm text-muted-foreground">
               {currentOrg.name}

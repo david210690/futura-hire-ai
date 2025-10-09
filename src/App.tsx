@@ -11,6 +11,7 @@ import CreateJob from "./pages/CreateJob";
 import JobDetail from "./pages/JobDetail";
 import AdminMonitor from "./pages/AdminMonitor";
 import OrgSettingsPage from "./pages/OrgSettingsPage";
+import RoleDesigner from "./pages/RoleDesigner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/admin/monitor" element={<AdminMonitor />} />
           <Route path="/org/settings" element={<OrgSettingsPage />} />
+          <Route path="/role-designer" element={<RoleDesigner />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

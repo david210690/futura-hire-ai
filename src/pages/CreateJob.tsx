@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 export default function CreateJob() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { currentOrg } = useCurrentOrg();
   const [loading, setLoading] = useState(false);
@@ -24,6 +25,28 @@ export default function CreateJob() {
     seniority: 'mid' as 'entry' | 'mid' | 'senior' | 'lead' | 'executive',
     jd_text: ''
   });
+
+  // Prefill from URL params (from Role Designer)
+  useEffect(() => {
+    const title = searchParams.get('title');
+    const jd_text = searchParams.get('jd_text');
+    const tags = searchParams.get('tags');
+    
+    if (title || jd_text) {
+      setFormData(prev => ({
+        ...prev,
+        ...(title && { title }),
+        ...(jd_text && { jd_text }),
+      }));
+      
+      if (tags) {
+        toast({
+          title: "Skills from Role Design",
+          description: `Key skills: ${tags}`,
+        });
+      }
+    }
+  }, [searchParams, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

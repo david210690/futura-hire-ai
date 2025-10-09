@@ -1045,6 +1045,88 @@ export type Database = {
           },
         ]
       }
+      role_design_versions: {
+        Row: {
+          created_at: string
+          id: string
+          interview_kit: string[] | null
+          jd_draft: string | null
+          notes: string | null
+          role_design_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interview_kit?: string[] | null
+          jd_draft?: string | null
+          notes?: string | null
+          role_design_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interview_kit?: string[] | null
+          jd_draft?: string | null
+          notes?: string | null
+          role_design_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_design_versions_role_design_id_fkey"
+            columns: ["role_design_id"]
+            isOneToOne: false
+            referencedRelation: "role_designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_designs: {
+        Row: {
+          created_at: string
+          id: string
+          interview_kit: string[] | null
+          jd_draft: string | null
+          org_id: string
+          problem_statement: string
+          skills_matrix: Json | null
+          suggested_titles: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interview_kit?: string[] | null
+          jd_draft?: string | null
+          org_id: string
+          problem_statement: string
+          skills_matrix?: Json | null
+          suggested_titles?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interview_kit?: string[] | null
+          jd_draft?: string | null
+          org_id?: string
+          problem_statement?: string
+          skills_matrix?: Json | null
+          suggested_titles?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_designs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       streaks: {
         Row: {
           current_streak: number
