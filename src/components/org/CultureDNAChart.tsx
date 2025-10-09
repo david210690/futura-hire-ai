@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   RadarChart,
   PolarGrid,
@@ -112,9 +113,21 @@ export const CultureDNAChart = ({ orgId }: CultureDNAChartProps) => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Culture DNA</CardTitle>
-          <CardDescription>Last updated: {updatedAt}</CardDescription>
+        <div className="flex items-center gap-2">
+          <div>
+            <CardTitle>Culture DNA</CardTitle>
+            <CardDescription>Last updated: {updatedAt}</CardDescription>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-sm">Your organization's culture profile based on team values and behaviors. Updated from company data and team member signals.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <Button 
           variant="outline" 

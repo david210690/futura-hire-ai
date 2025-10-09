@@ -167,6 +167,18 @@ Horizon: ${horizon}`;
 
       if (scoreError) throw scoreError;
       results.push(score);
+
+      // Log AI run
+      await supabase
+        .from('ai_runs')
+        .insert({
+          kind: 'retention_risk',
+          model_name: 'google/gemini-2.5-flash',
+          latency_ms: 0,
+          status: 'ok',
+          input_ref: score.id,
+          output_json: { tips, rationale },
+        });
     }
 
     return new Response(JSON.stringify(results), {

@@ -153,6 +153,18 @@ Match Score: ${matchScore}%`;
 
     if (matchError) throw matchError;
 
+    // Log AI run
+    await supabase
+      .from('ai_runs')
+      .insert({
+        kind: 'culture_match',
+        model_name: 'google/gemini-2.5-flash',
+        latency_ms: 0,
+        status: 'ok',
+        input_ref: match.id,
+        output_json: factors,
+      });
+
     return new Response(JSON.stringify(match), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

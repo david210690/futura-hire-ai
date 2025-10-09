@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle2, AlertCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, AlertCircle, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RetentionRiskCardsProps {
   hireId: string;
@@ -65,11 +66,23 @@ export const RetentionRiskCards = ({ hireId }: RetentionRiskCardsProps) => {
         <Card key={score.id}>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">
-                {score.horizon === '30d' && '30-Day'}
-                {score.horizon === '60d' && '60-Day'}
-                {score.horizon === '90d' && '90-Day'}
-              </CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base">
+                  {score.horizon === '30d' && '30-Day'}
+                  {score.horizon === '60d' && '60-Day'}
+                  {score.horizon === '90d' && '90-Day'}
+                </CardTitle>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-sm">Predicted risk of this hire leaving within this time period, based on culture fit, performance signals, and pulse check data.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               {getRiskIcon(score.risk)}
             </div>
             <CardDescription>Retention Risk</CardDescription>

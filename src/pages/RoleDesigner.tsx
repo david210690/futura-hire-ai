@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Copy, Briefcase, CheckCircle2 } from "lucide-react";
+import { Loader2, Copy, Briefcase, CheckCircle2, Lock } from "lucide-react";
 
 export default function RoleDesigner() {
   const navigate = useNavigate();
@@ -18,6 +18,26 @@ export default function RoleDesigner() {
   const [problemStatement, setProblemStatement] = useState("");
   const [loading, setLoading] = useState(false);
   const [design, setDesign] = useState<any>(null);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
+
+  useEffect(() => {
+    const checkEntitlement = async () => {
+      if (!currentOrg) return;
+      
+      const { data } = await supabase
+        .from('entitlements')
+        .select('enabled')
+        .eq('org_id', currentOrg.id)
+        .eq('feature', 'feature_role_designer')
+        .maybeSingle();
+      
+      setHasAccess(data?.enabled || false);
+      setCheckingAccess(false);
+    };
+
+    checkEntitlement();
+  }, [currentOrg]);
 
   const handleDesign = async () => {
     if (!problemStatement.trim() || !currentOrg) return;
@@ -69,6 +89,32 @@ export default function RoleDesigner() {
     
     navigate(`/create-job?${params.toString()}`);
   };
+
+  if (checkingAccess) {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-5xl">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-5xl">
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-destructive" />
+              <CardTitle>Feature Locked</CardTitle>
+            </div>
+            <CardDescription>
+              Role Designer is not enabled for your organization. Contact your admin to enable this feature.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">

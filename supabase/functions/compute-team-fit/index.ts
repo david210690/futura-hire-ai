@@ -149,6 +149,18 @@ Candidate: ${JSON.stringify(candidateVector)}`;
 
     if (fitError) throw fitError;
 
+    // Log AI run
+    await supabase
+      .from('ai_runs')
+      .insert({
+        kind: 'team_fit',
+        model_name: 'google/gemini-2.5-flash',
+        latency_ms: 0,
+        status: 'ok',
+        input_ref: fitData.id,
+        output_json: aiData,
+      });
+
     return new Response(JSON.stringify(fitData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
