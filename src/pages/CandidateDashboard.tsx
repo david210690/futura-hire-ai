@@ -113,10 +113,6 @@ export default function CandidateDashboard() {
               <Button className="w-full" onClick={() => navigate('/candidate/profile')}>
                 {candidate ? 'Edit Profile' : 'Create Profile'}
               </Button>
-              <Button variant="outline" className="w-full">
-                <FileUp className="w-4 h-4 mr-2" />
-                Upload Resume
-              </Button>
             </CardContent>
           </Card>
 
@@ -126,7 +122,7 @@ export default function CandidateDashboard() {
               <CardDescription>Record a short video to boost your culture-fit score</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => navigate('/candidate/video')}>
                 <Video className="w-4 h-4 mr-2" />
                 Record Video
               </Button>

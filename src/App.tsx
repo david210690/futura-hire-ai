@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import { AuthPage } from "./components/auth/AuthPage";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
+import CandidateProfile from "./pages/CandidateProfile";
+import CandidateVideo from "./pages/CandidateVideo";
 import CreateJob from "./pages/CreateJob";
 import JobDetail from "./pages/JobDetail";
 import AdminMonitor from "./pages/AdminMonitor";
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/dashboard" element={<RecruiterDashboard />} />
           <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+          <Route path="/candidate/profile" element={<CandidateProfile />} />
+          <Route path="/candidate/video" element={<CandidateVideo />} />
           <Route path="/create-job" element={<CreateJob />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/admin/monitor" element={<AdminMonitor />} />
