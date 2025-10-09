@@ -592,6 +592,102 @@ export type Database = {
           },
         ]
       }
+      interview_ratings: {
+        Row: {
+          communication: number | null
+          created_at: string
+          culture_add: number | null
+          hire_recommend: Database["public"]["Enums"]["hire_decision"]
+          id: string
+          interview_id: string
+          notes: string | null
+          problem_solving: number | null
+          tech_depth: number | null
+        }
+        Insert: {
+          communication?: number | null
+          created_at?: string
+          culture_add?: number | null
+          hire_recommend: Database["public"]["Enums"]["hire_decision"]
+          id?: string
+          interview_id: string
+          notes?: string | null
+          problem_solving?: number | null
+          tech_depth?: number | null
+        }
+        Update: {
+          communication?: number | null
+          created_at?: string
+          culture_add?: number | null
+          hire_recommend?: Database["public"]["Enums"]["hire_decision"]
+          id?: string
+          interview_id?: string
+          notes?: string | null
+          problem_solving?: number | null
+          tech_depth?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_ratings_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviews: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          interviewer_id: string | null
+          job_id: string
+          scheduled_at: string | null
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          interviewer_id?: string | null
+          job_id: string
+          scheduled_at?: string | null
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          interviewer_id?: string | null
+          job_id?: string
+          scheduled_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_interviewer_id_fkey"
+            columns: ["interviewer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           accepted_at: string | null
@@ -837,6 +933,41 @@ export type Database = {
           owner_id?: string
         }
         Relationships: []
+      }
+      predictive_scores: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          rationale: string | null
+          success_probability: number
+          version: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          rationale?: string | null
+          success_probability: number
+          version?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          rationale?: string | null
+          success_probability?: number
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictive_scores_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recruiter_metrics: {
         Row: {
@@ -1141,6 +1272,10 @@ export type Database = {
         Args: { _candidate_id: string }
         Returns: undefined
       }
+      compute_predictive_score: {
+        Args: { _application_id: string }
+        Returns: string
+      }
       get_entitlement: {
         Args: { _feature: string; _org_id: string }
         Returns: {
@@ -1198,6 +1333,7 @@ export type Database = {
       app_role: "recruiter" | "candidate" | "admin"
       application_status: "shortlisted" | "review" | "rejected" | "hired"
       employment_type: "full-time" | "part-time" | "contract" | "internship"
+      hire_decision: "yes" | "no" | "maybe"
       job_status: "open" | "closed"
       leaderboard_period: "weekly" | "monthly"
       org_role: "owner" | "admin" | "recruiter" | "viewer"
@@ -1335,6 +1471,7 @@ export const Constants = {
       app_role: ["recruiter", "candidate", "admin"],
       application_status: ["shortlisted", "review", "rejected", "hired"],
       employment_type: ["full-time", "part-time", "contract", "internship"],
+      hire_decision: ["yes", "no", "maybe"],
       job_status: ["open", "closed"],
       leaderboard_period: ["weekly", "monthly"],
       org_role: ["owner", "admin", "recruiter", "viewer"],
