@@ -282,6 +282,7 @@ export type Database = {
           full_name: string
           headline: string | null
           id: string
+          linkedin_url: string | null
           skills: string | null
           summary: string | null
           user_id: string
@@ -292,6 +293,7 @@ export type Database = {
           full_name: string
           headline?: string | null
           id?: string
+          linkedin_url?: string | null
           skills?: string | null
           summary?: string | null
           user_id: string
@@ -302,6 +304,7 @@ export type Database = {
           full_name?: string
           headline?: string | null
           id?: string
+          linkedin_url?: string | null
           skills?: string | null
           summary?: string | null
           user_id?: string

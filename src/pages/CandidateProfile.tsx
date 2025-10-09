@@ -25,6 +25,7 @@ export default function CandidateProfile() {
     summary: '',
     skills: '',
     years_experience: 0,
+    linkedin_url: '',
   });
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export default function CandidateProfile() {
           summary: candidateData.summary || '',
           skills: candidateData.skills || '',
           years_experience: candidateData.years_experience || 0,
+          linkedin_url: candidateData.linkedin_url || '',
         });
       }
 
@@ -204,6 +206,17 @@ export default function CandidateProfile() {
                     min="0"
                     value={formData.years_experience}
                     onChange={(e) => setFormData({ ...formData, years_experience: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="linkedin_url">LinkedIn Profile</Label>
+                  <Input
+                    id="linkedin_url"
+                    type="url"
+                    value={formData.linkedin_url}
+                    onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                    placeholder="https://linkedin.com/in/yourprofile"
                   />
                 </div>
               </div>
