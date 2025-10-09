@@ -659,6 +659,51 @@ export type Database = {
           },
         ]
       }
+      hires: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          manager_id: string
+          org_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["hire_status"]
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          manager_id: string
+          org_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["hire_status"]
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          manager_id?: string
+          org_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["hire_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hires_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hires_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_questions: {
         Row: {
           created_at: string | null
@@ -1078,6 +1123,41 @@ export type Database = {
           },
         ]
       }
+      pulse_checks: {
+        Row: {
+          created_at: string
+          day: number
+          hire_id: string
+          id: string
+          manager_report: Json | null
+          self_report: Json | null
+        }
+        Insert: {
+          created_at?: string
+          day: number
+          hire_id: string
+          id?: string
+          manager_report?: Json | null
+          self_report?: Json | null
+        }
+        Update: {
+          created_at?: string
+          day?: number
+          hire_id?: string
+          id?: string
+          manager_report?: Json | null
+          self_report?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_checks_hire_id_fkey"
+            columns: ["hire_id"]
+            isOneToOne: false
+            referencedRelation: "hires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recruiter_metrics: {
         Row: {
           avg_time_to_shortlist: number | null
@@ -1150,6 +1230,44 @@ export type Database = {
             columns: ["candidate_id"]
             isOneToOne: false
             referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retention_scores: {
+        Row: {
+          created_at: string
+          hire_id: string
+          horizon: Database["public"]["Enums"]["retention_horizon"]
+          id: string
+          rationale: string | null
+          risk: number
+          tips: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          hire_id: string
+          horizon: Database["public"]["Enums"]["retention_horizon"]
+          id?: string
+          rationale?: string | null
+          risk: number
+          tips?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          hire_id?: string
+          horizon?: Database["public"]["Enums"]["retention_horizon"]
+          id?: string
+          rationale?: string | null
+          risk?: number
+          tips?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retention_scores_hire_id_fkey"
+            columns: ["hire_id"]
+            isOneToOne: false
+            referencedRelation: "hires"
             referencedColumns: ["id"]
           },
         ]
@@ -1526,10 +1644,12 @@ export type Database = {
       culture_event_source: "hire" | "reject" | "interview"
       employment_type: "full-time" | "part-time" | "contract" | "internship"
       hire_decision: "yes" | "no" | "maybe"
+      hire_status: "active" | "exited"
       job_status: "open" | "closed"
       leaderboard_period: "weekly" | "monthly"
       org_role: "owner" | "admin" | "recruiter" | "viewer"
       question_source: "auto" | "manual"
+      retention_horizon: "30d" | "60d" | "90d"
       seniority_level: "entry" | "mid" | "senior" | "lead" | "executive"
       streak_kind: "candidate" | "recruiter"
     }
@@ -1665,10 +1785,12 @@ export const Constants = {
       culture_event_source: ["hire", "reject", "interview"],
       employment_type: ["full-time", "part-time", "contract", "internship"],
       hire_decision: ["yes", "no", "maybe"],
+      hire_status: ["active", "exited"],
       job_status: ["open", "closed"],
       leaderboard_period: ["weekly", "monthly"],
       org_role: ["owner", "admin", "recruiter", "viewer"],
       question_source: ["auto", "manual"],
+      retention_horizon: ["30d", "60d", "90d"],
       seniority_level: ["entry", "mid", "senior", "lead", "executive"],
       streak_kind: ["candidate", "recruiter"],
     },
