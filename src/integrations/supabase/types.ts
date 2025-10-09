@@ -1398,6 +1398,166 @@ export type Database = {
           },
         ]
       }
+      team_fit_scores: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          fills: string[] | null
+          fit: number
+          frictions: string[] | null
+          gaps: string[] | null
+          id: string
+          note: string | null
+          team_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          fills?: string[] | null
+          fit: number
+          frictions?: string[] | null
+          gaps?: string[] | null
+          id?: string
+          note?: string | null
+          team_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          fills?: string[] | null
+          fit?: number
+          frictions?: string[] | null
+          gaps?: string[] | null
+          id?: string
+          note?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_fit_scores_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_fit_scores_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          added_at: string
+          id: string
+          role: string | null
+          team_id: string
+          trait_vector: Json | null
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          role?: string | null
+          team_id: string
+          trait_vector?: Json | null
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          role?: string | null
+          team_id?: string
+          trait_vector?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_profiles: {
+        Row: {
+          id: string
+          notes: string | null
+          org_id: string
+          team_id: string
+          updated_at: string
+          vector: Json
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          org_id: string
+          team_id: string
+          updated_at?: string
+          vector: Json
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          org_id?: string
+          team_id?: string
+          updated_at?: string
+          vector?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          manager_id: string | null
+          name: string
+          org_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          manager_id?: string | null
+          name: string
+          org_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          manager_id?: string | null
+          name?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_counters: {
         Row: {
           count: number
