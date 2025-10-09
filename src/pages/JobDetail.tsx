@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScoreBadge } from "@/components/shared/ScoreBadge";
 import { BiasReport } from "@/components/recruiter/BiasReport";
 import { MarketingAssets } from "@/components/recruiter/MarketingAssets";
+import { CultureMatchBadge } from "@/components/shared/CultureMatchBadge";
+import { PredictiveScoreChip } from "@/components/recruiter/PredictiveScoreChip";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { UsageBadge } from "@/components/usage/UsageBadge";
@@ -186,7 +188,8 @@ export default function JobDetail() {
                         <TableHead>Candidate</TableHead>
                         <TableHead>Skills</TableHead>
                         <TableHead>Skill Fit</TableHead>
-                        <TableHead>Culture Fit</TableHead>
+                        <TableHead>Culture</TableHead>
+                        <TableHead>Predictive</TableHead>
                         <TableHead>Overall</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -212,7 +215,15 @@ export default function JobDetail() {
                             <ScoreBadge score={app.skill_fit_score} size="sm" />
                           </TableCell>
                           <TableCell>
-                            <ScoreBadge score={app.culture_fit_score} size="sm" />
+                            {job?.org_id && app.candidates?.id && (
+                              <CultureMatchBadge 
+                                orgId={job.org_id} 
+                                candidateId={app.candidates.id} 
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <PredictiveScoreChip applicationId={app.id} />
                           </TableCell>
                           <TableCell>
                             <ScoreBadge score={app.overall_score} size="sm" />

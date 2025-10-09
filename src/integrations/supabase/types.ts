@@ -515,6 +515,115 @@ export type Database = {
           },
         ]
       }
+      culture_events: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          payload: Json
+          source: Database["public"]["Enums"]["culture_event_source"]
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          payload: Json
+          source: Database["public"]["Enums"]["culture_event_source"]
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          payload?: Json
+          source?: Database["public"]["Enums"]["culture_event_source"]
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "culture_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      culture_matches: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          factors: Json | null
+          id: string
+          match_score: number
+          org_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          factors?: Json | null
+          id?: string
+          match_score: number
+          org_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          factors?: Json | null
+          id?: string
+          match_score?: number
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "culture_matches_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "culture_matches_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      culture_profiles: {
+        Row: {
+          id: string
+          notes: string | null
+          org_id: string
+          updated_at: string
+          vector: Json
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          org_id: string
+          updated_at?: string
+          vector: Json
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          org_id?: string
+          updated_at?: string
+          vector?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "culture_profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entitlements: {
         Row: {
           enabled: boolean
@@ -1414,6 +1523,7 @@ export type Database = {
       achievement_kind: "candidate" | "recruiter"
       app_role: "recruiter" | "candidate" | "admin"
       application_status: "shortlisted" | "review" | "rejected" | "hired"
+      culture_event_source: "hire" | "reject" | "interview"
       employment_type: "full-time" | "part-time" | "contract" | "internship"
       hire_decision: "yes" | "no" | "maybe"
       job_status: "open" | "closed"
@@ -1552,6 +1662,7 @@ export const Constants = {
       achievement_kind: ["candidate", "recruiter"],
       app_role: ["recruiter", "candidate", "admin"],
       application_status: ["shortlisted", "review", "rejected", "hired"],
+      culture_event_source: ["hire", "reject", "interview"],
       employment_type: ["full-time", "part-time", "contract", "internship"],
       hire_decision: ["yes", "no", "maybe"],
       job_status: ["open", "closed"],
