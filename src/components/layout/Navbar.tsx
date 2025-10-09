@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { OrgSwitcher } from "@/components/org/OrgSwitcher";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 interface NavbarProps {
   userName?: string;
@@ -12,6 +14,7 @@ interface NavbarProps {
 export const Navbar = ({ userName, userRole }: NavbarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentOrg } = useCurrentOrg();
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -29,16 +32,24 @@ export const Navbar = ({ userName, userRole }: NavbarProps) => {
   return (
     <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary">
-            <Sparkles className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              FuturaHire
+            </span>
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            FuturaHire
-          </span>
+          {currentOrg && (
+            <span className="text-sm text-muted-foreground">
+              {currentOrg.name}
+            </span>
+          )}
         </div>
         
         <div className="flex items-center gap-4">
+          <OrgSwitcher />
           {userName && (
             <div className="flex flex-col items-end">
               <span className="text-sm font-medium">{userName}</span>

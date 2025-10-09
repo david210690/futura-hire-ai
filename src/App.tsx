@@ -10,6 +10,7 @@ import CandidateDashboard from "./pages/CandidateDashboard";
 import CreateJob from "./pages/CreateJob";
 import JobDetail from "./pages/JobDetail";
 import AdminMonitor from "./pages/AdminMonitor";
+import OrgSettingsPage from "./pages/OrgSettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/create-job" element={<CreateJob />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/admin/monitor" element={<AdminMonitor />} />
+          <Route path="/org/settings" element={<OrgSettingsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

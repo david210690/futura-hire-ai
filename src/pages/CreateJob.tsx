@@ -10,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 export default function CreateJob() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentOrg } = useCurrentOrg();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -30,6 +32,7 @@ export default function CreateJob() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
+      if (!currentOrg) throw new Error('No organization selected');
 
       const { data: userData } = await supabase
         .from('users')
@@ -46,6 +49,7 @@ export default function CreateJob() {
         .insert([{
           ...formData,
           company_id: userData.company_id,
+          org_id: currentOrg.id,
           created_by: user.id,
           status: 'open' as const
         }])

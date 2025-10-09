@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Briefcase, Users, TrendingUp, Building2 } from "lucide-react";
+import { Plus, Briefcase, Users, TrendingUp, Building2, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 export default function RecruiterDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -15,6 +16,7 @@ export default function RecruiterDashboard() {
   const [hasCompany, setHasCompany] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentOrg, loading: orgLoading } = useCurrentOrg();
 
   useEffect(() => {
     loadData();
@@ -88,7 +90,7 @@ export default function RecruiterDashboard() {
   };
 
   const createCompany = async () => {
-    if (!user) return;
+    if (!user || !currentOrg) return;
 
     const companyName = prompt("Enter your company name:");
     if (!companyName) return;
@@ -98,6 +100,7 @@ export default function RecruiterDashboard() {
       .insert({
         name: companyName,
         created_by: user.id,
+        org_id: currentOrg.id,
       })
       .select()
       .single();
@@ -161,10 +164,20 @@ export default function RecruiterDashboard() {
             <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">{company?.name}</p>
           </div>
-          <Button onClick={() => navigate('/create-job')} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Create Job
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/org/settings')}
+              className="gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Team
+            </Button>
+            <Button onClick={() => navigate('/create-job')} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Create Job
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

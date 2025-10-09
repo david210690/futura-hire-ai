@@ -65,6 +65,7 @@ export type Database = {
           explanations: Json | null
           id: string
           job_id: string
+          org_id: string
           overall_score: number | null
           shortlist_reason: string | null
           skill_fit_score: number | null
@@ -79,6 +80,7 @@ export type Database = {
           explanations?: Json | null
           id?: string
           job_id: string
+          org_id: string
           overall_score?: number | null
           shortlist_reason?: string | null
           skill_fit_score?: number | null
@@ -93,6 +95,7 @@ export type Database = {
           explanations?: Json | null
           id?: string
           job_id?: string
+          org_id?: string
           overall_score?: number | null
           shortlist_reason?: string | null
           skill_fit_score?: number | null
@@ -112,6 +115,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
         ]
@@ -280,6 +290,7 @@ export type Database = {
           created_by: string
           id: string
           name: string
+          org_id: string
           size_band: string | null
           values_text: string | null
           website: string | null
@@ -290,6 +301,7 @@ export type Database = {
           created_by: string
           id?: string
           name: string
+          org_id: string
           size_band?: string | null
           values_text?: string | null
           website?: string | null
@@ -300,6 +312,7 @@ export type Database = {
           created_by?: string
           id?: string
           name?: string
+          org_id?: string
           size_band?: string | null
           values_text?: string | null
           website?: string | null
@@ -312,6 +325,13 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "companies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
         ]
       }
       interview_questions: {
@@ -319,6 +339,7 @@ export type Database = {
           created_at: string | null
           id: string
           job_id: string
+          org_id: string
           question: string
           source: Database["public"]["Enums"]["question_source"]
         }
@@ -326,6 +347,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           job_id: string
+          org_id: string
           question: string
           source?: Database["public"]["Enums"]["question_source"]
         }
@@ -333,6 +355,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           job_id?: string
+          org_id?: string
           question?: string
           source?: Database["public"]["Enums"]["question_source"]
         }
@@ -342,6 +365,57 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_questions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          org_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
         ]
@@ -355,6 +429,7 @@ export type Database = {
           id: string
           jd_text: string
           location: string
+          org_id: string
           remote_mode: string | null
           salary_range: string | null
           seniority: Database["public"]["Enums"]["seniority_level"]
@@ -370,6 +445,7 @@ export type Database = {
           id?: string
           jd_text: string
           location: string
+          org_id: string
           remote_mode?: string | null
           salary_range?: string | null
           seniority?: Database["public"]["Enums"]["seniority_level"]
@@ -385,6 +461,7 @@ export type Database = {
           id?: string
           jd_text?: string
           location?: string
+          org_id?: string
           remote_mode?: string | null
           salary_range?: string | null
           seniority?: Database["public"]["Enums"]["seniority_level"]
@@ -405,6 +482,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
         ]
@@ -443,6 +527,59 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      org_members: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orgs: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: []
       }
       resumes: {
         Row: {
@@ -623,11 +760,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_org_role: {
+        Args: {
+          _org_id: string
+          _role: Database["public"]["Enums"]["org_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_org_admin: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       log_audit: {
@@ -645,6 +798,7 @@ export type Database = {
       application_status: "shortlisted" | "review" | "rejected" | "hired"
       employment_type: "full-time" | "part-time" | "contract" | "internship"
       job_status: "open" | "closed"
+      org_role: "owner" | "admin" | "recruiter" | "viewer"
       question_source: "auto" | "manual"
       seniority_level: "entry" | "mid" | "senior" | "lead" | "executive"
     }
@@ -778,6 +932,7 @@ export const Constants = {
       application_status: ["shortlisted", "review", "rejected", "hired"],
       employment_type: ["full-time", "part-time", "contract", "internship"],
       job_status: ["open", "closed"],
+      org_role: ["owner", "admin", "recruiter", "viewer"],
       question_source: ["auto", "manual"],
       seniority_level: ["entry", "mid", "senior", "lead", "executive"],
     },
