@@ -27,7 +27,7 @@ export const CreateAssessmentFromBank = ({ onSuccess }: CreateAssessmentFromBank
   const [purpose, setPurpose] = useState<"screening" | "skills" | "culture" | "coding">("skills");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
-  const [filterTag, setFilterTag] = useState("");
+  const [filterTag, setFilterTag] = useState("all");
   const [isCreating, setIsCreating] = useState(false);
 
   const { data: questions, isLoading } = useQuery({
@@ -47,7 +47,7 @@ export const CreateAssessmentFromBank = ({ onSuccess }: CreateAssessmentFromBank
       if (filterDifficulty !== "all") {
         query = query.eq("difficulty", filterDifficulty as "easy" | "medium" | "hard");
       }
-      if (filterTag) {
+      if (filterTag !== "all") {
         query = query.contains("skill_tags", [filterTag]);
       }
 
@@ -184,7 +184,7 @@ export const CreateAssessmentFromBank = ({ onSuccess }: CreateAssessmentFromBank
                 <SelectValue placeholder="Skill tag" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Tags</SelectItem>
+                <SelectItem value="all">All Tags</SelectItem>
                 {allTags.map(tag => (
                   <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                 ))}
