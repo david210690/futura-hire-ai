@@ -29,6 +29,65 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) throw new Error('Unauthorized');
 
+    // Get job details with company values
+    const { data: job } = await supabase
+      .from('jobs')
+      .select('*, org_id, companies(name, values_text)')
+      .eq('id', jobId)
+      .single();
+
+    if (!job) throw new Error('Job not found');
+
+    // Check entitlement
+    const { data: entitlement } = await supabase
+      .from('entitlements')
+      .select('enabled')
+      .eq('org_id', job.org_id)
+      .eq('feature', 'feature_marketing_assets')
+      .maybeSingle();
+
+    if (!entitlement?.enabled) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Upgrade required',
+          needed_feature: 'feature_marketing_assets',
+          message: 'Marketing Assets feature requires an upgrade.'
+        }),
+        { 
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check and increment usage
+    const { data: usageResult, error: usageError } = await supabase.rpc('increment_usage', {
+      _org_id: job.org_id,
+      _metric: 'marketing_runs'
+    });
+
+    if (usageError) {
+      console.error('Usage tracking error:', usageError);
+    }
+
+    if (usageResult && usageResult[0]) {
+      const { count, limit_value } = usageResult[0];
+      if (count > limit_value) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Quota exceeded',
+            message: `Daily marketing generation limit reached (${limit_value}/day). Try again tomorrow.`,
+            quota: limit_value,
+            used: count
+          }),
+          { 
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
+
     // Rate limit: 3 runs per day per job
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data: recentRuns } = await supabase
@@ -44,22 +103,6 @@ serve(async (req) => {
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Get job details with company values
-    const { data: job } = await supabase
-      .from('jobs')
-      .select(`
-        title,
-        jd_text,
-        companies!inner(
-          name,
-          values_text
-        )
-      `)
-      .eq('id', jobId)
-      .single();
-
-    if (!job) throw new Error('Job not found');
 
     const companies = job.companies as any;
     const companyName = companies?.name || 'our company';

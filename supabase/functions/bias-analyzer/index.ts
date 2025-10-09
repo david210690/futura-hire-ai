@@ -29,6 +29,65 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) throw new Error('Unauthorized');
 
+    // Get job details with org_id
+    const { data: job, error: jobError } = await supabase
+      .from('jobs')
+      .select('*, org_id')
+      .eq('id', jobId)
+      .single();
+
+    if (jobError) throw jobError;
+
+    // Check entitlement
+    const { data: entitlement } = await supabase
+      .from('entitlements')
+      .select('enabled')
+      .eq('org_id', job.org_id)
+      .eq('feature', 'feature_bias_analyzer')
+      .maybeSingle();
+
+    if (!entitlement?.enabled) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Upgrade required',
+          needed_feature: 'feature_bias_analyzer',
+          message: 'Bias Analyzer feature requires an upgrade. Contact admin to enable.'
+        }),
+        { 
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check and increment usage
+    const { data: usageResult, error: usageError } = await supabase.rpc('increment_usage', {
+      _org_id: job.org_id,
+      _metric: 'bias_runs'
+    });
+
+    if (usageError) {
+      console.error('Usage tracking error:', usageError);
+    }
+
+    if (usageResult && usageResult[0]) {
+      const { count, limit_value } = usageResult[0];
+      if (count > limit_value) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Quota exceeded',
+            message: `Daily bias analysis limit reached (${limit_value}/day). Try again tomorrow.`,
+            quota: limit_value,
+            used: count
+          }),
+          { 
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
+
     // Rate limit: 2 runs per hour per job
     const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await supabase

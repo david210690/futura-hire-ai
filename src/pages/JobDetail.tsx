@@ -11,6 +11,8 @@ import { BiasReport } from "@/components/recruiter/BiasReport";
 import { MarketingAssets } from "@/components/recruiter/MarketingAssets";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
+import { UsageBadge } from "@/components/usage/UsageBadge";
+import { UpgradeModal } from "@/components/usage/UpgradeModal";
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -20,6 +22,8 @@ export default function JobDetail() {
   const [applications, setApplications] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<{ feature?: string; quotaExceeded?: boolean }>({});
 
   useEffect(() => {
     loadData();
@@ -61,11 +65,24 @@ export default function JobDetail() {
   const generateShortlist = async () => {
     setGenerating(true);
     try {
-      const { error } = await supabase.functions.invoke('generate-shortlist', {
+      const { data, error } = await supabase.functions.invoke('generate-shortlist', {
         body: { jobId: id }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's an entitlement or quota error
+        const errorMsg = error.message || '';
+        if (errorMsg.includes('Upgrade required') || errorMsg.includes('needed_feature')) {
+          setUpgradeReason({ feature: 'AI Shortlist' });
+          setUpgradeModalOpen(true);
+          return;
+        } else if (errorMsg.includes('Quota exceeded') || errorMsg.includes('limit reached')) {
+          setUpgradeReason({ quotaExceeded: true });
+          setUpgradeModalOpen(true);
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Shortlist generated!",
@@ -91,14 +108,22 @@ export default function JobDetail() {
       <Navbar userRole="recruiter" />
       
       <main className="container mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/dashboard')}
-          className="mb-6 gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Button>
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/dashboard')}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Button>
+
+          <div className="flex gap-2">
+            <UsageBadge metric="ai_shortlist" label="Shortlists" />
+            <UsageBadge metric="bias_runs" label="Bias Reports" />
+            <UsageBadge metric="marketing_runs" label="Marketing" />
+          </div>
+        </div>
 
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">
@@ -228,6 +253,13 @@ export default function JobDetail() {
           </div>
         </div>
       </main>
+
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        feature={upgradeReason.feature}
+        quotaExceeded={upgradeReason.quotaExceeded}
+      />
     </div>
   );
 }

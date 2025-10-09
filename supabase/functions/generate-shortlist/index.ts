@@ -49,19 +49,70 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) throw new Error('Unauthorized');
 
-    // Rate limit check
-    if (!checkRateLimit(user.id)) {
-      throw new Error('Rate limit exceeded. Maximum 5 shortlists per hour.');
-    }
-
-    // Get job details
+    // Get job details with org_id
     const { data: job, error: jobError } = await supabase
       .from('jobs')
-      .select('*')
+      .select('*, org_id')
       .eq('id', jobId)
       .single();
 
     if (jobError) throw jobError;
+
+    // Check entitlement
+    const { data: entitlement } = await supabase
+      .from('entitlements')
+      .select('enabled')
+      .eq('org_id', job.org_id)
+      .eq('feature', 'feature_basic_shortlist')
+      .maybeSingle();
+
+    if (!entitlement?.enabled) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Upgrade required',
+          needed_feature: 'feature_basic_shortlist',
+          message: 'AI Shortlist feature is not enabled for your plan. Upgrade to unlock.'
+        }),
+        { 
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check and increment usage
+    const { data: usageResult, error: usageError } = await supabase.rpc('increment_usage', {
+      _org_id: job.org_id,
+      _metric: 'ai_shortlist'
+    });
+
+    if (usageError) {
+      console.error('Usage tracking error:', usageError);
+    }
+
+    // Check if quota exceeded (we increment first to get accurate count)
+    if (usageResult && usageResult[0]) {
+      const { count, limit_value } = usageResult[0];
+      if (count > limit_value) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Quota exceeded',
+            message: `Daily shortlist limit reached (${limit_value}/day). Upgrade or try again tomorrow.`,
+            quota: limit_value,
+            used: count
+          }),
+          { 
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
+
+    // Rate limit check (per user)
+    if (!checkRateLimit(user.id)) {
+      throw new Error('Rate limit exceeded. Maximum 5 shortlists per hour.');
+    }
 
     // Get all candidates with resumes
     const { data: candidates, error: candidatesError } = await supabase

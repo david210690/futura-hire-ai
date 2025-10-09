@@ -29,6 +29,65 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) throw new Error('Unauthorized');
 
+    // Get candidate's org via user
+    const { data: orgMember } = await supabase
+      .from('org_members')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!orgMember) throw new Error('No organization found');
+
+    // Check entitlement
+    const { data: entitlement } = await supabase
+      .from('entitlements')
+      .select('enabled')
+      .eq('org_id', orgMember.org_id)
+      .eq('feature', 'feature_career_coach')
+      .maybeSingle();
+
+    if (!entitlement?.enabled) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Upgrade required',
+          needed_feature: 'feature_career_coach',
+          message: 'Career Coach feature requires an upgrade.'
+        }),
+        { 
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Check and increment usage
+    const { data: usageResult, error: usageError } = await supabase.rpc('increment_usage', {
+      _org_id: orgMember.org_id,
+      _metric: 'coach_runs'
+    });
+
+    if (usageError) {
+      console.error('Usage tracking error:', usageError);
+    }
+
+    if (usageResult && usageResult[0]) {
+      const { count, limit_value } = usageResult[0];
+      if (count > limit_value) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Quota exceeded',
+            message: `Daily career coach limit reached (${limit_value}/day). Try again tomorrow.`,
+            quota: limit_value,
+            used: count
+          }),
+          { 
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
+
     // Rate limit: 2 runs per hour
     const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await supabase

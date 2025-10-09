@@ -334,6 +334,41 @@ export type Database = {
           },
         ]
       }
+      entitlements: {
+        Row: {
+          enabled: boolean
+          feature: string
+          id: string
+          org_id: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          feature: string
+          id?: string
+          org_id: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          feature?: string
+          id?: string
+          org_id?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entitlements_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_questions: {
         Row: {
           created_at: string | null
@@ -616,6 +651,41 @@ export type Database = {
           },
         ]
       }
+      usage_counters: {
+        Row: {
+          count: number
+          day: string
+          id: string
+          metric: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          count?: number
+          day?: string
+          id?: string
+          metric: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          count?: number
+          day?: string
+          id?: string
+          metric?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_counters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -760,6 +830,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_entitlement: {
+        Args: { _feature: string; _org_id: string }
+        Returns: {
+          enabled: boolean
+          value: string
+        }[]
+      }
+      get_usage: {
+        Args: { _day?: string; _metric: string; _org_id: string }
+        Returns: number
+      }
       has_org_role: {
         Args: {
           _org_id: string
@@ -774,6 +855,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_usage: {
+        Args: { _metric: string; _org_id: string }
+        Returns: {
+          count: number
+          limit_value: number
+          remaining: number
+        }[]
       }
       is_org_admin: {
         Args: { _org_id: string; _user_id: string }
