@@ -167,6 +167,320 @@ export type Database = {
           },
         ]
       }
+      assessment_questions: {
+        Row: {
+          assessment_id: string
+          id: string
+          order_index: number
+          question_id: string
+          section_id: string | null
+        }
+        Insert: {
+          assessment_id: string
+          id?: string
+          order_index: number
+          question_id: string
+          section_id?: string | null
+        }
+        Update: {
+          assessment_id?: string
+          id?: string
+          order_index?: number
+          question_id?: string
+          section_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_questions_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_questions_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_reports: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          id: string
+          summary: Json
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          id?: string
+          summary: Json
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          id?: string
+          summary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_reports_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_sections: {
+        Row: {
+          assessment_id: string
+          id: string
+          title: string
+          weight: number
+        }
+        Insert: {
+          assessment_id: string
+          id?: string
+          title: string
+          weight?: number
+        }
+        Update: {
+          assessment_id?: string
+          id?: string
+          title?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_sections_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessments: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          name: string
+          org_id: string
+          passing_score: number
+          purpose: Database["public"]["Enums"]["assessment_purpose"]
+          shuffle: boolean
+          total_points: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name: string
+          org_id: string
+          passing_score?: number
+          purpose: Database["public"]["Enums"]["assessment_purpose"]
+          shuffle?: boolean
+          total_points?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name?: string
+          org_id?: string
+          passing_score?: number
+          purpose?: Database["public"]["Enums"]["assessment_purpose"]
+          shuffle?: boolean
+          total_points?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          application_id: string | null
+          assessment_id: string
+          candidate_id: string | null
+          created_at: string
+          due_at: string | null
+          id: string
+          job_id: string | null
+          status: Database["public"]["Enums"]["assignment_status"]
+        }
+        Insert: {
+          application_id?: string | null
+          assessment_id: string
+          candidate_id?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          job_id?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+        }
+        Update: {
+          application_id?: string | null
+          assessment_id?: string
+          candidate_id?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          job_id?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attempt_answers: {
+        Row: {
+          ai_feedback: string | null
+          attempt_id: string
+          auto_score: number | null
+          id: string
+          is_flagged: boolean | null
+          question_id: string
+          response: Json
+        }
+        Insert: {
+          ai_feedback?: string | null
+          attempt_id: string
+          auto_score?: number | null
+          id?: string
+          is_flagged?: boolean | null
+          question_id: string
+          response: Json
+        }
+        Update: {
+          ai_feedback?: string | null
+          attempt_id?: string
+          auto_score?: number | null
+          id?: string
+          is_flagged?: boolean | null
+          question_id?: string
+          response?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempt_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attempt_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attempts: {
+        Row: {
+          ai_grade: number | null
+          assignment_id: string
+          final_grade: number | null
+          human_override_grade: number | null
+          id: string
+          ip_addr: string | null
+          pass: boolean | null
+          proctor_score: number | null
+          started_at: string
+          submitted_at: string | null
+          time_spent_seconds: number | null
+          ua: string | null
+        }
+        Insert: {
+          ai_grade?: number | null
+          assignment_id: string
+          final_grade?: number | null
+          human_override_grade?: number | null
+          id?: string
+          ip_addr?: string | null
+          pass?: boolean | null
+          proctor_score?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          time_spent_seconds?: number | null
+          ua?: string | null
+        }
+        Update: {
+          ai_grade?: number | null
+          assignment_id?: string
+          final_grade?: number | null
+          human_override_grade?: number | null
+          id?: string
+          ip_addr?: string | null
+          pass?: boolean | null
+          proctor_score?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          time_spent_seconds?: number | null
+          ua?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempts_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -707,6 +1021,41 @@ export type Database = {
           },
         ]
       }
+      imports: {
+        Row: {
+          created_at: string
+          file_url: string
+          format: Database["public"]["Enums"]["import_format"]
+          id: string
+          org_id: string
+          parsed: Json | null
+        }
+        Insert: {
+          created_at?: string
+          file_url: string
+          format: Database["public"]["Enums"]["import_format"]
+          id?: string
+          org_id: string
+          parsed?: Json | null
+        }
+        Update: {
+          created_at?: string
+          file_url?: string
+          format?: Database["public"]["Enums"]["import_format"]
+          id?: string
+          org_id?: string
+          parsed?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "imports_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_questions: {
         Row: {
           created_at: string | null
@@ -1126,6 +1475,38 @@ export type Database = {
           },
         ]
       }
+      proctor_events: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          kind: string
+          meta: Json | null
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          meta?: Json | null
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          meta?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proctor_events_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "attempts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pulse_checks: {
         Row: {
           created_at: string
@@ -1157,6 +1538,62 @@ export type Database = {
             columns: ["hire_id"]
             isOneToOne: false
             referencedRelation: "hires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_bank: {
+        Row: {
+          answer_key: Json | null
+          created_at: string
+          difficulty: Database["public"]["Enums"]["question_difficulty"]
+          id: string
+          options: Json | null
+          org_id: string
+          points: number
+          question: string
+          role_tag: string | null
+          rubric: Json | null
+          skill_tags: string[] | null
+          source: Database["public"]["Enums"]["question_source"]
+          type: Database["public"]["Enums"]["question_type"]
+        }
+        Insert: {
+          answer_key?: Json | null
+          created_at?: string
+          difficulty: Database["public"]["Enums"]["question_difficulty"]
+          id?: string
+          options?: Json | null
+          org_id: string
+          points?: number
+          question: string
+          role_tag?: string | null
+          rubric?: Json | null
+          skill_tags?: string[] | null
+          source?: Database["public"]["Enums"]["question_source"]
+          type: Database["public"]["Enums"]["question_type"]
+        }
+        Update: {
+          answer_key?: Json | null
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["question_difficulty"]
+          id?: string
+          options?: Json | null
+          org_id?: string
+          points?: number
+          question?: string
+          role_tag?: string | null
+          rubric?: Json | null
+          skill_tags?: string[] | null
+          source?: Database["public"]["Enums"]["question_source"]
+          type?: Database["public"]["Enums"]["question_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bank_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
         ]
@@ -1804,14 +2241,25 @@ export type Database = {
       achievement_kind: "candidate" | "recruiter"
       app_role: "recruiter" | "candidate" | "admin"
       application_status: "shortlisted" | "review" | "rejected" | "hired"
+      assessment_purpose: "screening" | "skills" | "culture" | "coding"
+      assignment_status:
+        | "pending"
+        | "invited"
+        | "started"
+        | "submitted"
+        | "graded"
+        | "expired"
       culture_event_source: "hire" | "reject" | "interview"
       employment_type: "full-time" | "part-time" | "contract" | "internship"
       hire_decision: "yes" | "no" | "maybe"
       hire_status: "active" | "exited"
+      import_format: "pdf" | "csv" | "json"
       job_status: "open" | "closed"
       leaderboard_period: "weekly" | "monthly"
       org_role: "owner" | "admin" | "recruiter" | "viewer"
+      question_difficulty: "easy" | "medium" | "hard"
       question_source: "auto" | "manual"
+      question_type: "mcq" | "free_text" | "coding"
       retention_horizon: "30d" | "60d" | "90d"
       seniority_level: "entry" | "mid" | "senior" | "lead" | "executive"
       streak_kind: "candidate" | "recruiter"
@@ -1945,14 +2393,26 @@ export const Constants = {
       achievement_kind: ["candidate", "recruiter"],
       app_role: ["recruiter", "candidate", "admin"],
       application_status: ["shortlisted", "review", "rejected", "hired"],
+      assessment_purpose: ["screening", "skills", "culture", "coding"],
+      assignment_status: [
+        "pending",
+        "invited",
+        "started",
+        "submitted",
+        "graded",
+        "expired",
+      ],
       culture_event_source: ["hire", "reject", "interview"],
       employment_type: ["full-time", "part-time", "contract", "internship"],
       hire_decision: ["yes", "no", "maybe"],
       hire_status: ["active", "exited"],
+      import_format: ["pdf", "csv", "json"],
       job_status: ["open", "closed"],
       leaderboard_period: ["weekly", "monthly"],
       org_role: ["owner", "admin", "recruiter", "viewer"],
+      question_difficulty: ["easy", "medium", "hard"],
       question_source: ["auto", "manual"],
+      question_type: ["mcq", "free_text", "coding"],
       retention_horizon: ["30d", "60d", "90d"],
       seniority_level: ["entry", "mid", "senior", "lead", "executive"],
       streak_kind: ["candidate", "recruiter"],

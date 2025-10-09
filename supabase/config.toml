@@ -1,5 +1,14 @@
 project_id = "yruxfucwryumxlonzahs"
 
+[functions.generate-assessment]
+verify_jwt = true
+
+[functions.grade-assessment]
+verify_jwt = false
+
+[functions.submit-attempt]
+verify_jwt = true
+
 [functions.parse-resume]
 verify_jwt = true
 
