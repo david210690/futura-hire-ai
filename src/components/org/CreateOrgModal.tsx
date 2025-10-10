@@ -57,9 +57,20 @@ export const CreateOrgModal = ({ open, onOpenChange, onSuccess }: CreateOrgModal
 
       if (memberError) throw memberError;
 
+      // Create default company for the org
+      const { error: companyError } = await supabase
+        .from('companies')
+        .insert({
+          name: orgName, // Use org name as default company name
+          created_by: user.id,
+          org_id: newOrg.id,
+        });
+
+      if (companyError) throw companyError;
+
       toast({
         title: "Organization created!",
-        description: "You can now invite team members and create jobs.",
+        description: "You're all set to start hiring.",
       });
 
       // Store as current org
@@ -68,11 +79,17 @@ export const CreateOrgModal = ({ open, onOpenChange, onSuccess }: CreateOrgModal
       setOrgName("");
       onOpenChange(false);
       
-      if (onSuccess) {
-        onSuccess();
+      // Navigate based on role
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (userRole?.role === 'recruiter') {
+        navigate('/dashboard');
       } else {
-        // Reload to switch to new org
-        window.location.reload();
+        navigate('/candidate/dashboard');
       }
     } catch (error: any) {
       toast({
