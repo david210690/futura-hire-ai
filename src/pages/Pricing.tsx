@@ -90,14 +90,39 @@ export default function Pricing() {
 
   const handlePlanClick = async (planId: string) => {
     if (!BILLING_CONFIG.enabled) {
-      // Demo mode: Request Access flow
-      setSelectedPlan(planId);
-      setShowWaitlist(true);
+      // Demo mode: Grant full access immediately
+      try {
+        if (!currentOrg) {
+          toast({
+            title: "Please sign in",
+            description: "You need to be signed in to access features.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+
+        await grantDemoEntitlements(currentOrg.id);
+        
+        toast({
+          title: "Access Granted! 🎉",
+          description: `Full access to ${planId} plan features activated.`,
+        });
+
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Error granting access:", error);
+        toast({
+          title: "Error",
+          description: "Failed to grant access. Please try again.",
+          variant: "destructive",
+        });
+      }
     } else {
       // Real billing mode: Open Razorpay checkout
       toast({
         title: "Coming soon",
-        description: "Razorpay integration will be available soon.",
+        description: "Payment integration will be available soon.",
       });
     }
   };
@@ -205,7 +230,7 @@ export default function Pricing() {
                   variant={plan.popular ? "default" : "outline"}
                   size="lg"
                 >
-                  {!BILLING_CONFIG.enabled ? "Request Access" : plan.cta}
+                  {plan.cta}
                 </Button>
               </Card>
             );

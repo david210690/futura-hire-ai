@@ -36,8 +36,13 @@ serve(async (req) => {
 
     const { threadId, message, orgId, jobId, candidateId } = await req.json();
 
-    // Check usage limits
-    const { data: usageData } = await supabase.rpc('increment_usage', {
+    // Check usage limits with service role key to bypass RLS
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: usageData } = await adminClient.rpc('increment_usage', {
       _org_id: orgId,
       _metric: 'copilot_calls'
     });
@@ -49,10 +54,10 @@ serve(async (req) => {
       });
     }
 
-    // Get or create thread
+    // Get or create thread using admin client
     let currentThreadId = threadId;
     if (!currentThreadId) {
-      const { data: newThread, error: threadError } = await supabase
+      const { data: newThread, error: threadError } = await adminClient
         .from('copilot_threads')
         .insert({ org_id: orgId, user_id: user.id, title: message.slice(0, 50) })
         .select()
@@ -62,21 +67,21 @@ serve(async (req) => {
       currentThreadId = newThread.id;
     }
 
-    // Save user message
-    await supabase.from('copilot_messages').insert({
+    // Save user message using admin client
+    await adminClient.from('copilot_messages').insert({
       thread_id: currentThreadId,
       role: 'user',
       content: message
     });
 
-    // Assemble context
-    const context = await assembleContext(supabase, orgId, jobId, candidateId);
+    // Assemble context using admin client
+    const context = await assembleContext(adminClient, orgId, jobId, candidateId);
 
     // Call Lovable AI with tool calling
-    const response = await callCopilotAI(message, context, supabase, orgId, user.id, jobId, candidateId);
+    const response = await callCopilotAI(message, context, adminClient, orgId, user.id, jobId, candidateId);
 
-    // Save assistant response
-    await supabase.from('copilot_messages').insert({
+    // Save assistant response using admin client
+    await adminClient.from('copilot_messages').insert({
       thread_id: currentThreadId,
       role: 'assistant',
       content: response.answer
