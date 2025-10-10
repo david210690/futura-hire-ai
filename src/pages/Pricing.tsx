@@ -143,7 +143,7 @@ export default function Pricing() {
         
         await createCheckoutSession({
           orgId: currentOrg.id,
-          plan: planId as 'pro' | 'team' | 'enterprise',
+          plan: planId as 'pro' | 'team',  // Enterprise handled separately
           onSuccess: () => {
             toast({
               title: "Payment Successful! 🎉",

@@ -9,7 +9,7 @@ declare global {
 
 export interface CheckoutOptions {
   orgId: string;
-  plan: 'pro' | 'team' | 'enterprise';
+  plan: 'pro' | 'team';  // Enterprise handled via contact sales
   onSuccess?: () => void;
   onFailure?: (error: any) => void;
 }
