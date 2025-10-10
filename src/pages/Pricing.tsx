@@ -32,7 +32,7 @@ const plans = [
     name: "Pro",
     planId: "pro",
     icon: Building2,
-    price: "₹4,999",
+    price: "₹2,999",
     period: "/month",
     description: "For growing teams",
     features: [
@@ -58,7 +58,7 @@ const plans = [
     description: "For large organizations",
     features: [
       "Everything in Pro",
-      "Unlimited users",
+      "Up to 10 users",
       "Advanced analytics",
       "Custom integrations",
       "Dedicated account manager",

@@ -35,10 +35,12 @@ const plans = [
   },
   {
     name: "Team",
-    price: "₹7,999",
+    price: "₹9,999",
     period: "/month",
     description: "For larger organizations",
     features: [
+      "Everything in Pro",
+      "Up to 10 users",
       "Culture DNA mapping",
       "Video interview rules",
       "Gamification dashboard",
