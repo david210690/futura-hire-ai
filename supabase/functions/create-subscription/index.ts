@@ -28,14 +28,10 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { org_id, plan, quantity = 1 } = await req.json();
+    const { org_id, plan } = await req.json();
     
     if (!org_id || !plan) {
       throw new Error('Missing required fields: org_id, plan');
-    }
-    
-    if (quantity < 1) {
-      throw new Error('Quantity must be at least 1');
     }
 
     // Verify user is org member
@@ -76,13 +72,11 @@ serve(async (req) => {
       body: JSON.stringify({
         plan_id: razorpayPlanId,
         total_count: 12, // 12 months
-        quantity: quantity, // Number of users for team plan
         customer_notify: 1,
         notes: {
           org_id,
           plan,
           user_id: user.id,
-          quantity: quantity,
         }
       })
     });

@@ -10,7 +10,6 @@ declare global {
 export interface CheckoutOptions {
   orgId: string;
   plan: 'pro' | 'team';  // Enterprise handled via contact sales
-  quantity?: number; // Number of users for team plan
   onSuccess?: () => void;
   onFailure?: (error: any) => void;
 }
@@ -27,7 +26,7 @@ export interface CandidateOrderOptions {
  * Create a Razorpay subscription checkout session for an organization
  */
 export async function createCheckoutSession(options: CheckoutOptions) {
-  const { orgId, plan, quantity = 1, onSuccess, onFailure } = options;
+  const { orgId, plan, onSuccess, onFailure } = options;
 
   try {
     // Check if billing is properly configured
@@ -37,7 +36,7 @@ export async function createCheckoutSession(options: CheckoutOptions) {
 
     // Call edge function to create Razorpay subscription
     const { data, error } = await supabase.functions.invoke('create-subscription', {
-      body: { org_id: orgId, plan, quantity }
+      body: { org_id: orgId, plan }
     });
 
     if (error) throw error;
