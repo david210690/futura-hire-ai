@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,7 +16,6 @@ serve(async (req) => {
       throw new Error("RESEND_API_KEY not configured");
     }
 
-    const resend = new Resend(RESEND_API_KEY);
     const { type, email, data } = await req.json();
 
     let emailContent;
@@ -102,11 +100,26 @@ serve(async (req) => {
       throw new Error("Unknown email type");
     }
 
-    const result = await resend.emails.send(emailContent);
-    console.log("Email sent successfully:", result);
+    // Send email using Resend API via fetch
+    const result = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(emailContent),
+    });
+
+    if (!result.ok) {
+      const errorText = await result.text();
+      throw new Error(`Resend API error: ${errorText}`);
+    }
+
+    const responseData = await result.json();
+    console.log("Email sent successfully:", responseData);
 
     return new Response(
-      JSON.stringify({ success: true, result }),
+      JSON.stringify({ success: true, result: responseData }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
