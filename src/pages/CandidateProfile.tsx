@@ -16,6 +16,8 @@ export default function CandidateProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [parsedData, setParsedData] = useState<any>(null);
+  const [availableJobs, setAvailableJobs] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -139,6 +141,19 @@ export default function CandidateProfile() {
       });
 
       if (parseError) throw parseError;
+
+      setParsedData(parseData);
+
+      // Fetch available jobs
+      const { data: jobs } = await supabase
+        .from('jobs')
+        .select('*, companies(name)')
+        .eq('status', 'open')
+        .limit(10);
+
+      if (jobs) {
+        setAvailableJobs(jobs);
+      }
 
       toast({
         title: "Resume uploaded",
@@ -270,20 +285,77 @@ export default function CandidateProfile() {
                 <CardDescription>Upload your resume for AI parsing</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="resume">Upload Resume (PDF or DOCX)</Label>
-                  <Input
-                    id="resume"
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleResumeUpload}
-                    disabled={uploadingResume}
-                  />
-                  {uploadingResume && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Uploading and parsing resume...
-                    </p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="resume">Upload Resume (PDF or DOCX)</Label>
+                    <Input
+                      id="resume"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleResumeUpload}
+                      disabled={uploadingResume}
+                    />
+                    {uploadingResume && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploading and parsing resume...
+                      </p>
+                    )}
+                  </div>
+
+                  {parsedData && (
+                    <div className="space-y-4 p-4 bg-muted rounded-lg">
+                      <h3 className="font-semibold text-sm">Parsed Resume Data</h3>
+                      <div className="space-y-2 text-sm">
+                        {parsedData.name && (
+                          <div>
+                            <span className="font-medium">Name:</span> {parsedData.name}
+                          </div>
+                        )}
+                        {parsedData.email && (
+                          <div>
+                            <span className="font-medium">Email:</span> {parsedData.email}
+                          </div>
+                        )}
+                        {parsedData.skills && parsedData.skills.length > 0 && (
+                          <div>
+                            <span className="font-medium">Skills:</span> {parsedData.skills.join(', ')}
+                          </div>
+                        )}
+                        {parsedData.experience && (
+                          <div>
+                            <span className="font-medium">Experience:</span> {parsedData.experience} years
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {availableJobs.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm">Available Job Openings</h3>
+                      <div className="space-y-2">
+                        {availableJobs.map((job) => (
+                          <div 
+                            key={job.id}
+                            className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                            onClick={() => navigate(`/jobs/${job.id}`)}
+                          >
+                            <div className="font-medium">{job.title}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {job.companies?.name} • {job.location}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => navigate('/candidate/dashboard')}
+                      >
+                        View All Jobs
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>
