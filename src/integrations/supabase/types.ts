@@ -2239,6 +2239,10 @@ export type Database = {
         }
         Returns: string
       }
+      shares_org_with: {
+        Args: { _other_user_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       achievement_kind: "candidate" | "recruiter"
