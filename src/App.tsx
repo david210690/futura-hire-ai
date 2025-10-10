@@ -20,6 +20,10 @@ import OrgSettingsPage from "./pages/OrgSettingsPage";
 import RoleDesigner from "./pages/RoleDesigner";
 import BillingSettings from "./pages/BillingSettings";
 import ShareableShortlist from "./pages/ShareableShortlist";
+import CareersPage from "./pages/careers/CareersPage";
+import JobDetailPage from "./pages/careers/JobDetailPage";
+import ApplyPage from "./pages/careers/ApplyPage";
+import ApplicationStatusPage from "./pages/careers/ApplicationStatusPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +52,13 @@ const App = () => (
           <Route path="/billing" element={<BillingSettings />} />
           <Route path="/role-designer" element={<RoleDesigner />} />
           <Route path="/s/:token" element={<ShareableShortlist />} />
+          
+          {/* Candidate-facing career pages */}
+          <Route path="/c/:orgSlug" element={<CareersPage />} />
+          <Route path="/c/:orgSlug/jobs/:jobSlug" element={<JobDetailPage />} />
+          <Route path="/c/:orgSlug/jobs/:jobSlug/apply" element={<ApplyPage />} />
+          <Route path="/c/:orgSlug/apply/status/:token" element={<ApplicationStatusPage />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
