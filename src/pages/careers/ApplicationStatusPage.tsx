@@ -185,16 +185,20 @@ export default function ApplicationStatusPage() {
               <p className="text-muted-foreground mb-4">
                 {nextAction === "assessment"
                   ? "Complete your AI-powered assessment to move forward."
-                  : "Record your video introduction to complete your application."}
+                  : nextAction === "video"
+                  ? "Record your video introduction to complete your application."
+                  : "Your application is being reviewed."}
               </p>
-              <Button
-                size="lg"
-                onClick={() =>
-                  navigate(`/c/${orgSlug}/apply/${nextAction}/${token}`)
-                }
-              >
-                {nextActionLabel}
-              </Button>
+              {nextActionLabel && (
+                <Button
+                  size="lg"
+                  onClick={() =>
+                    navigate(`/c/${orgSlug}/apply/${nextAction}/${token}`)
+                  }
+                >
+                  {nextActionLabel}
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

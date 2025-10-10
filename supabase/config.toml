@@ -80,3 +80,6 @@ verify_jwt = true
 
 [functions.get-candidate-status]
 verify_jwt = false
+
+[functions.submit-attempt]
+verify_jwt = false

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Briefcase, MapPin, Clock, Video, FileText, Users, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SEOHead } from "@/components/shared/SEOHead";
 
 export default function JobDetailPage() {
   const { orgSlug, jobSlug } = useParams();
@@ -69,6 +70,10 @@ export default function JobDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${job.title} at ${job.companies?.name || job.orgs?.name}`}
+        description={`Apply for ${job.title} position. ${job.location} • ${job.employment_type}`}
+      />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Back Button */}
         <Button

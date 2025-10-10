@@ -65,6 +65,27 @@ serve(async (req) => {
       throw new Error("Failed to create or find candidate");
     }
 
+    // Parse resume if provided
+    if (candidateData.resumeText) {
+      try {
+        const { data: parseData } = await supabase.functions.invoke(
+          "parse-resume",
+          { body: { resumeText: candidateData.resumeText } }
+        );
+        if (parseData) {
+          await supabase
+            .from("candidates")
+            .update({
+              skills: parseData.skills?.join(", ") || candidateData.skills || "",
+              years_experience: parseData.years_experience || candidateData.yearsExperience || 0,
+            })
+            .eq("id", candidate.id);
+        }
+      } catch (error) {
+        console.error("Resume parsing error:", error);
+      }
+    }
+
     // Create application
     const { data: application, error: appError } = await supabase
       .from("applications")
@@ -74,6 +95,7 @@ serve(async (req) => {
         candidate_id: candidate.id,
         status: job.default_assessment_id ? "assessment_pending" : "review",
         video_required: job.video_required || false,
+        stage: job.default_assessment_id ? "assessment_pending" : "applied",
       })
       .select()
       .single();

@@ -24,6 +24,8 @@ import CareersPage from "./pages/careers/CareersPage";
 import JobDetailPage from "./pages/careers/JobDetailPage";
 import ApplyPage from "./pages/careers/ApplyPage";
 import ApplicationStatusPage from "./pages/careers/ApplicationStatusPage";
+import TakeAssessmentPage from "./pages/careers/TakeAssessmentPage";
+import RecordVideoPage from "./pages/careers/RecordVideoPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +60,8 @@ const App = () => (
           <Route path="/c/:orgSlug/jobs/:jobSlug" element={<JobDetailPage />} />
           <Route path="/c/:orgSlug/jobs/:jobSlug/apply" element={<ApplyPage />} />
           <Route path="/c/:orgSlug/apply/status/:token" element={<ApplicationStatusPage />} />
+          <Route path="/c/:orgSlug/apply/assessment/:token" element={<TakeAssessmentPage />} />
+          <Route path="/c/:orgSlug/apply/video/:token" element={<RecordVideoPage />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, MapPin, Search, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SEOHead } from "@/components/shared/SEOHead";
 
 export default function CareersPage() {
   const { orgSlug } = useParams();
@@ -76,6 +77,10 @@ export default function CareersPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${org.name} Careers`}
+        description={`Join our team at ${org.name}. Explore open positions and apply today.`}
+      />
       {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">
         <div className="container mx-auto px-4 py-16 max-w-6xl">
