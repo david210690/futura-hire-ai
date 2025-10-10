@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Copy, Briefcase, CheckCircle2, Lock } from "lucide-react";
+import { Loader2, Copy, Briefcase, CheckCircle2, Lock, ArrowLeft } from "lucide-react";
 
 export default function RoleDesigner() {
   const navigate = useNavigate();
@@ -118,6 +118,15 @@ export default function RoleDesigner() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
+      <Button
+        variant="ghost"
+        onClick={() => navigate('/dashboard')}
+        className="mb-4"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Dashboard
+      </Button>
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Role Designer</h1>
         <p className="text-muted-foreground">
