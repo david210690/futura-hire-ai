@@ -86,18 +86,53 @@ export const PlanPickerModal = ({ open, onOpenChange, orgId }: PlanPickerModalPr
 
     setLoading(true);
     
-    // For now, show coming soon toast
-    // When billing is enabled, this will call createCheckoutSession
-    toast({
-      title: "Coming Soon",
-      description: "Payment integration will be available soon. Join our waitlist!",
-    });
+    try {
+      const { BILLING_CONFIG } = await import("@/lib/entitlements");
+      
+      if (!BILLING_CONFIG.enabled) {
+        toast({
+          title: "Coming Soon",
+          description: "Payment integration will be available soon.",
+        });
+        setTimeout(() => {
+          setLoading(false);
+          onOpenChange(false);
+          navigate('/pricing');
+        }, 1000);
+        return;
+      }
 
-    setTimeout(() => {
+      const { createCheckoutSession } = await import("@/lib/razorpay");
+      
+      await createCheckoutSession({
+        orgId,
+        plan: planId as 'pro' | 'team',
+        onSuccess: () => {
+          toast({
+            title: "Subscription Activated! 🎉",
+            description: `Welcome to ${planId.charAt(0).toUpperCase() + planId.slice(1)}! All features unlocked.`,
+          });
+          onOpenChange(false);
+          navigate('/dashboard');
+        },
+        onFailure: (error) => {
+          toast({
+            title: "Payment Failed",
+            description: error.message || "Please try again.",
+            variant: "destructive",
+          });
+          setLoading(false);
+        }
+      });
+    } catch (error) {
+      console.error("Plan selection error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process your request. Please try again.",
+        variant: "destructive",
+      });
       setLoading(false);
-      onOpenChange(false);
-      navigate('/pricing');
-    }, 1000);
+    }
   };
 
   return (

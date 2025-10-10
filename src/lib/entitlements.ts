@@ -13,7 +13,7 @@ export interface UsageCheck {
 
 // Get billing configuration from environment or defaults
 export const BILLING_CONFIG = {
-  enabled: import.meta.env.VITE_BILLING_ENABLED === 'true' || false,
+  enabled: import.meta.env.VITE_BILLING_ENABLED === 'true',
   razorpayMode: import.meta.env.VITE_RAZORPAY_MODE || 'test',
   razorpayKeyId: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
 };

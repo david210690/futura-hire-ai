@@ -18,6 +18,7 @@ import JobDetail from "./pages/JobDetail";
 import AdminMonitor from "./pages/AdminMonitor";
 import OrgSettingsPage from "./pages/OrgSettingsPage";
 import RoleDesigner from "./pages/RoleDesigner";
+import BillingSettings from "./pages/BillingSettings";
 import ShareableShortlist from "./pages/ShareableShortlist";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/admin/monitor" element={<AdminMonitor />} />
           <Route path="/org/settings" element={<OrgSettingsPage />} />
+          <Route path="/billing" element={<BillingSettings />} />
           <Route path="/role-designer" element={<RoleDesigner />} />
           <Route path="/s/:token" element={<ShareableShortlist />} />
           <Route path="*" element={<NotFound />} />

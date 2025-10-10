@@ -121,9 +121,9 @@ export default function JobDetail() {
           </Button>
 
           <div className="flex gap-2">
-            <UsageBadge metric="ai_shortlist" label="Shortlists" />
-            <UsageBadge metric="bias_runs" label="Bias Reports" />
-            <UsageBadge metric="marketing_runs" label="Marketing" />
+            <UsageBadge metric="ai_shortlist" label="Shortlists" limit={100} />
+            <UsageBadge metric="bias_runs" label="Bias Reports" limit={50} />
+            <UsageBadge metric="marketing_runs" label="Marketing" limit={50} />
           </div>
         </div>
 

@@ -10,6 +10,7 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { CopilotPanel } from "@/components/recruiter/CopilotPanel";
 import { TrialBanner } from "@/components/trial/TrialBanner";
 import { UpgradeFAB } from "@/components/trial/UpgradeFAB";
+import { GlobalCopilotFAB } from "@/components/copilot/GlobalCopilotFAB";
 import { expireTrialIfNeeded, getTrialStatus } from "@/lib/trial";
 
 export default function RecruiterDashboard() {
@@ -316,7 +317,10 @@ export default function RecruiterDashboard() {
       </div>
 
       {currentOrg?.id && (
-        <UpgradeFAB orgId={currentOrg.id} show={showUpgradeFAB} />
+        <>
+          <UpgradeFAB orgId={currentOrg.id} show={showUpgradeFAB} />
+          <GlobalCopilotFAB />
+        </>
       )}
     </div>
   );

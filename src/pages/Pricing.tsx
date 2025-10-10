@@ -101,20 +101,20 @@ export default function Pricing() {
   const [loading, setLoading] = useState(false);
 
   const handlePlanClick = async (planId: string) => {
+    if (!currentOrg) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to access features.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
     if (!BILLING_CONFIG.enabled) {
       // Demo mode: Grant full access with trial period
       try {
-        if (!currentOrg) {
-          toast({
-            title: "Please sign in",
-            description: "You need to be signed in to access features.",
-            variant: "destructive",
-          });
-          navigate("/auth");
-          return;
-        }
-
-        const selectedPlan = plans.find(p => p.name.toLowerCase() === planId);
+        const selectedPlan = plans.find(p => p.planId === planId);
         const trialDays = selectedPlan?.trialDays || 0;
 
         await grantDemoEntitlements(currentOrg.id);
@@ -122,8 +122,8 @@ export default function Pricing() {
         toast({
           title: "Access Granted! 🎉",
           description: trialDays > 0 
-            ? `${trialDays}-day free trial started for ${planId} plan!`
-            : `Full access to ${planId} plan activated.`,
+            ? `${trialDays}-day free trial started for ${selectedPlan?.name} plan!`
+            : `Full access to ${selectedPlan?.name} plan activated.`,
         });
 
         navigate("/dashboard");
@@ -137,10 +137,38 @@ export default function Pricing() {
       }
     } else {
       // Real billing mode: Open Razorpay checkout
-      toast({
-        title: "Coming soon",
-        description: "Payment integration will be available soon.",
-      });
+      setLoading(true);
+      try {
+        const { createCheckoutSession } = await import("@/lib/razorpay");
+        
+        await createCheckoutSession({
+          orgId: currentOrg.id,
+          plan: planId as 'pro' | 'team' | 'enterprise',
+          onSuccess: () => {
+            toast({
+              title: "Payment Successful! 🎉",
+              description: "Your subscription is now active. Enjoy unlimited features!",
+            });
+            navigate("/dashboard");
+          },
+          onFailure: (error) => {
+            toast({
+              title: "Payment Failed",
+              description: error.message || "Please try again or contact support.",
+              variant: "destructive",
+            });
+          }
+        });
+      } catch (error) {
+        console.error("Checkout error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to initiate checkout. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
