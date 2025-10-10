@@ -11,14 +11,33 @@ import { format } from "date-fns";
 
 export default function BillingSettings() {
   const navigate = useNavigate();
-  const { currentOrg } = useCurrentOrg();
+  const { currentOrg, loading: orgLoading } = useCurrentOrg();
   const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadBillingData = async () => {
-      if (!currentOrg) return;
+    const checkAuthAndLoadData = async () => {
+      // Check authentication first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+
+      if (orgLoading || !currentOrg) {
+        setLoading(false);
+        return;
+      }
+
+      await loadBillingData();
+    };
+
+    checkAuthAndLoadData();
+  }, [currentOrg, orgLoading, navigate]);
+
+  const loadBillingData = async () => {
+    if (!currentOrg) return;
 
       try {
         const status = await getTrialStatus(currentOrg.id);
@@ -38,9 +57,6 @@ export default function BillingSettings() {
         setLoading(false);
       }
     };
-
-    loadBillingData();
-  }, [currentOrg]);
 
   if (loading) {
     return (
