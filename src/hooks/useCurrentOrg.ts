@@ -23,34 +23,59 @@ export const useCurrentOrg = () => {
   const [loading, setLoading] = useState(true);
 
   const loadOrgs = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      // Get all org memberships
+      const { data: memberships, error: memberError } = await supabase
+        .from('org_members')
+        .select('org_id, role')
+        .eq('user_id', user.id);
+
+      if (memberError) {
+        console.error('Error loading memberships:', memberError);
+        setLoading(false);
+        return;
+      }
+
+      if (memberships && memberships.length > 0) {
+        // Get org details separately
+        const orgIds = memberships.map(m => m.org_id);
+        const { data: orgsData, error: orgsError } = await supabase
+          .from('orgs')
+          .select('*')
+          .in('id', orgIds);
+
+        if (orgsError) {
+          console.error('Error loading orgs:', orgsError);
+          setLoading(false);
+          return;
+        }
+
+        setOrgs(orgsData || []);
+
+        // Get stored org preference or use first org
+        const storedOrgId = localStorage.getItem('currentOrgId');
+        const selectedOrg = storedOrgId 
+          ? orgsData?.find(o => o.id === storedOrgId) || orgsData?.[0]
+          : orgsData?.[0];
+
+        if (selectedOrg) {
+          setCurrentOrg(selectedOrg);
+          const membership = memberships.find(m => m.org_id === selectedOrg.id);
+          setCurrentRole(membership?.role || null);
+        }
+      }
+
       setLoading(false);
-      return;
+    } catch (error) {
+      console.error('Error in loadOrgs:', error);
+      setLoading(false);
     }
-
-    // Get all orgs user is member of
-    const { data: memberships } = await supabase
-      .from('org_members')
-      .select('org_id, role, orgs(*)')
-      .eq('user_id', user.id);
-
-    if (memberships && memberships.length > 0) {
-      const userOrgs = memberships.map(m => m.orgs).filter(Boolean) as Org[];
-      setOrgs(userOrgs);
-
-      // Get stored org preference or use first org
-      const storedOrgId = localStorage.getItem('currentOrgId');
-      const selectedOrg = storedOrgId 
-        ? userOrgs.find(o => o.id === storedOrgId) || userOrgs[0]
-        : userOrgs[0];
-
-      setCurrentOrg(selectedOrg);
-      const membership = memberships.find(m => m.org_id === selectedOrg.id);
-      setCurrentRole(membership?.role || null);
-    }
-
-    setLoading(false);
   };
 
   const switchOrg = (orgId: string) => {

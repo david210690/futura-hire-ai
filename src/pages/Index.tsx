@@ -10,37 +10,50 @@ const Index = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate('/auth');
+          return;
+        }
 
-      // Check if user has any orgs
-      const { data: orgs } = await supabase
-        .from('org_members')
-        .select('org_id, orgs(*)')
-        .eq('user_id', session.user.id);
+        // Check if user has any orgs
+        const { data: memberships, error: memberError } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', session.user.id);
 
-      if (!orgs || orgs.length === 0) {
-        // No org, show create modal
+        if (memberError) {
+          console.error('Error checking memberships:', memberError);
+          setChecking(false);
+          setShowCreateOrg(true);
+          return;
+        }
+
+        if (!memberships || memberships.length === 0) {
+          // No org, show create modal
+          setChecking(false);
+          setShowCreateOrg(true);
+          return;
+        }
+
+        // Has org, redirect based on role
+        const { data: userRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        if (userRole?.role === 'recruiter') {
+          navigate('/dashboard');
+        } else {
+          navigate('/candidate/dashboard');
+        }
+      } catch (error) {
+        console.error('Error in checkAuth:', error);
         setChecking(false);
         setShowCreateOrg(true);
-        return;
-      }
-
-      // Has org, redirect based on role
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-
-      if (userRole?.role === 'recruiter') {
-        navigate('/dashboard');
-      } else {
-        navigate('/candidate/dashboard');
       }
     };
 
