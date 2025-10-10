@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, Eye, Edit, ArrowLeft } from "lucide-react";
+import { CandidateProfilePreview } from "@/components/candidate/CandidateProfilePreview";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CandidateProfile() {
   const [user, setUser] = useState<any>(null);
@@ -18,6 +20,7 @@ export default function CandidateProfile() {
   const [uploadingResume, setUploadingResume] = useState(false);
   const [parsedData, setParsedData] = useState<any>(null);
   const [availableJobs, setAvailableJobs] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -81,6 +84,7 @@ export default function CandidateProfile() {
           title: "Profile updated",
           description: "Your profile has been successfully updated.",
         });
+        setActiveTab("preview");
       } else {
         // Create new candidate
         const { data, error } = await supabase
@@ -99,6 +103,7 @@ export default function CandidateProfile() {
           title: "Profile created",
           description: "Your profile has been successfully created.",
         });
+        setActiveTab("preview");
       }
     } catch (error: any) {
       console.error('Error saving profile:', error);
@@ -188,15 +193,41 @@ export default function CandidateProfile() {
       
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/candidate/dashboard')}
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
           <h1 className="text-3xl font-bold mb-2">
-            {candidate ? 'Edit Profile' : 'Create Profile'}
+            {candidate ? 'My Profile' : 'Create Profile'}
           </h1>
           <p className="text-muted-foreground">
             Complete your profile to get better job matches
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {candidate && (
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "edit" | "preview")} className="mb-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="edit">
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Profile
+              </TabsTrigger>
+              <TabsTrigger value="preview">
+                <Eye className="mr-2 h-4 w-4" />
+                Preview
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+
+        {activeTab === "preview" && candidate ? (
+          <CandidateProfilePreview candidate={formData} />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
@@ -377,7 +408,8 @@ export default function CandidateProfile() {
               Cancel
             </Button>
           </div>
-        </form>
+          </form>
+        )}
       </main>
     </div>
   );
