@@ -44,12 +44,19 @@ export default function RecruiterDashboard() {
 
     setUser(userData);
 
-    // Load company for this org
-    const { data: companyData } = await supabase
+    // Load company for this org - get the first one
+    const { data: companies, error: companyError } = await supabase
       .from('companies')
       .select('*')
       .eq('org_id', currentOrg.id)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (companyError) {
+      console.error('Error loading company:', companyError);
+    }
+
+    const companyData = companies?.[0];
 
     if (!companyData) {
       setHasCompany(false);
