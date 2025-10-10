@@ -47,7 +47,7 @@ export const FinalCTA = () => {
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
               <div>© 2025 FuturaHire. All rights reserved.</div>
               <div>Built by ShipMyMVP Studio</div>
-              <div>hello@futurahire.ai</div>
+              <div>hello@futurahire.app</div>
             </div>
           </footer>
         </motion.div>
