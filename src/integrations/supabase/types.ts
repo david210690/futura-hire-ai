@@ -100,6 +100,7 @@ export type Database = {
       applications: {
         Row: {
           ai_version: string | null
+          apply_token: string | null
           candidate_id: string
           created_at: string | null
           culture_fit_score: number | null
@@ -112,9 +113,11 @@ export type Database = {
           skill_fit_score: number | null
           stage: string | null
           status: Database["public"]["Enums"]["application_status"]
+          video_required: boolean | null
         }
         Insert: {
           ai_version?: string | null
+          apply_token?: string | null
           candidate_id: string
           created_at?: string | null
           culture_fit_score?: number | null
@@ -127,9 +130,11 @@ export type Database = {
           skill_fit_score?: number | null
           stage?: string | null
           status?: Database["public"]["Enums"]["application_status"]
+          video_required?: boolean | null
         }
         Update: {
           ai_version?: string | null
+          apply_token?: string | null
           candidate_id?: string
           created_at?: string | null
           culture_fit_score?: number | null
@@ -142,6 +147,7 @@ export type Database = {
           skill_fit_score?: number | null
           stage?: string | null
           status?: Database["public"]["Enums"]["application_status"]
+          video_required?: boolean | null
         }
         Relationships: [
           {
@@ -1246,49 +1252,61 @@ export type Database = {
           company_id: string
           created_at: string | null
           created_by: string
+          default_assessment_id: string | null
           employment_type: Database["public"]["Enums"]["employment_type"]
           id: string
+          is_public: boolean | null
           jd_text: string
           location: string
           org_id: string
           remote_mode: string | null
           salary_range: string | null
           seniority: Database["public"]["Enums"]["seniority_level"]
+          slug: string | null
           status: Database["public"]["Enums"]["job_status"]
           tags: string[] | null
           title: string
+          video_required: boolean | null
         }
         Insert: {
           company_id: string
           created_at?: string | null
           created_by: string
+          default_assessment_id?: string | null
           employment_type?: Database["public"]["Enums"]["employment_type"]
           id?: string
+          is_public?: boolean | null
           jd_text: string
           location: string
           org_id: string
           remote_mode?: string | null
           salary_range?: string | null
           seniority?: Database["public"]["Enums"]["seniority_level"]
+          slug?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           tags?: string[] | null
           title: string
+          video_required?: boolean | null
         }
         Update: {
           company_id?: string
           created_at?: string | null
           created_by?: string
+          default_assessment_id?: string | null
           employment_type?: Database["public"]["Enums"]["employment_type"]
           id?: string
+          is_public?: boolean | null
           jd_text?: string
           location?: string
           org_id?: string
           remote_mode?: string | null
           salary_range?: string | null
           seniority?: Database["public"]["Enums"]["seniority_level"]
+          slug?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           tags?: string[] | null
           title?: string
+          video_required?: boolean | null
         }
         Relationships: [
           {
@@ -1303,6 +1321,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_default_assessment_id_fkey"
+            columns: ["default_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
             referencedColumns: ["id"]
           },
           {
@@ -1428,18 +1453,21 @@ export type Database = {
           id: string
           name: string
           owner_id: string
+          slug: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
           owner_id: string
+          slug?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
           owner_id?: string
+          slug?: string | null
         }
         Relationships: []
       }
@@ -2236,6 +2264,14 @@ export type Database = {
       }
       compute_predictive_score: {
         Args: { _application_id: string }
+        Returns: string
+      }
+      generate_apply_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_slug: {
+        Args: { name: string }
         Returns: string
       }
       get_entitlement: {
