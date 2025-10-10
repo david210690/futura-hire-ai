@@ -28,7 +28,6 @@ const plans = [
       "Unlimited assessments",
       "Predictive hire score",
       "Priority support",
-      "Custom branding",
     ],
     cta: "Start Free Trial",
     popular: true,
@@ -55,6 +54,7 @@ const plans = [
     price: "Custom",
     description: "For enterprise-scale hiring",
     features: [
+      "Custom branding",
       "Custom integrations",
       "On-premise deployment",
       "Unlimited everything",

@@ -43,7 +43,6 @@ const plans = [
       "Career coach & bias analyzer",
       "Priority support",
       "Up to 5 users",
-      "Custom branding",
       "14-day free trial",
     ],
     cta: "Start Free Trial",
@@ -212,7 +211,7 @@ export default function Pricing() {
   const comparisonFeatures = [
     { category: "Job Management", features: [
       { name: "Job Postings", free: "Up to 10", pro: "Unlimited", team: "Unlimited", enterprise: "Unlimited" },
-      { name: "Custom Branding", free: false, pro: true, team: true, enterprise: true },
+      { name: "Custom Branding", free: false, pro: false, team: false, enterprise: true },
     ]},
     { category: "AI Features", features: [
       { name: "AI Shortlist", free: "5/day", pro: "Unlimited", team: "Unlimited", enterprise: "Unlimited" },
