@@ -119,11 +119,16 @@ export default function RecruiterDashboard() {
       return;
     }
 
+    // Immediately update state to show dashboard
+    setCompany(newCompany);
+    setHasCompany(true);
+
     toast({
       title: "Company created!",
       description: "You can now create jobs.",
     });
 
+    // Reload data in background
     loadData();
   };
 
