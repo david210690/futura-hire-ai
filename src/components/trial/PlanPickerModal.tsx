@@ -23,7 +23,7 @@ const plans = [
   {
     id: "pro",
     name: "Pro",
-    price: "$49",
+    price: "₹3,999",
     period: "/month",
     description: "Perfect for small teams",
     icon: Sparkles,
@@ -39,8 +39,8 @@ const plans = [
   {
     id: "team",
     name: "Team",
-    price: "$149",
-    period: "/month",
+    price: "₹999",
+    period: "/user/month",
     description: "Best for growing companies",
     icon: Crown,
     recommended: true,
@@ -77,6 +77,7 @@ export const PlanPickerModal = ({ open, onOpenChange, orgId }: PlanPickerModalPr
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [teamUserCount, setTeamUserCount] = useState(3); // Minimum 3 users for team plan
 
   const handlePlanSelect = async (planId: string) => {
     if (planId === "enterprise") {
@@ -107,6 +108,7 @@ export const PlanPickerModal = ({ open, onOpenChange, orgId }: PlanPickerModalPr
       await createCheckoutSession({
         orgId,
         plan: planId as 'pro' | 'team',
+        quantity: planId === 'team' ? teamUserCount : 1,
         onSuccess: () => {
           toast({
             title: "Subscription Activated! 🎉",
@@ -178,6 +180,40 @@ export const PlanPickerModal = ({ open, onOpenChange, orgId }: PlanPickerModalPr
                 </div>
 
                 <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
+
+                {plan.id === 'team' && (
+                  <div className="space-y-2 mb-6 pb-6 border-b">
+                    <label className="text-sm font-medium">Number of Users</label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTeamUserCount(Math.max(3, teamUserCount - 1))}
+                      >
+                        -
+                      </Button>
+                      <input
+                        type="number"
+                        min="3"
+                        value={teamUserCount}
+                        onChange={(e) => setTeamUserCount(Math.max(3, parseInt(e.target.value) || 3))}
+                        className="w-16 text-center border rounded-md px-2 py-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTeamUserCount(teamUserCount + 1)}
+                      >
+                        +
+                      </Button>
+                      <span className="text-sm font-semibold ml-auto">
+                        ₹{999 * teamUserCount}/mo
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((feature, index) => (
