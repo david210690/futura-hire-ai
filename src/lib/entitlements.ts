@@ -11,12 +11,8 @@ export interface UsageCheck {
   limit: number;
 }
 
-// Get billing configuration from environment or defaults
-export const BILLING_CONFIG = {
-  enabled: import.meta.env.VITE_BILLING_ENABLED === 'true',
-  razorpayMode: import.meta.env.VITE_RAZORPAY_MODE || 'test',
-  razorpayKeyId: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
-};
+// Import billing config from separate file
+export { BILLING_CONFIG, isDemoMode, isBillingConfigured } from './billing-config';
 
 // Default demo entitlements when billing is disabled
 export const DEMO_ENTITLEMENTS = {

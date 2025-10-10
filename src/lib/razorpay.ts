@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { BILLING_CONFIG } from "./entitlements";
+import { BILLING_CONFIG, isBillingConfigured } from "./billing-config";
 
 declare global {
   interface Window {
@@ -29,6 +29,11 @@ export async function createCheckoutSession(options: CheckoutOptions) {
   const { orgId, plan, onSuccess, onFailure } = options;
 
   try {
+    // Check if billing is properly configured
+    if (!isBillingConfigured()) {
+      throw new Error('Razorpay is not configured. Please add VITE_RAZORPAY_KEY_ID to your environment variables.');
+    }
+
     // Call edge function to create Razorpay subscription
     const { data, error } = await supabase.functions.invoke('create-subscription', {
       body: { org_id: orgId, plan }
