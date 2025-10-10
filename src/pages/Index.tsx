@@ -18,7 +18,20 @@ const Index = () => {
           return;
         }
 
-        // Check if user has any orgs
+        // Get user role first
+        const { data: userRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        // If candidate, go directly to candidate dashboard
+        if (userRole?.role === 'candidate') {
+          navigate('/candidate/dashboard');
+          return;
+        }
+
+        // For recruiters, check if they have an org
         const { data: memberships, error: memberError } = await supabase
           .from('org_members')
           .select('org_id')
@@ -32,24 +45,14 @@ const Index = () => {
         }
 
         if (!memberships || memberships.length === 0) {
-          // No org, show create modal
+          // No org, show create modal for recruiters
           setChecking(false);
           setShowCreateOrg(true);
           return;
         }
 
-        // Has org, redirect based on role
-        const { data: userRole } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (userRole?.role === 'recruiter') {
-          navigate('/dashboard');
-        } else {
-          navigate('/candidate/dashboard');
-        }
+        // Has org, redirect to dashboard
+        navigate('/dashboard');
       } catch (error) {
         console.error('Error in checkAuth:', error);
         setChecking(false);
