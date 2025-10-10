@@ -39,7 +39,7 @@ const plans = [
   {
     id: "team",
     name: "Team",
-    price: "₹999",
+    price: "₹799",
     period: "/user/month",
     description: "Best for growing companies",
     icon: Crown,
@@ -209,7 +209,7 @@ export const PlanPickerModal = ({ open, onOpenChange, orgId }: PlanPickerModalPr
                         +
                       </Button>
                       <span className="text-sm font-semibold ml-auto">
-                        ₹{999 * teamUserCount}/mo
+                        ₹{799 * teamUserCount}/mo
                       </span>
                     </div>
                   </div>
