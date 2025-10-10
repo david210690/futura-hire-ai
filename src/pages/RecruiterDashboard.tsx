@@ -14,7 +14,7 @@ export default function RecruiterDashboard() {
   const [stats, setStats] = useState({ openJobs: 0, candidates: 0, avgCultureFit: 0 });
   const [jobs, setJobs] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
-  const [hasCompany, setHasCompany] = useState(false);
+  const [hasCompany, setHasCompany] = useState<boolean | null>(null); // null = loading
   const [showCopilot, setShowCopilot] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -132,7 +132,13 @@ export default function RecruiterDashboard() {
     loadData();
   };
 
-  if (!user) return null;
+  if (!user || hasCompany === null || orgLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
 
   if (!hasCompany) {
     return (
