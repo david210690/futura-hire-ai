@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const FinalCTA = () => {
   return (
@@ -28,13 +29,17 @@ export const FinalCTA = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 shadow-[var(--glow-blue)]">
-              Request Live Demo
-              <ArrowRight className="ml-2" />
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/10">
-              Try FuturaHire Free
-            </Button>
+            <Link to="/pricing">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 shadow-[var(--glow-blue)]">
+                Request Live Demo
+                <ArrowRight className="ml-2" />
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button size="lg" className="bg-card border-2 border-primary text-foreground hover:bg-primary hover:text-primary-foreground text-lg px-8 py-6 transition-all">
+                Try FuturaHire Free
+              </Button>
+            </Link>
           </div>
 
           {/* Footer */}
