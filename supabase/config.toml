@@ -29,3 +29,33 @@ verify_jwt = true
 
 [functions.check-professional-attire]
 verify_jwt = true
+
+[functions.copilot-chat]
+verify_jwt = true
+
+[functions.compute-culture-match]
+verify_jwt = true
+
+[functions.compute-retention-risk]
+verify_jwt = true
+
+[functions.compute-team-fit]
+verify_jwt = true
+
+[functions.compute-team-profile]
+verify_jwt = true
+
+[functions.design-role]
+verify_jwt = true
+
+[functions.generate-interview-feedback]
+verify_jwt = true
+
+[functions.send-invite]
+verify_jwt = true
+
+[functions.accept-invite]
+verify_jwt = true
+
+[functions.update-culture-profile]
+verify_jwt = true
