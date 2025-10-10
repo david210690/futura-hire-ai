@@ -49,7 +49,7 @@ export const AuthPage = () => {
       });
       
       if (signInError) throw signInError;
-      navigate('/');
+      navigate('/app');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -73,7 +73,7 @@ export const AuthPage = () => {
 
       if (error) throw error;
 
-      navigate('/');
+      navigate('/app');
     } catch (error: any) {
       toast({
         variant: "destructive",

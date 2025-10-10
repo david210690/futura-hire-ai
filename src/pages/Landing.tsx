@@ -8,10 +8,12 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { CopilotAvatar } from "@/components/landing/CopilotAvatar";
+import { LandingNavbar } from "@/components/landing/LandingNavbar";
 
 const Landing = () => {
   return (
     <main className="min-h-screen bg-background dark overflow-x-hidden">
+      <LandingNavbar />
       <HeroSection />
       <WhyFuturaHire />
       <AssessmentSuite />
