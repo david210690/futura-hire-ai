@@ -47,7 +47,22 @@ export const CopilotPanel = ({ jobId, candidateId }: CopilotPanelProps) => {
     try {
       console.log('Calling copilot with:', { orgId: currentOrg.id, hasThreadId: !!threadId });
       
+      // Get the current session to pass the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to use the copilot",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('copilot-chat', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: {
           threadId,
           message: userMessage,
