@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Sparkles, LogOut, Briefcase, LayoutDashboard, Users } from "lucide-react";
+import { Sparkles, LogOut, Briefcase, LayoutDashboard, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OrgSwitcher } from "@/components/org/OrgSwitcher";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -62,6 +62,15 @@ export const Navbar = ({ userName, userRole }: NavbarProps) => {
               >
                 <Briefcase className="w-4 h-4" />
                 Role Designer
+              </Button>
+              <Button
+                variant={location.pathname === '/pricing' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => navigate('/pricing')}
+                className="gap-2"
+              >
+                <DollarSign className="w-4 h-4" />
+                Pricing
               </Button>
             </nav>
           )}
