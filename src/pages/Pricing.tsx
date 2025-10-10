@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Zap, Users, Building2 } from "lucide-react";
+import { Check, Zap, Users, Building2, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,69 +12,81 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 const plans = [
   {
-    name: "Starter",
-    price: "₹4,999",
-    period: "/month",
+    name: "Free",
+    planId: "free",
     icon: Zap,
+    price: "₹0",
+    period: "/month",
+    description: "Perfect for trying out FuturaHire",
     features: [
-      "Up to 3 recruiters",
-      "Basic ATS",
-      "Resume parsing",
-      "Job posting",
-      "Email support",
+      "Up to 10 job postings",
+      "Basic AI shortlist (5/day)",
+      "Video analysis (3/day)",
+      "Standard support",
+      "1 user",
     ],
     cta: "Get Started",
-    planId: "starter",
+    popular: false,
   },
   {
     name: "Pro",
-    price: "₹14,999",
+    planId: "pro",
+    icon: Building2,
+    price: "₹4,999",
     period: "/month",
-    icon: Users,
-    popular: true,
+    description: "For growing teams",
     features: [
-      "Everything in Starter",
-      "AI Copilot (20/day)",
-      "Predictive Hire Score",
-      "Gamification",
-      "Video summaries",
+      "Unlimited job postings",
+      "Advanced AI shortlist (unlimited)",
+      "Unlimited video analysis",
+      "Career coach & bias analyzer",
       "Priority support",
+      "Up to 5 users",
+      "Custom branding",
+      "14-day free trial",
     ],
     cta: "Start Free Trial",
-    planId: "pro",
+    popular: true,
+    trialDays: 14,
   },
   {
     name: "Team",
-    price: "₹29,999",
+    planId: "team",
+    icon: Users,
+    price: "₹9,999",
     period: "/month",
-    icon: Building2,
+    description: "For large organizations",
     features: [
       "Everything in Pro",
-      "Assessments suite",
-      "Culture DNA",
-      "Marketing assets",
-      "Role designer",
-      "Dedicated success manager",
+      "Unlimited users",
+      "Advanced analytics",
+      "Custom integrations",
+      "Dedicated account manager",
+      "SLA guarantee",
+      "Custom AI training",
+      "14-day free trial",
     ],
-    cta: "Request Demo",
-    planId: "team",
+    cta: "Start Free Trial",
+    popular: false,
+    trialDays: 14,
   },
   {
     name: "Enterprise",
+    planId: "enterprise",
+    icon: Crown,
     price: "Custom",
     period: "",
-    icon: Building2,
+    description: "Tailored for your needs",
     features: [
       "Everything in Team",
-      "Retention optimizer",
-      "Team optimizer",
-      "Shareable shortlists",
-      "Custom integrations",
-      "White-label options",
-      "SLA guarantee",
+      "Custom SLA",
+      "On-premise deployment",
+      "White-label solution",
+      "Unlimited everything",
+      "24/7 dedicated support",
     ],
     cta: "Contact Sales",
-    planId: "enterprise",
+    popular: false,
   },
 ];
 
@@ -90,7 +102,7 @@ export default function Pricing() {
 
   const handlePlanClick = async (planId: string) => {
     if (!BILLING_CONFIG.enabled) {
-      // Demo mode: Grant full access immediately
+      // Demo mode: Grant full access with trial period
       try {
         if (!currentOrg) {
           toast({
@@ -102,11 +114,16 @@ export default function Pricing() {
           return;
         }
 
+        const selectedPlan = plans.find(p => p.name.toLowerCase() === planId);
+        const trialDays = selectedPlan?.trialDays || 0;
+
         await grantDemoEntitlements(currentOrg.id);
         
         toast({
           title: "Access Granted! 🎉",
-          description: `Full access to ${planId} plan features activated.`,
+          description: trialDays > 0 
+            ? `${trialDays}-day free trial started for ${planId} plan!`
+            : `Full access to ${planId} plan activated.`,
         });
 
         navigate("/dashboard");
