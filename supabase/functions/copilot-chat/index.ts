@@ -12,8 +12,13 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Copilot chat function called');
+    
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader) {
+      console.error('No authorization header found');
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -27,14 +32,18 @@ serve(async (req) => {
     );
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('User auth result:', { userId: user?.id, error: userError?.message });
+    
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      console.error('Auth failed:', userError);
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const { threadId, message, orgId, jobId, candidateId } = await req.json();
+    console.log('Request data:', { hasThreadId: !!threadId, hasMessage: !!message, orgId });
 
     // Check usage limits with service role key to bypass RLS
     const adminClient = createClient(

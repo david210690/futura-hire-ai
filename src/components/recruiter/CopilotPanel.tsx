@@ -45,6 +45,8 @@ export const CopilotPanel = ({ jobId, candidateId }: CopilotPanelProps) => {
     setLoading(true);
 
     try {
+      console.log('Calling copilot with:', { orgId: currentOrg.id, hasThreadId: !!threadId });
+      
       const { data, error } = await supabase.functions.invoke('copilot-chat', {
         body: {
           threadId,
@@ -55,11 +57,21 @@ export const CopilotPanel = ({ jobId, candidateId }: CopilotPanelProps) => {
         }
       });
 
+      console.log('Copilot response:', { data, error });
+
       if (error) {
-        if (error.message.includes('quota_exceeded')) {
+        console.error('Copilot error:', error);
+        
+        if (error.message?.includes('quota_exceeded')) {
           toast({
             title: "Daily limit reached",
             description: "You've used all copilot calls for today. Upgrade for more.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: error.message || "Failed to get response from copilot",
             variant: "destructive"
           });
         }
@@ -74,11 +86,11 @@ export const CopilotPanel = ({ jobId, candidateId }: CopilotPanelProps) => {
         open_links: data.response.open_links
       }]);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Copilot error:', err);
       toast({
         title: "Error",
-        description: "Failed to get response from copilot",
+        description: err.message || "Failed to get response from copilot",
         variant: "destructive"
       });
     } finally {
