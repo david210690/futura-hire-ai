@@ -8,6 +8,9 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { CopilotPanel } from "@/components/recruiter/CopilotPanel";
+import { TrialBanner } from "@/components/trial/TrialBanner";
+import { UpgradeFAB } from "@/components/trial/UpgradeFAB";
+import { expireTrialIfNeeded, getTrialStatus } from "@/lib/trial";
 
 export default function RecruiterDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -16,6 +19,7 @@ export default function RecruiterDashboard() {
   const [company, setCompany] = useState<any>(null);
   const [hasCompany, setHasCompany] = useState<boolean | null>(null); // null = loading
   const [showCopilot, setShowCopilot] = useState(false);
+  const [showUpgradeFAB, setShowUpgradeFAB] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentOrg, loading: orgLoading } = useCurrentOrg();
@@ -23,8 +27,17 @@ export default function RecruiterDashboard() {
   useEffect(() => {
     if (!orgLoading && currentOrg) {
       loadData();
+      checkTrialStatus();
     }
   }, [currentOrg, orgLoading]);
+
+  const checkTrialStatus = async () => {
+    if (!currentOrg?.id) return;
+    
+    await expireTrialIfNeeded(currentOrg.id);
+    const status = await getTrialStatus(currentOrg.id);
+    setShowUpgradeFAB(status.state === 'trial' || status.state === 'free');
+  };
 
   const loadData = async () => {
     if (orgLoading || !currentOrg) return;
@@ -175,6 +188,7 @@ export default function RecruiterDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar userName={user?.name} userRole="recruiter" />
+      {currentOrg?.id && <TrialBanner orgId={currentOrg.id} />}
       
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -300,6 +314,10 @@ export default function RecruiterDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {currentOrg?.id && (
+        <UpgradeFAB orgId={currentOrg.id} show={showUpgradeFAB} />
+      )}
     </div>
   );
 }

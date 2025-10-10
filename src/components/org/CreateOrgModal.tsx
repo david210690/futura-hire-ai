@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { startOrgTrial, applyTrialEntitlements } from "@/lib/trial";
 import {
   Dialog,
   DialogContent,
@@ -68,9 +69,18 @@ export const CreateOrgModal = ({ open, onOpenChange, onSuccess }: CreateOrgModal
 
       if (companyError) throw companyError;
 
+      // Start 14-day trial for new org
+      try {
+        await startOrgTrial(newOrg.id);
+        await applyTrialEntitlements(newOrg.id);
+      } catch (trialError) {
+        console.error('Error setting up trial:', trialError);
+        // Don't block org creation if trial setup fails
+      }
+
       toast({
         title: "Organization created!",
-        description: "You're all set to start hiring.",
+        description: "You're all set with a 14-day trial. Start hiring now!",
       });
 
       // Store as current org

@@ -1841,6 +1841,56 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          plan: string
+          provider: string
+          status: string
+          subscription_id: string | null
+          trial_end_at: string | null
+          trial_start_at: string | null
+          trial_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          plan?: string
+          provider?: string
+          status?: string
+          subscription_id?: string | null
+          trial_end_at?: string | null
+          trial_start_at?: string | null
+          trial_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          plan?: string
+          provider?: string
+          status?: string
+          subscription_id?: string | null
+          trial_end_at?: string | null
+          trial_start_at?: string | null
+          trial_status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_fit_scores: {
         Row: {
           candidate_id: string
