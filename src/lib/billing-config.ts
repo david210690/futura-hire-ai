@@ -11,7 +11,7 @@
  */
 
 // TEMPORARY: Set this to true to test billing flow without env vars
-const FORCE_LIVE_MODE = false;
+const FORCE_LIVE_MODE = true;
 
 export const BILLING_CONFIG = {
   enabled: FORCE_LIVE_MODE || import.meta.env.VITE_BILLING_ENABLED === 'true',
