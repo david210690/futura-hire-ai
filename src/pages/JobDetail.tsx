@@ -15,11 +15,14 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { UsageBadge } from "@/components/usage/UsageBadge";
 import { UpgradeModal } from "@/components/usage/UpgradeModal";
+import { ShareJobButton } from "@/components/recruiter/ShareJobButton";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentOrg } = useCurrentOrg();
   const [job, setJob] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -120,7 +123,14 @@ export default function JobDetail() {
             Back to Dashboard
           </Button>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {currentOrg?.slug && job?.slug && (
+              <ShareJobButton
+                orgSlug={currentOrg.slug}
+                jobSlug={job.slug}
+                jobTitle={job.title}
+              />
+            )}
             <UsageBadge metric="ai_shortlist" label="Shortlists" limit={100} />
             <UsageBadge metric="bias_runs" label="Bias Reports" limit={50} />
             <UsageBadge metric="marketing_runs" label="Marketing" limit={50} />

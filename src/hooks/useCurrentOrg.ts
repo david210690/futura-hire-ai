@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Org {
   id: string;
   name: string;
+  slug: string | null;
   owner_id: string;
   created_at: string;
 }
