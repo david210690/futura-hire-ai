@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
+import Pricing from "./pages/Pricing";
 import Assessments from "./pages/Assessments";
 import AssessmentDetail from "./pages/AssessmentDetail";
 import { AuthPage } from "./components/auth/AuthPage";
@@ -17,6 +18,7 @@ import JobDetail from "./pages/JobDetail";
 import AdminMonitor from "./pages/AdminMonitor";
 import OrgSettingsPage from "./pages/OrgSettingsPage";
 import RoleDesigner from "./pages/RoleDesigner";
+import ShareableShortlist from "./pages/ShareableShortlist";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/landing" element={<Landing />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/assessments" element={<Assessments />} />
           <Route path="/assessments/:id" element={<AssessmentDetail />} />
           <Route path="/auth" element={<AuthPage />} />
@@ -42,6 +45,7 @@ const App = () => (
           <Route path="/admin/monitor" element={<AdminMonitor />} />
           <Route path="/org/settings" element={<OrgSettingsPage />} />
           <Route path="/role-designer" element={<RoleDesigner />} />
+          <Route path="/s/:token" element={<ShareableShortlist />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
