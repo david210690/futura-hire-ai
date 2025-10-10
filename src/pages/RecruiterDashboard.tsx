@@ -21,10 +21,14 @@ export default function RecruiterDashboard() {
   const { currentOrg, loading: orgLoading } = useCurrentOrg();
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!orgLoading && currentOrg) {
+      loadData();
+    }
+  }, [currentOrg, orgLoading]);
 
   const loadData = async () => {
+    if (orgLoading || !currentOrg) return;
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate('/auth');
@@ -40,27 +44,26 @@ export default function RecruiterDashboard() {
 
     setUser(userData);
 
-    if (!userData?.company_id) {
+    // Load company for this org
+    const { data: companyData } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('org_id', currentOrg.id)
+      .maybeSingle();
+
+    if (!companyData) {
       setHasCompany(false);
       return;
     }
 
     setHasCompany(true);
-
-    // Load company
-    const { data: companyData } = await supabase
-      .from('companies')
-      .select('*')
-      .eq('id', userData.company_id)
-      .single();
-
     setCompany(companyData);
 
-    // Load jobs
+    // Load jobs for this org
     const { data: jobsData } = await supabase
       .from('jobs')
       .select('*')
-      .eq('company_id', userData.company_id)
+      .eq('org_id', currentOrg.id)
       .order('created_at', { ascending: false })
       .limit(5);
 
@@ -70,13 +73,13 @@ export default function RecruiterDashboard() {
     const { count: openCount } = await supabase
       .from('jobs')
       .select('*', { count: 'exact', head: true })
-      .eq('company_id', userData.company_id)
+      .eq('org_id', currentOrg.id)
       .eq('status', 'open');
 
     const { data: appsData } = await supabase
       .from('applications')
       .select('culture_fit_score, job_id')
-      .in('job_id', (jobsData || []).map(j => j.id));
+      .eq('org_id', currentOrg.id);
 
     const avgCulture = appsData && appsData.length > 0
       ? Math.round(appsData.reduce((sum, app) => sum + (app.culture_fit_score || 0), 0) / appsData.length)
@@ -115,11 +118,6 @@ export default function RecruiterDashboard() {
       });
       return;
     }
-
-    await supabase
-      .from('users')
-      .update({ company_id: newCompany.id })
-      .eq('id', user.id);
 
     toast({
       title: "Company created!",
@@ -197,7 +195,22 @@ export default function RecruiterDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
+              <Building2 className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold capitalize">{company?.pricing_tier || 'Free'}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {company?.pricing_tier === 'free' && 'Basic features'}
+                {company?.pricing_tier === 'pro' && '$49/month'}
+                {company?.pricing_tier === 'enterprise' && 'Custom pricing'}
+              </p>
+            </CardContent>
+          </Card>
+          
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Open Jobs</CardTitle>

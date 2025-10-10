@@ -687,6 +687,7 @@ export type Database = {
           id: string
           name: string
           org_id: string
+          pricing_tier: string | null
           size_band: string | null
           values_text: string | null
           website: string | null
@@ -698,6 +699,7 @@ export type Database = {
           id?: string
           name: string
           org_id: string
+          pricing_tier?: string | null
           size_band?: string | null
           values_text?: string | null
           website?: string | null
@@ -709,6 +711,7 @@ export type Database = {
           id?: string
           name?: string
           org_id?: string
+          pricing_tier?: string | null
           size_band?: string | null
           values_text?: string | null
           website?: string | null
