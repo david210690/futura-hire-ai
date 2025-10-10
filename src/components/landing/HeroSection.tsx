@@ -44,13 +44,17 @@ export const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 shadow-[var(--glow-blue)]">
-                Book Demo
-                <ArrowRight className="ml-2" />
-              </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/10">
-                Try Free →
-              </Button>
+              <Link to="/pricing">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 shadow-[var(--glow-blue)]">
+                  Book Demo
+                  <ArrowRight className="ml-2" />
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/10">
+                  Try Free →
+                </Button>
+              </Link>
             </div>
 
             <div className="flex flex-wrap gap-4 pt-4">

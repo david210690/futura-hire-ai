@@ -85,9 +85,11 @@ export const CopilotDemo = () => {
 
                 {/* CTA */}
                 <div className="p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border-t border-primary/20">
-                  <Button className="w-full bg-primary hover:bg-primary/90 shadow-[var(--glow-blue)]" size="lg">
-                    Meet Your Hiring Copilot
-                    <ArrowRight className="ml-2" />
+                  <Button asChild className="w-full bg-primary hover:bg-primary/90 shadow-[var(--glow-blue)]" size="lg">
+                    <a href="/auth">
+                      Meet Your Hiring Copilot
+                      <ArrowRight className="ml-2" />
+                    </a>
                   </Button>
                 </div>
               </CardContent>

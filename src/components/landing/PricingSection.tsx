@@ -117,10 +117,13 @@ export const PricingSection = () => {
                     ))}
                   </ul>
                   <Button 
+                    asChild
                     className={`w-full ${plan.popular ? 'bg-primary hover:bg-primary/90 shadow-[var(--glow-blue)]' : ''}`} 
                     variant={plan.popular ? 'default' : 'outline'}
                   >
-                    {plan.cta}
+                    <a href={plan.name === 'Enterprise' ? 'mailto:sales@futurahire.com' : '/auth'}>
+                      {plan.cta}
+                    </a>
                   </Button>
                 </CardContent>
               </Card>

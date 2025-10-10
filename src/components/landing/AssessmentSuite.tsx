@@ -72,9 +72,11 @@ export const AssessmentSuite = () => {
                   ))}
                 </div>
 
-                <Button className="w-full mt-8 bg-secondary hover:bg-secondary/90 shadow-[var(--glow-purple)]" size="lg">
-                  Create Your First AI Assessment
-                  <ArrowRight className="ml-2" />
+                <Button asChild className="w-full mt-8 bg-secondary hover:bg-secondary/90 shadow-[var(--glow-purple)]" size="lg">
+                  <a href="/auth">
+                    Create Your First AI Assessment
+                    <ArrowRight className="ml-2" />
+                  </a>
                 </Button>
               </CardContent>
             </Card>

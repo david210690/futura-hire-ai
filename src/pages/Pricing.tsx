@@ -200,7 +200,7 @@ export default function Pricing() {
                 </ul>
 
                 <Button
-                  onClick={() => handlePlanClick(plan.planId)}
+                  onClick={() => plan.planId === 'enterprise' ? window.location.href = 'mailto:sales@futurahire.com' : handlePlanClick(plan.planId)}
                   className="w-full"
                   variant={plan.popular ? "default" : "outline"}
                   size="lg"
