@@ -115,6 +115,53 @@ serve(async (req) => {
         });
     }
 
+    // Send confirmation email
+    const statusUrl = `${Deno.env.get("SUPABASE_URL")?.replace("/rest/v1", "")}/c/${orgSlug}/apply/status/${application.apply_token}`;
+    
+    try {
+      // Get candidate email from users table
+      const { data: candidateUser } = await supabase
+        .from("users")
+        .select("email, name")
+        .eq("id", candidate.user_id)
+        .single();
+
+      if (candidateUser?.email) {
+        // Send application received email
+        await supabase.functions.invoke("send-application-email", {
+          body: {
+            type: "application_received",
+            email: candidateUser.email,
+            data: {
+              candidateName: candidateUser.name || candidateData.name,
+              jobTitle: job.title,
+              orgName: orgSlug,
+              statusUrl,
+            },
+          },
+        });
+
+        // If there's an assessment, send invitation email
+        if (job.default_assessment_id) {
+          await supabase.functions.invoke("send-application-email", {
+            body: {
+              type: "assessment_invitation",
+              email: candidateUser.email,
+              data: {
+                candidateName: candidateUser.name || candidateData.name,
+                jobTitle: job.title,
+                assessmentUrl: `${statusUrl}`,
+                duration: "60",
+              },
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Email error:", error);
+      // Don't fail the application if email fails
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.submit-attempt]
 verify_jwt = false
+
+[functions.send-application-email]
+verify_jwt = true
