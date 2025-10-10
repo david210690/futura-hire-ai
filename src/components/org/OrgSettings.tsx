@@ -63,22 +63,51 @@ export const OrgSettings = () => {
   const loadMembers = async () => {
     if (!currentOrg) return;
 
-    const { data, error } = await supabase
-      .from('org_members')
-      .select(`
-        id,
-        user_id,
-        role,
-        created_at,
-        users!inner(name, email)
-      `)
-      .eq('org_id', currentOrg.id)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('org_members')
+        .select(`
+          id,
+          user_id,
+          role,
+          created_at
+        `)
+        .eq('org_id', currentOrg.id)
+        .order('created_at', { ascending: false });
 
-    if (error) {
+      if (error) {
+        console.error('Error loading members:', error);
+        toast({ variant: "destructive", description: error.message });
+        return;
+      }
+
+      // Fetch user details separately
+      if (data && data.length > 0) {
+        const userIds = data.map(m => m.user_id);
+        const { data: usersData, error: usersError } = await supabase
+          .from('users')
+          .select('id, name, email')
+          .in('id', userIds);
+
+        if (usersError) {
+          console.error('Error loading users:', usersError);
+          toast({ variant: "destructive", description: usersError.message });
+          return;
+        }
+
+        // Combine the data
+        const membersWithUsers = data.map(member => ({
+          ...member,
+          users: usersData?.find(u => u.id === member.user_id) || { name: 'Unknown', email: 'unknown@example.com' }
+        }));
+
+        setMembers(membersWithUsers as any);
+      } else {
+        setMembers([]);
+      }
+    } catch (error: any) {
+      console.error('Unexpected error:', error);
       toast({ variant: "destructive", description: error.message });
-    } else {
-      setMembers((data || []) as any);
     }
   };
 
