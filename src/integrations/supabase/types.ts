@@ -1247,6 +1247,90 @@ export type Database = {
           },
         ]
       }
+      job_twin_jobs: {
+        Row: {
+          applied_at: string | null
+          created_at: string | null
+          id: string
+          job_id: string
+          match_reasons: string[] | null
+          match_score: number | null
+          notes: string | null
+          profile_id: string
+          status: string
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string | null
+          id?: string
+          job_id: string
+          match_reasons?: string[] | null
+          match_score?: number | null
+          notes?: string | null
+          profile_id: string
+          status?: string
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          match_reasons?: string[] | null
+          match_score?: number | null
+          notes?: string | null
+          profile_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_twin_jobs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_twin_jobs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_twin_profiles: {
+        Row: {
+          career_goals: string | null
+          created_at: string | null
+          id: string
+          ideal_role: string | null
+          preferences: Json | null
+          skills: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          career_goals?: string | null
+          created_at?: string | null
+          id?: string
+          ideal_role?: string | null
+          preferences?: Json | null
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          career_goals?: string | null
+          created_at?: string | null
+          id?: string
+          ideal_role?: string | null
+          preferences?: Json | null
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
           company_id: string
