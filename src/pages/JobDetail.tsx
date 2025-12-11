@@ -12,7 +12,7 @@ import { MarketingAssets } from "@/components/recruiter/MarketingAssets";
 import { CultureMatchBadge } from "@/components/shared/CultureMatchBadge";
 import { PredictiveScoreChip } from "@/components/recruiter/PredictiveScoreChip";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Brain } from "lucide-react";
 import { UsageBadge } from "@/components/usage/UsageBadge";
 import { UpgradeModal } from "@/components/usage/UpgradeModal";
 import { ShareJobButton } from "@/components/recruiter/ShareJobButton";
@@ -123,7 +123,17 @@ export default function JobDetail() {
             Back to Dashboard
           </Button>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap">
+            {applications.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/jobs/${id}/decision-room`)}
+                className="gap-2"
+              >
+                <Brain className="w-4 h-4" />
+                AI Decision Room
+              </Button>
+            )}
             {currentOrg?.slug && job?.slug && (
               <ShareJobButton
                 orgSlug={currentOrg.slug}
