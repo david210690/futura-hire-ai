@@ -7,15 +7,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
+
+interface DimensionScores {
+  skills_match: number;
+  experience_relevance: number;
+  growth_potential: number;
+  communication_quality: number;
+  role_alignment: number;
+}
 
 interface CandidateEvaluation {
   candidate_id: string;
   overall_fit_score: number;
+  dimension_scores?: DimensionScores;
   summary: string;
+  strengths?: string[];
   risks: string[];
+  interview_probes?: string[];
   recommended_next_action: string;
+  fairness_note?: string;
 }
 
 interface Cluster {
@@ -27,6 +40,7 @@ interface Cluster {
 interface GlobalSummary {
   market_insight: string;
   hiring_recommendation: string;
+  fairness_advisory?: string;
 }
 
 interface SnapshotData {
@@ -322,6 +336,15 @@ export default function DecisionRoom() {
                   <h4 className="font-medium text-sm text-muted-foreground mb-1">Hiring Recommendation</h4>
                   <p className="font-medium text-primary">{snapshot.data.global_summary.hiring_recommendation}</p>
                 </div>
+                {snapshot.data.global_summary.fairness_advisory && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-medium text-sm text-blue-700 dark:text-blue-400 mb-1 flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      Fairness Advisory
+                    </h4>
+                    <p className="text-sm text-blue-600 dark:text-blue-300">{snapshot.data.global_summary.fairness_advisory}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -388,11 +411,49 @@ export default function DecisionRoom() {
                                   </div>
                                 </div>
 
+                                {/* Dimension Scores */}
+                                {evaluation.dimension_scores && (
+                                  <div>
+                                    <h4 className="font-medium mb-3">Dimension Scores</h4>
+                                    <div className="space-y-3">
+                                      {Object.entries(evaluation.dimension_scores).map(([key, value]) => (
+                                        <div key={key} className="space-y-1">
+                                          <div className="flex justify-between text-sm">
+                                            <span className="capitalize text-muted-foreground">
+                                              {key.replace(/_/g, ' ')}
+                                            </span>
+                                            <span className="font-medium">{value}/10</span>
+                                          </div>
+                                          <Progress value={value * 10} className="h-2" />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* Summary */}
                                 <div>
                                   <h4 className="font-medium mb-2">Summary</h4>
                                   <p className="text-sm text-muted-foreground">{evaluation.summary}</p>
                                 </div>
+
+                                {/* Strengths */}
+                                {evaluation.strengths && evaluation.strengths.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                                      <Sparkles className="h-4 w-4 text-green-500" />
+                                      Key Strengths
+                                    </h4>
+                                    <ul className="space-y-1">
+                                      {evaluation.strengths.map((strength, sIdx) => (
+                                        <li key={sIdx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                          <span className="text-green-500 mt-1">✓</span>
+                                          {strength}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
 
                                 {/* Risks */}
                                 {evaluation.risks.length > 0 && (
@@ -409,6 +470,34 @@ export default function DecisionRoom() {
                                         </li>
                                       ))}
                                     </ul>
+                                  </div>
+                                )}
+
+                                {/* Interview Probes */}
+                                {evaluation.interview_probes && evaluation.interview_probes.length > 0 && (
+                                  <div>
+                                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                                      <MessageSquare className="h-4 w-4 text-blue-500" />
+                                      Interview Questions to Explore
+                                    </h4>
+                                    <ul className="space-y-2">
+                                      {evaluation.interview_probes.map((probe, pIdx) => (
+                                        <li key={pIdx} className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md">
+                                          "{probe}"
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {/* Fairness Note */}
+                                {evaluation.fairness_note && (
+                                  <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                                    <h4 className="font-medium text-sm text-purple-700 dark:text-purple-400 mb-1 flex items-center gap-2">
+                                      <ShieldCheck className="h-4 w-4" />
+                                      Fairness Note
+                                    </h4>
+                                    <p className="text-sm text-purple-600 dark:text-purple-300">{evaluation.fairness_note}</p>
                                   </div>
                                 )}
 
