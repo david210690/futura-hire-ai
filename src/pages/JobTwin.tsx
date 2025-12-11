@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost } from "lucide-react";
+import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STATUS_OPTIONS = [
@@ -72,6 +72,8 @@ export default function JobTwin() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [matching, setMatching] = useState(false);
+  const [importingResume, setImportingResume] = useState(false);
+  const [hasResume, setHasResume] = useState(false);
   const [profile, setProfile] = useState<JobTwinProfile | null>(null);
   const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([]);
   const [interviewPreps, setInterviewPreps] = useState<InterviewPrep[]>([]);
@@ -97,6 +99,23 @@ export default function JobTwin() {
       if (!user) {
         navigate("/auth");
         return;
+      }
+
+      // Check if user has a candidate profile with resume
+      const { data: candidate } = await supabase
+        .from("candidates")
+        .select("id, skills")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (candidate) {
+        const { data: resume } = await supabase
+          .from("resumes")
+          .select("id, parsed_text")
+          .eq("candidate_id", candidate.id)
+          .maybeSingle();
+        
+        setHasResume(!!resume);
       }
 
       // Load Job Twin profile using user_id
@@ -159,6 +178,57 @@ export default function JobTwin() {
       console.error("Error loading profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const importFromResume = async () => {
+    setImportingResume(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get candidate and their resume
+      const { data: candidate } = await supabase
+        .from("candidates")
+        .select("id, skills, headline, summary")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!candidate) {
+        toast({ title: "No candidate profile", description: "Please create your candidate profile first", variant: "destructive" });
+        return;
+      }
+
+      // Parse skills from candidate profile
+      const candidateSkills = candidate.skills?.split(",").map((s: string) => s.trim()).filter(Boolean) || [];
+      
+      // Merge with existing skills (avoid duplicates)
+      const existingSkills = skills.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+      const newSkills = candidateSkills.filter((s: string) => !existingSkills.includes(s.toLowerCase()));
+      
+      if (newSkills.length > 0 || candidateSkills.length > 0) {
+        const mergedSkills = [...new Set([...skills.split(",").map(s => s.trim()).filter(Boolean), ...newSkills])];
+        setSkills(mergedSkills.join(", "));
+      }
+
+      // Use headline as ideal role if not set
+      if (!idealRole && candidate.headline) {
+        setIdealRole(candidate.headline);
+      }
+
+      // Use summary as career goals if not set
+      if (!careerGoals && candidate.summary) {
+        setCareerGoals(candidate.summary);
+      }
+
+      toast({ 
+        title: "Resume data imported", 
+        description: `Imported ${newSkills.length} new skills from your profile` 
+      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setImportingResume(false);
     }
   };
 
@@ -326,10 +396,29 @@ export default function JobTwin() {
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle>Your Ideal Role</CardTitle>
-                <CardDescription>
-                  Tell us about your dream job and we'll find the best matches
-                </CardDescription>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle>Your Ideal Role</CardTitle>
+                    <CardDescription>
+                      Tell us about your dream job and we'll find the best matches
+                    </CardDescription>
+                  </div>
+                  {hasResume && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={importFromResume}
+                      disabled={importingResume}
+                    >
+                      {importingResume ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <FileText className="h-4 w-4 mr-2" />
+                      )}
+                      Import from Resume
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -343,7 +432,14 @@ export default function JobTwin() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="skills">Your key skills (comma-separated)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="skills">Your key skills (comma-separated)</Label>
+                    {!hasResume && (
+                      <span className="text-xs text-muted-foreground">
+                        Upload a resume to auto-import skills
+                      </span>
+                    )}
+                  </div>
                   <Input
                     id="skills"
                     placeholder="e.g., Python, React, Product Strategy, Data Analysis"
