@@ -4,7 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CareerCoachCard } from "@/components/career/CareerCoachCard";
-import { FileUp, Video, BriefcaseIcon, Radar } from "lucide-react";
+import { FileUp, Video, BriefcaseIcon, Radar, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function CandidateDashboard() {
@@ -141,6 +141,22 @@ export default function CandidateDashboard() {
               <Button onClick={() => navigate('/opportunity-radar')} className="w-full md:w-auto">
                 <Radar className="w-4 h-4 mr-2" />
                 View Opportunity Radar
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-amber-600" />
+                Career Trajectory Engine
+              </CardTitle>
+              <CardDescription>Map your career path with AI-powered trajectory planning, salary projections, and 6-month action plans</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/career-trajectory')} className="w-full md:w-auto bg-amber-600 hover:bg-amber-700">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                View Career Trajectory
               </Button>
             </CardContent>
           </Card>
