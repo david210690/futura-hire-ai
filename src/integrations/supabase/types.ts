@@ -685,6 +685,30 @@ export type Database = {
           },
         ]
       }
+      career_trajectory_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          snapshot_json: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          snapshot_json: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          snapshot_json?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           country: string | null

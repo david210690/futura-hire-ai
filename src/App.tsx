@@ -29,6 +29,7 @@ import InterviewSessionReview from "./pages/InterviewSessionReview";
 import VoiceInterviewList from "./pages/VoiceInterviewList";
 import VoiceInterviewDetail from "./pages/VoiceInterviewDetail";
 import OpportunityRadar from "./pages/OpportunityRadar";
+import CareerTrajectory from "./pages/CareerTrajectory";
 import CareersPage from "./pages/careers/CareersPage";
 import JobDetailPage from "./pages/careers/JobDetailPage";
 import ApplyPage from "./pages/careers/ApplyPage";
@@ -71,6 +72,7 @@ const App = () => (
           <Route path="/voice-interview" element={<VoiceInterviewList />} />
           <Route path="/voice-interview/:sessionId" element={<VoiceInterviewDetail />} />
           <Route path="/opportunity-radar" element={<OpportunityRadar />} />
+          <Route path="/career-trajectory" element={<CareerTrajectory />} />
           <Route path="/s/:token" element={<ShareableShortlist />} />
           
           {/* Candidate-facing career pages */}

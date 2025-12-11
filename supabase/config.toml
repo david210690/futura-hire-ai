@@ -137,3 +137,9 @@ verify_jwt = true
 
 [functions.get-opportunity-radar]
 verify_jwt = true
+
+[functions.generate-career-trajectory]
+verify_jwt = true
+
+[functions.get-career-trajectory]
+verify_jwt = true
