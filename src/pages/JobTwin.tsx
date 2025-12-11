@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame, Package, Mail } from "lucide-react";
+import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame, Package, Mail, TrendingUp, BarChart3 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STATUS_OPTIONS = [
@@ -605,6 +605,69 @@ export default function JobTwin() {
           </TabsContent>
 
           <TabsContent value="matches" className="space-y-6">
+            {/* Application Stats */}
+            {matchedJobs.length > 0 && (() => {
+              const stats = {
+                total: matchedJobs.length,
+                new: matchedJobs.filter(j => j.status === 'new').length,
+                saved: matchedJobs.filter(j => j.status === 'saved').length,
+                applied: matchedJobs.filter(j => j.status === 'applied').length,
+                interview: matchedJobs.filter(j => j.status === 'interview').length,
+                offer: matchedJobs.filter(j => j.status === 'offer').length,
+                rejected: matchedJobs.filter(j => j.status === 'rejected').length,
+                ghosted: matchedJobs.filter(j => j.status === 'ghosted').length,
+                avgScore: Math.round(matchedJobs.reduce((a, j) => a + j.match_score, 0) / matchedJobs.length),
+              };
+              const appliedTotal = stats.applied + stats.interview + stats.offer + stats.rejected + stats.ghosted;
+              const successRate = appliedTotal > 0 ? Math.round((stats.interview + stats.offer) / appliedTotal * 100) : 0;
+              
+              return (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">Application Stats</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <p className="text-2xl font-bold">{stats.total}</p>
+                        <p className="text-xs text-muted-foreground">Total Matches</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <p className="text-2xl font-bold">{appliedTotal}</p>
+                        <p className="text-xs text-muted-foreground">Applied</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <p className="text-2xl font-bold text-primary">{stats.avgScore}%</p>
+                        <p className="text-xs text-muted-foreground">Avg Match</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <p className="text-2xl font-bold text-green-500">{successRate}%</p>
+                        <p className="text-xs text-muted-foreground">Success Rate</p>
+                      </div>
+                    </div>
+                    
+                    {/* Status Funnel */}
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {STATUS_OPTIONS.map(opt => {
+                        const count = stats[opt.value as keyof typeof stats] as number;
+                        const Icon = opt.icon;
+                        return (
+                          <div key={opt.value} className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-sm">
+                            <Icon className="h-3 w-3" />
+                            <span className="font-medium">{count}</span>
+                            <span className="text-muted-foreground">{opt.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
             {/* Today's Picks - Top 3 matches */}
             {matchedJobs.length > 0 && (
               <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
