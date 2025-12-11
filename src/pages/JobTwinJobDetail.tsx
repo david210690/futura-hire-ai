@@ -20,6 +20,7 @@ import {
   Calendar, DollarSign, FileText, Sparkles, Edit, Check, Mic, ExternalLink, TrendingUp, Target
 } from "lucide-react";
 import { StartVoiceInterviewDialog } from "@/components/voice-interview/StartVoiceInterviewDialog";
+import { RoleDnaPanel } from "@/components/role-dna/RoleDnaPanel";
 import { format, formatDistanceToNow } from "date-fns";
 
 interface JobTwinJob {
@@ -530,6 +531,11 @@ export default function JobTwinJobDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Role DNA Blueprint */}
+            <div className="mt-6">
+              <RoleDnaPanel jobTwinJobId={jobData.id} />
+            </div>
           </TabsContent>
 
           {/* Communication Tab */}
