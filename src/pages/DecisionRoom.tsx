@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { CandidateComparisonModal } from "@/components/decision-room/CandidateComparisonModal";
+import { exportDecisionPDF } from "@/components/decision-room/ExportDecisionPDF";
 
 interface DimensionScores {
   skills_match: number;
@@ -297,6 +298,20 @@ export default function DecisionRoom() {
                 </Button>
               )}
               <Button
+                onClick={() => exportDecisionPDF({
+                  jobTitle: job.title,
+                  companyName: (job.companies as any)?.name || 'Company',
+                  snapshotDate: snapshot.created_at,
+                  snapshotData: snapshot.data,
+                  candidatesMap: candidates,
+                })}
+                variant="outline"
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export PDF
+              </Button>
+              <Button
                 onClick={generateSnapshot}
                 disabled={generating}
                 variant="outline"
@@ -307,7 +322,7 @@ export default function DecisionRoom() {
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
-                Regenerate Analysis
+                Regenerate
               </Button>
             </div>
           )}
