@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
-  FileText, Plus, Edit, Trash2, Copy, Loader2, Mail, Linkedin, Star, Sparkles, RefreshCw
+  FileText, Plus, Edit, Trash2, Copy, Loader2, Mail, Linkedin, Star, Sparkles, RefreshCw, UserCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -46,6 +47,7 @@ const CHANNELS = [
 
 export function TemplatesLibrary({ onSelectTemplate }: { onSelectTemplate?: (template: Template) => void }) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -53,6 +55,7 @@ export function TemplatesLibrary({ onSelectTemplate }: { onSelectTemplate?: (tem
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
+  const [hasProfile, setHasProfile] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -64,7 +67,25 @@ export function TemplatesLibrary({ onSelectTemplate }: { onSelectTemplate?: (tem
 
   useEffect(() => {
     loadTemplates();
+    checkProfile();
   }, []);
+
+  const checkProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("job_twin_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      setHasProfile(!!data);
+    } catch (error) {
+      setHasProfile(false);
+    }
+  };
 
   const loadTemplates = async () => {
     try {
@@ -268,41 +289,61 @@ export function TemplatesLibrary({ onSelectTemplate }: { onSelectTemplate?: (tem
       {/* AI Generation Card */}
       <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
         <CardContent className="py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-primary" />
+          {!hasProfile ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                  <UserCircle className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Set Up Your Profile First</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Complete your Job Twin profile to generate AI-personalized templates based on your skills and goals
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold">AI-Powered Templates</h3>
-                <p className="text-sm text-muted-foreground">
-                  Generate personalized templates based on your profile, skills, and career goals
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {templates.length > 0 && (
-                <Button 
-                  variant="outline" 
-                  onClick={deleteAllTemplates}
-                  size="sm"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear All
-                </Button>
-              )}
-              <Button onClick={generateAITemplates} disabled={generating}>
-                {generating ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : templates.length > 0 ? (
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
-                )}
-                {generating ? "Generating..." : templates.length > 0 ? "Regenerate" : "Generate Templates"}
+              <Button onClick={() => navigate("/job-twin/setup")}>
+                <UserCircle className="h-4 w-4 mr-2" />
+                Set Up Profile
               </Button>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">AI-Powered Templates</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Generate personalized templates based on your profile, skills, and career goals
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {templates.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    onClick={deleteAllTemplates}
+                    size="sm"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear All
+                  </Button>
+                )}
+                <Button onClick={generateAITemplates} disabled={generating}>
+                  {generating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : templates.length > 0 ? (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  {generating ? "Generating..." : templates.length > 0 ? "Regenerate" : "Generate Templates"}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
