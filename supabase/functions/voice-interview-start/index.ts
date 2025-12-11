@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ success: false, message: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -29,7 +29,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) {
       console.error('Auth error:', userError);
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ success: false, message: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -37,8 +37,27 @@ serve(async (req) => {
 
     const { jobId, roleTitle, mode, difficulty } = await req.json();
 
+    // Validate required fields
     if (!jobId && !roleTitle) {
-      return new Response(JSON.stringify({ error: 'Either jobId or roleTitle is required' }), {
+      return new Response(JSON.stringify({ success: false, message: 'Either jobId or roleTitle is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate mode
+    const validModes = ['technical', 'behavioral', 'mixed'];
+    if (mode && !validModes.includes(mode)) {
+      return new Response(JSON.stringify({ success: false, message: `Invalid mode. Must be one of: ${validModes.join(', ')}` }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate difficulty
+    const validDifficulties = ['junior', 'mid', 'senior'];
+    if (difficulty && !validDifficulties.includes(difficulty)) {
+      return new Response(JSON.stringify({ success: false, message: `Invalid difficulty. Must be one of: ${validDifficulties.join(', ')}` }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -98,7 +117,7 @@ serve(async (req) => {
 
     if (sessionError) {
       console.error('Error creating session:', sessionError);
-      return new Response(JSON.stringify({ error: 'Failed to create session' }), {
+      return new Response(JSON.stringify({ success: false, message: 'Failed to create session' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -117,7 +136,7 @@ serve(async (req) => {
         .update({ status: 'failed' })
         .eq('id', session.id);
 
-      return new Response(JSON.stringify({ error: 'Voice interview service not configured' }), {
+      return new Response(JSON.stringify({ success: false, message: 'Voice interview service not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -158,7 +177,7 @@ serve(async (req) => {
         .update({ status: 'failed' })
         .eq('id', session.id);
 
-      return new Response(JSON.stringify({ error: 'Failed to create voice session' }), {
+      return new Response(JSON.stringify({ success: false, message: 'Failed to start voice interview session' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -195,7 +214,7 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Error in voice-interview-start:', error);
-    return new Response(JSON.stringify({ error: error?.message || 'Unknown error' }), {
+    return new Response(JSON.stringify({ success: false, message: error?.message || 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
