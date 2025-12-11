@@ -12,9 +12,12 @@ serve(async (req) => {
   }
 
   try {
-    // Verify webhook secret
+    // Verify webhook secret - check header OR query param
     const webhookSecret = Deno.env.get('RETELL_WEBHOOK_SECRET');
-    const providedSecret = req.headers.get('x-retell-secret') || req.headers.get('x-retell-signature');
+    const url = new URL(req.url);
+    const querySecret = url.searchParams.get('secret');
+    const headerSecret = req.headers.get('x-retell-secret') || req.headers.get('x-retell-signature');
+    const providedSecret = headerSecret || querySecret;
     
     if (webhookSecret && providedSecret !== webhookSecret) {
       console.error('Invalid webhook secret');
