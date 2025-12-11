@@ -122,3 +122,6 @@ verify_jwt = true
 
 [functions.voice-interview-webhook]
 verify_jwt = false
+
+[functions.evaluate-voice-interview]
+verify_jwt = false
