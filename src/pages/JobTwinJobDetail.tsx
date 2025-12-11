@@ -760,13 +760,19 @@ export default function JobTwinJobDetail() {
                   Cover letter, resume highlights, and interview prep
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
                   Visit the main Job Twin page to generate application packages for this job.
                 </p>
-                <Button variant="outline" className="mt-4" onClick={() => navigate("/job-twin")}>
-                  Go to Job Twin
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => navigate("/job-twin")}>
+                    Go to Job Twin
+                  </Button>
+                  <Button onClick={() => navigate(`/interview-practice?job=${jobTwinJob?.id}`)}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Voice Interview Practice
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
