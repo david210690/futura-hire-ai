@@ -2321,6 +2321,48 @@ export type Database = {
           },
         ]
       }
+      role_dna_snapshots: {
+        Row: {
+          created_at: string
+          generated_by_user_id: string
+          id: string
+          job_twin_job_id: string
+          snapshot_json: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          generated_by_user_id: string
+          id?: string
+          job_twin_job_id: string
+          snapshot_json: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          generated_by_user_id?: string
+          id?: string
+          job_twin_job_id?: string
+          snapshot_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_dna_snapshots_generated_by_user_id_fkey"
+            columns: ["generated_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_dna_snapshots_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       streaks: {
         Row: {
           current_streak: number
