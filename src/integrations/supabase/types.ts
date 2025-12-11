@@ -1247,39 +1247,125 @@ export type Database = {
           },
         ]
       }
+      job_twin_interactions: {
+        Row: {
+          ai_generated: boolean | null
+          body: string | null
+          channel: string | null
+          created_at: string | null
+          direction: string | null
+          id: string
+          interaction_type: string
+          is_sent: boolean | null
+          job_twin_job_id: string
+          metadata: Json | null
+          scheduled_for: string | null
+          sent_at: string | null
+          subject: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          body?: string | null
+          channel?: string | null
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          interaction_type: string
+          is_sent?: boolean | null
+          job_twin_job_id: string
+          metadata?: Json | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          subject?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_generated?: boolean | null
+          body?: string | null
+          channel?: string | null
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          interaction_type?: string
+          is_sent?: boolean | null
+          job_twin_job_id?: string
+          metadata?: Json | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          subject?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_twin_interactions_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_twin_jobs: {
         Row: {
           applied_at: string | null
+          contact_channel: string | null
           created_at: string | null
           id: string
           job_id: string
+          last_contacted_at: string | null
           match_reasons: string[] | null
           match_score: number | null
+          next_action_at: string | null
+          next_action_type: string | null
           notes: string | null
           profile_id: string
+          recruiter_email: string | null
+          recruiter_linkedin_url: string | null
+          recruiter_name: string | null
           status: string
+          timezone: string | null
         }
         Insert: {
           applied_at?: string | null
+          contact_channel?: string | null
           created_at?: string | null
           id?: string
           job_id: string
+          last_contacted_at?: string | null
           match_reasons?: string[] | null
           match_score?: number | null
+          next_action_at?: string | null
+          next_action_type?: string | null
           notes?: string | null
           profile_id: string
+          recruiter_email?: string | null
+          recruiter_linkedin_url?: string | null
+          recruiter_name?: string | null
           status?: string
+          timezone?: string | null
         }
         Update: {
           applied_at?: string | null
+          contact_channel?: string | null
           created_at?: string | null
           id?: string
           job_id?: string
+          last_contacted_at?: string | null
           match_reasons?: string[] | null
           match_score?: number | null
+          next_action_at?: string | null
+          next_action_type?: string | null
           notes?: string | null
           profile_id?: string
+          recruiter_email?: string | null
+          recruiter_linkedin_url?: string | null
+          recruiter_name?: string | null
           status?: string
+          timezone?: string | null
         }
         Relationships: [
           {
@@ -1294,6 +1380,56 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "job_twin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_twin_negotiation_notes: {
+        Row: {
+          candidate_desired_salary: string | null
+          created_at: string | null
+          current_offer_salary: string | null
+          id: string
+          job_twin_job_id: string
+          last_updated_at: string | null
+          negotiation_email_template: string | null
+          negotiation_strategy_summary: string | null
+          non_salary_items: string | null
+          talking_points: string | null
+          user_id: string
+        }
+        Insert: {
+          candidate_desired_salary?: string | null
+          created_at?: string | null
+          current_offer_salary?: string | null
+          id?: string
+          job_twin_job_id: string
+          last_updated_at?: string | null
+          negotiation_email_template?: string | null
+          negotiation_strategy_summary?: string | null
+          non_salary_items?: string | null
+          talking_points?: string | null
+          user_id: string
+        }
+        Update: {
+          candidate_desired_salary?: string | null
+          created_at?: string | null
+          current_offer_salary?: string | null
+          id?: string
+          job_twin_job_id?: string
+          last_updated_at?: string | null
+          negotiation_email_template?: string | null
+          negotiation_strategy_summary?: string | null
+          non_salary_items?: string | null
+          talking_points?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_twin_negotiation_notes_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: true
+            referencedRelation: "job_twin_jobs"
             referencedColumns: ["id"]
           },
         ]

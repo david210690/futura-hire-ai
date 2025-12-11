@@ -21,6 +21,7 @@ import RoleDesigner from "./pages/RoleDesigner";
 import BillingSettings from "./pages/BillingSettings";
 import ShareableShortlist from "./pages/ShareableShortlist";
 import JobTwin from "./pages/JobTwin";
+import JobTwinJobDetail from "./pages/JobTwinJobDetail";
 import CareersPage from "./pages/careers/CareersPage";
 import JobDetailPage from "./pages/careers/JobDetailPage";
 import ApplyPage from "./pages/careers/ApplyPage";
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/billing" element={<BillingSettings />} />
           <Route path="/role-designer" element={<RoleDesigner />} />
           <Route path="/job-twin" element={<JobTwin />} />
+          <Route path="/job-twin/jobs/:id" element={<JobTwinJobDetail />} />
           <Route path="/s/:token" element={<ShareableShortlist />} />
           
           {/* Candidate-facing career pages */}

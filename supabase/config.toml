@@ -92,3 +92,12 @@ verify_jwt = true
 
 [functions.job-twin-application-package]
 verify_jwt = true
+
+[functions.job-twin-generate-message]
+verify_jwt = true
+
+[functions.job-twin-generate-negotiation]
+verify_jwt = true
+
+[functions.job-twin-generate-contact-plan]
+verify_jwt = true
