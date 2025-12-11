@@ -12,7 +12,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2 } from "lucide-react";
+import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const STATUS_OPTIONS = [
+  { value: 'new', label: 'New', icon: Sparkles, color: 'bg-blue-500' },
+  { value: 'saved', label: 'Saved', icon: Bookmark, color: 'bg-yellow-500' },
+  { value: 'applied', label: 'Applied', icon: Send, color: 'bg-green-500' },
+  { value: 'interview', label: 'Interview', icon: Calendar, color: 'bg-purple-500' },
+  { value: 'offer', label: 'Offer', icon: Trophy, color: 'bg-emerald-500' },
+  { value: 'rejected', label: 'Rejected', icon: XCircle, color: 'bg-red-500' },
+  { value: 'ghosted', label: 'Ghosted', icon: Ghost, color: 'bg-gray-500' },
+] as const;
 
 interface JobTwinProfile {
   id: string;
@@ -27,6 +38,9 @@ interface MatchedJob {
   job_id: string;
   match_score: number;
   match_reasons: string[];
+  status: string;
+  applied_at?: string;
+  notes?: string;
   job?: {
     title: string;
     company_name?: string;
@@ -50,7 +64,6 @@ export default function JobTwin() {
   const [profile, setProfile] = useState<JobTwinProfile | null>(null);
   const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([]);
   const [interviewPreps, setInterviewPreps] = useState<InterviewPrep[]>([]);
-  const [candidateId, setCandidateId] = useState<string | null>(null);
 
   // Form state
   const [idealRole, setIdealRole] = useState("");
@@ -72,26 +85,12 @@ export default function JobTwin() {
         return;
       }
 
-      // Get candidate record
-      const { data: candidate } = await supabase
-        .from("candidates")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!candidate) {
-        setLoading(false);
-        return;
-      }
-
-      setCandidateId(candidate.id);
-
-      // Load Job Twin profile using raw query since types may not be synced
+      // Load Job Twin profile using user_id
       const { data: profileData, error: profileError } = await supabase
         .from("job_twin_profiles" as any)
         .select("*")
-        .eq("candidate_id", candidate.id)
-        .single();
+        .eq("user_id", user.id)
+        .maybeSingle();
 
       if (profileData && !profileError) {
         const typedProfile = profileData as unknown as JobTwinProfile;
@@ -117,6 +116,9 @@ export default function JobTwin() {
             job_id: j.job_id,
             match_score: j.match_score,
             match_reasons: j.match_reasons,
+            status: j.status || 'new',
+            applied_at: j.applied_at,
+            notes: j.notes,
             job: j.jobs
           })));
         }
@@ -144,15 +146,16 @@ export default function JobTwin() {
   };
 
   const saveProfile = async () => {
-    if (!candidateId) {
-      toast({ title: "Error", description: "Please complete your candidate profile first", variant: "destructive" });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "Error", description: "Please sign in first", variant: "destructive" });
       return;
     }
 
     setSaving(true);
     try {
       const profileData = {
-        candidate_id: candidateId,
+        user_id: user.id,
         ideal_role: idealRole,
         skills: skills.split(",").map(s => s.trim()).filter(Boolean),
         career_goals: careerGoals,
@@ -187,6 +190,30 @@ export default function JobTwin() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const updateJobStatus = async (jobTwinJobId: string, newStatus: string) => {
+    try {
+      const updateData: Record<string, any> = { status: newStatus };
+      if (newStatus === 'applied') {
+        updateData.applied_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from("job_twin_jobs" as any)
+        .update(updateData)
+        .eq("id", jobTwinJobId);
+
+      if (error) throw error;
+
+      setMatchedJobs(prev => prev.map(j => 
+        j.id === jobTwinJobId ? { ...j, status: newStatus, ...(newStatus === 'applied' ? { applied_at: new Date().toISOString() } : {}) } : j
+      ));
+
+      toast({ title: "Status updated" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
@@ -385,40 +412,74 @@ export default function JobTwin() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {matchedJobs.map((match) => (
-                      <Card key={match.id} className="border-l-4 border-l-primary">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-lg">{match.job?.title || "Job Position"}</h3>
-                              {match.job?.location && (
-                                <p className="text-sm text-muted-foreground">{match.job.location}</p>
-                              )}
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                {match.match_reasons?.slice(0, 3).map((reason, i) => (
-                                  <Badge key={i} variant="secondary">{reason}</Badge>
-                                ))}
+                    {matchedJobs.map((match) => {
+                      const statusOption = STATUS_OPTIONS.find(s => s.value === match.status) || STATUS_OPTIONS[0];
+                      const StatusIcon = statusOption.icon;
+                      return (
+                        <Card key={match.id} className="border-l-4 border-l-primary">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-semibold text-lg truncate">{match.job?.title || "Job Position"}</h3>
+                                </div>
+                                {match.job?.location && (
+                                  <p className="text-sm text-muted-foreground">{match.job.location}</p>
+                                )}
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {match.match_reasons?.slice(0, 3).map((reason, i) => (
+                                    <Badge key={i} variant="secondary">{reason}</Badge>
+                                  ))}
+                                </div>
+                                {match.applied_at && (
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Applied: {new Date(match.applied_at).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex flex-col items-end gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-2xl font-bold text-primary">{match.match_score}%</span>
+                                </div>
+                                <Progress value={match.match_score} className="w-24 h-2" />
+                                <Select
+                                  value={match.status}
+                                  onValueChange={(value) => updateJobStatus(match.id, value)}
+                                >
+                                  <SelectTrigger className="w-32 h-8">
+                                    <div className="flex items-center gap-2">
+                                      <StatusIcon className="h-3 w-3" />
+                                      <SelectValue />
+                                    </div>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {STATUS_OPTIONS.map((opt) => {
+                                      const Icon = opt.icon;
+                                      return (
+                                        <SelectItem key={opt.value} value={opt.value}>
+                                          <div className="flex items-center gap-2">
+                                            <Icon className="h-3 w-3" />
+                                            {opt.label}
+                                          </div>
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => generateInterviewPrep(match.job_id)}
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  Prep
+                                </Button>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="flex items-center gap-2">
-                                <span className="text-2xl font-bold text-primary">{match.match_score}%</span>
-                              </div>
-                              <Progress value={match.match_score} className="w-24 h-2 mt-1" />
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="mt-2"
-                                onClick={() => generateInterviewPrep(match.job_id)}
-                              >
-                                <MessageSquare className="h-4 w-4 mr-1" />
-                                Prep
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
