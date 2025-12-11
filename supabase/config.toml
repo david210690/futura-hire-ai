@@ -7,7 +7,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.submit-attempt]
-verify_jwt = true
+verify_jwt = false
 
 [functions.parse-resume]
 verify_jwt = true
@@ -81,8 +81,14 @@ verify_jwt = true
 [functions.get-candidate-status]
 verify_jwt = false
 
-[functions.submit-attempt]
-verify_jwt = false
-
 [functions.send-application-email]
+verify_jwt = true
+
+[functions.job-twin-match]
+verify_jwt = true
+
+[functions.job-twin-interview-prep]
+verify_jwt = true
+
+[functions.job-twin-application-package]
 verify_jwt = true
