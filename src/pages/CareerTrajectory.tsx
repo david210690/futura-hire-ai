@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, RefreshCw, TrendingUp, Target, Zap, Calendar, DollarSign, Users, Flame, AlertTriangle, ChevronRight, Sparkles, ArrowUp, ArrowRight, Shuffle } from "lucide-react";
+import { Loader2, RefreshCw, TrendingUp, Target, Zap, Calendar, DollarSign, Users, Flame, AlertTriangle, ChevronRight, Sparkles, ArrowUp, ArrowRight, Shuffle, Mic, CalendarDays, List } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { SnapshotHistory } from "@/components/career-trajectory/SnapshotHistory";
+import { ExportTrajectoryPDF } from "@/components/career-trajectory/ExportTrajectoryPDF";
+import { WeeklyPlanView } from "@/components/career-trajectory/WeeklyPlanView";
 
 interface TrajectorySnapshot {
   current_position?: {
@@ -85,6 +88,9 @@ export default function CareerTrajectory() {
   const [generating, setGenerating] = useState(false);
   const [snapshot, setSnapshot] = useState<TrajectorySnapshot | null>(null);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
+  const [snapshotId, setSnapshotId] = useState<string | null>(null);
+  const [planViewMode, setPlanViewMode] = useState<'monthly' | 'weekly'>('monthly');
+  const [userName, setUserName] = useState<string>('');
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -96,6 +102,7 @@ export default function CareerTrajectory() {
       navigate("/auth");
       return;
     }
+    setUserName(user.user_metadata?.name || user.email || 'Candidate');
     await loadLatestSnapshot();
   };
 
@@ -120,6 +127,7 @@ export default function CareerTrajectory() {
       if (data.exists) {
         setSnapshot(data.snapshot);
         setCreatedAt(data.created_at);
+        setSnapshotId(data.id);
       }
     } catch (error) {
       console.error('Error loading trajectory:', error);
@@ -157,6 +165,7 @@ export default function CareerTrajectory() {
 
       setSnapshot(data.snapshot);
       setCreatedAt(data.created_at);
+      setSnapshotId(data.id);
       toast.success("Career trajectory generated!");
     } catch (error: any) {
       console.error('Error generating trajectory:', error);
@@ -182,6 +191,12 @@ export default function CareerTrajectory() {
       case 'switch': return <Shuffle className="h-5 w-5" />;
       default: return <TrendingUp className="h-5 w-5" />;
     }
+  };
+
+  const handleSnapshotSelect = (snapshotData: any, snapshotCreatedAt: string, id: string) => {
+    setSnapshot(snapshotData);
+    setCreatedAt(snapshotCreatedAt);
+    setSnapshotId(id);
   };
 
   const getTrajectoryColor = (id: string) => {
@@ -219,23 +234,34 @@ export default function CareerTrajectory() {
               AI-powered career path planning and growth insights
             </p>
             {createdAt && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Last updated: {new Date(createdAt).toLocaleDateString()}
-              </p>
+              <div className="flex items-center gap-4 mt-2">
+                <p className="text-sm text-muted-foreground">
+                  Last updated: {new Date(createdAt).toLocaleDateString()}
+                </p>
+                <SnapshotHistory 
+                  currentSnapshotId={snapshotId} 
+                  onSelectSnapshot={handleSnapshotSelect} 
+                />
+              </div>
             )}
           </div>
-          <Button 
-            onClick={generateTrajectory} 
-            disabled={generating}
-            className="gap-2"
-          >
-            {generating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
+          <div className="flex items-center gap-2">
+            {snapshot && !snapshot.error && (
+              <ExportTrajectoryPDF snapshot={snapshot} candidateName={userName} />
             )}
-            {snapshot ? 'Regenerate' : 'Generate'} Trajectory
-          </Button>
+            <Button 
+              onClick={generateTrajectory} 
+              disabled={generating}
+              className="gap-2"
+            >
+              {generating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {snapshot ? 'Regenerate' : 'Generate'} Trajectory
+            </Button>
+          </div>
         </div>
 
         {/* Disclaimer */}
@@ -386,6 +412,26 @@ export default function CareerTrajectory() {
                             </ul>
                           </div>
                         </div>
+                        <div className="mt-4 pt-3 border-t flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1 text-xs"
+                            onClick={() => navigate('/job-twin')}
+                          >
+                            <Target className="h-3 w-3 mr-1" />
+                            Find Jobs
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1 text-xs"
+                            onClick={() => navigate('/voice-interview')}
+                          >
+                            <Mic className="h-3 w-3 mr-1" />
+                            Practice
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -485,37 +531,63 @@ export default function CareerTrajectory() {
             {/* 6-Month Plan */}
             {snapshot.six_month_plan && (
               <div>
-                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  6-Month Action Plan
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    6-Month Action Plan
+                  </h2>
+                  <div className="flex items-center gap-1 border rounded-lg p-1">
+                    <Button
+                      variant={planViewMode === 'monthly' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setPlanViewMode('monthly')}
+                      className="gap-1 h-7"
+                    >
+                      <List className="h-3 w-3" />
+                      Monthly
+                    </Button>
+                    <Button
+                      variant={planViewMode === 'weekly' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setPlanViewMode('weekly')}
+                      className="gap-1 h-7"
+                    >
+                      <CalendarDays className="h-3 w-3" />
+                      Weekly
+                    </Button>
+                  </div>
+                </div>
                 <Card>
                   <CardHeader>
                     <CardDescription>{snapshot.six_month_plan.summary}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Accordion type="single" collapsible className="w-full">
-                      {snapshot.six_month_plan.months?.map((month) => (
-                        <AccordionItem key={month.month_index} value={`month-${month.month_index}`}>
-                          <AccordionTrigger className="hover:no-underline">
-                            <div className="flex items-center gap-3">
-                              <Badge variant="outline">Month {month.month_index}</Badge>
-                              <span className="font-medium">{month.theme}</span>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <ul className="space-y-2 pl-4">
-                              {month.focus_items?.map((item, i) => (
-                                <li key={i} className="text-muted-foreground flex items-start gap-2">
-                                  <ChevronRight className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
-                                  {item}
-                                </li>
-                              ))}
-                            </ul>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
+                    {planViewMode === 'monthly' ? (
+                      <Accordion type="single" collapsible className="w-full">
+                        {snapshot.six_month_plan.months?.map((month) => (
+                          <AccordionItem key={month.month_index} value={`month-${month.month_index}`}>
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex items-center gap-3">
+                                <Badge variant="outline">Month {month.month_index}</Badge>
+                                <span className="font-medium">{month.theme}</span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <ul className="space-y-2 pl-4">
+                                {month.focus_items?.map((item, i) => (
+                                  <li key={i} className="text-muted-foreground flex items-start gap-2">
+                                    <ChevronRight className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    ) : (
+                      <WeeklyPlanView months={snapshot.six_month_plan.months || []} />
+                    )}
                   </CardContent>
                 </Card>
               </div>
