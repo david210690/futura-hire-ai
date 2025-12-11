@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
+import { CandidateComparisonModal } from "@/components/decision-room/CandidateComparisonModal";
 
 interface DimensionScores {
   skills_match: number;
@@ -75,6 +77,24 @@ export default function DecisionRoom() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateEvaluation | null>(null);
+  const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
+  const [showComparison, setShowComparison] = useState(false);
+
+  const toggleCompareCandidate = (candidateId: string) => {
+    setCompareIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(candidateId)) {
+        newSet.delete(candidateId);
+      } else if (newSet.size < 4) {
+        newSet.add(candidateId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectedForComparison = snapshot?.data.candidates.filter(
+    c => compareIds.has(c.candidate_id)
+  ) || [];
 
   useEffect(() => {
     if (jobId && jobId !== ':id') {
@@ -265,19 +285,31 @@ export default function DecisionRoom() {
           </div>
           
           {snapshot && (
-            <Button
-              onClick={generateSnapshot}
-              disabled={generating}
-              variant="outline"
-              className="gap-2"
-            >
-              {generating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              {compareIds.size >= 2 && (
+                <Button
+                  onClick={() => setShowComparison(true)}
+                  variant="default"
+                  className="gap-2"
+                >
+                  <GitCompare className="h-4 w-4" />
+                  Compare ({compareIds.size})
+                </Button>
               )}
-              Regenerate Analysis
-            </Button>
+              <Button
+                onClick={generateSnapshot}
+                disabled={generating}
+                variant="outline"
+                className="gap-2"
+              >
+                {generating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Regenerate Analysis
+              </Button>
+            </div>
           )}
         </div>
 
@@ -368,30 +400,36 @@ export default function DecisionRoom() {
                         if (!evaluation) return null;
                         
                         return (
-                          <Sheet key={candidateId}>
-                            <SheetTrigger asChild>
-                              <button
-                                onClick={() => setSelectedCandidate(evaluation)}
-                                className="w-full text-left p-3 rounded-lg border bg-card hover:bg-accent transition-colors"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium truncate">
-                                      {getCandidateName(candidateId)}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground truncate">
-                                      {evaluation.recommended_next_action}
-                                    </p>
+                          <div key={candidateId} className="flex items-center gap-2">
+                            <Checkbox
+                              checked={compareIds.has(candidateId)}
+                              onCheckedChange={() => toggleCompareCandidate(candidateId)}
+                              disabled={!compareIds.has(candidateId) && compareIds.size >= 4}
+                            />
+                            <Sheet>
+                              <SheetTrigger asChild>
+                                <button
+                                  onClick={() => setSelectedCandidate(evaluation)}
+                                  className="flex-1 text-left p-3 rounded-lg border bg-card hover:bg-accent transition-colors"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium truncate">
+                                        {getCandidateName(candidateId)}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        {evaluation.recommended_next_action}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-2">
+                                      <Badge className={getScoreColor(evaluation.overall_fit_score)}>
+                                        {evaluation.overall_fit_score}
+                                      </Badge>
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-2 ml-2">
-                                    <Badge className={getScoreColor(evaluation.overall_fit_score)}>
-                                      {evaluation.overall_fit_score}
-                                    </Badge>
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                  </div>
-                                </div>
-                              </button>
-                            </SheetTrigger>
+                                </button>
+                              </SheetTrigger>
                             <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
                               <SheetHeader>
                                 <SheetTitle>{getCandidateName(candidateId)}</SheetTitle>
@@ -550,6 +588,7 @@ export default function DecisionRoom() {
                               </div>
                             </SheetContent>
                           </Sheet>
+                          </div>
                         );
                       })}
                     </div>
@@ -571,8 +610,13 @@ export default function DecisionRoom() {
                     .map((evaluation) => (
                       <div
                         key={evaluation.candidate_id}
-                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
                       >
+                        <Checkbox
+                          checked={compareIds.has(evaluation.candidate_id)}
+                          onCheckedChange={() => toggleCompareCandidate(evaluation.candidate_id)}
+                          disabled={!compareIds.has(evaluation.candidate_id) && compareIds.size >= 4}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium">{getCandidateName(evaluation.candidate_id)}</p>
                           <p className="text-sm text-muted-foreground truncate">{evaluation.summary}</p>
@@ -593,6 +637,14 @@ export default function DecisionRoom() {
           </div>
         )}
       </main>
+
+      {/* Comparison Modal */}
+      <CandidateComparisonModal
+        open={showComparison}
+        onOpenChange={setShowComparison}
+        selectedCandidates={selectedForComparison}
+        candidatesMap={candidates}
+      />
     </div>
   );
 }
