@@ -12,8 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame, Package, Mail, TrendingUp, BarChart3, ExternalLink } from "lucide-react";
+import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame, Package, Mail, TrendingUp, BarChart3, ExternalLink, Bell, Library } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AssistantView } from "@/components/job-twin/AssistantView";
+import { TemplatesLibrary } from "@/components/job-twin/TemplatesLibrary";
 
 const STATUS_OPTIONS = [
   { value: 'new', label: 'New', icon: Sparkles, color: 'bg-blue-500' },
@@ -407,8 +409,12 @@ export default function JobTwin() {
           </p>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="assistant" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="assistant" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Assistant
+            </TabsTrigger>
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
               Profile
@@ -428,7 +434,16 @@ export default function JobTwin() {
               <MessageSquare className="h-4 w-4" />
               Prep
             </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <Library className="h-4 w-4" />
+              Templates
+            </TabsTrigger>
           </TabsList>
+
+          {/* Assistant Tab - Global Action View */}
+          <TabsContent value="assistant">
+            <AssistantView />
+          </TabsContent>
 
           <TabsContent value="profile">
             <Card>
@@ -1008,6 +1023,24 @@ export default function JobTwin() {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Templates Tab */}
+          <TabsContent value="templates">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Library className="h-5 w-5" />
+                  Message Templates
+                </CardTitle>
+                <CardDescription>
+                  Create reusable message templates for outreach, follow-ups, and negotiations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TemplatesLibrary />
               </CardContent>
             </Card>
           </TabsContent>
