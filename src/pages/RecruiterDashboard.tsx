@@ -25,6 +25,29 @@ export default function RecruiterDashboard() {
   const { toast } = useToast();
   const { currentOrg, loading: orgLoading } = useCurrentOrg();
 
+  // Check user role and redirect candidates
+  useEffect(() => {
+    const checkRole = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+      
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      
+      if (userRole?.role === 'candidate') {
+        navigate('/candidate/dashboard');
+        return;
+      }
+    };
+    checkRole();
+  }, [navigate]);
+
   useEffect(() => {
     if (!orgLoading && currentOrg) {
       loadData();
