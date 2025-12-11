@@ -1401,6 +1401,41 @@ export type Database = {
           },
         ]
       }
+      job_decision_snapshots: {
+        Row: {
+          created_at: string
+          generated_by_user_id: string
+          id: string
+          job_id: string
+          snapshot_json: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          generated_by_user_id: string
+          id?: string
+          job_id: string
+          snapshot_json: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          generated_by_user_id?: string
+          id?: string
+          job_id?: string
+          snapshot_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_decision_snapshots_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_twin_interactions: {
         Row: {
           ai_generated: boolean | null

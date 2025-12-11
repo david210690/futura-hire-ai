@@ -125,3 +125,9 @@ verify_jwt = false
 
 [functions.evaluate-voice-interview]
 verify_jwt = false
+
+[functions.generate-decision-snapshot]
+verify_jwt = true
+
+[functions.get-decision-snapshot]
+verify_jwt = true
