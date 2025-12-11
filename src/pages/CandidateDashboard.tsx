@@ -4,7 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CareerCoachCard } from "@/components/career/CareerCoachCard";
-import { FileUp, Video, BriefcaseIcon } from "lucide-react";
+import { FileUp, Video, BriefcaseIcon, Radar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function CandidateDashboard() {
@@ -125,6 +125,22 @@ export default function CandidateDashboard() {
               <Button variant="outline" className="w-full" onClick={() => navigate('/candidate/video')}>
                 <Video className="w-4 h-4 mr-2" />
                 Record Video
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Radar className="h-5 w-5 text-primary" />
+                My Opportunity Radar
+              </CardTitle>
+              <CardDescription>Discover role families that match your skills and find high-impact areas to focus on</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/opportunity-radar')} className="w-full md:w-auto">
+                <Radar className="w-4 h-4 mr-2" />
+                View Opportunity Radar
               </Button>
             </CardContent>
           </Card>

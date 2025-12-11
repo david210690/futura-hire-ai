@@ -131,3 +131,9 @@ verify_jwt = true
 
 [functions.get-decision-snapshot]
 verify_jwt = true
+
+[functions.generate-opportunity-radar]
+verify_jwt = true
+
+[functions.get-opportunity-radar]
+verify_jwt = true
