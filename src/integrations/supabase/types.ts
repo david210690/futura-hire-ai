@@ -2266,14 +2266,8 @@ export type Database = {
         Args: { _application_id: string }
         Returns: string
       }
-      generate_apply_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_slug: {
-        Args: { name: string }
-        Returns: string
-      }
+      generate_apply_token: { Args: never; Returns: string }
+      generate_slug: { Args: { name: string }; Returns: string }
       get_entitlement: {
         Args: { _feature: string; _org_id: string }
         Returns: {
