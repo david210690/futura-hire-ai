@@ -1,0 +1,485 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Navbar } from "@/components/layout/Navbar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2 } from "lucide-react";
+
+interface JobTwinProfile {
+  id: string;
+  ideal_role: string;
+  skills: string[];
+  preferences: Record<string, any>;
+  career_goals: string;
+}
+
+interface MatchedJob {
+  id: string;
+  job_id: string;
+  match_score: number;
+  match_reasons: string[];
+  job?: {
+    title: string;
+    company_name?: string;
+    location?: string;
+  };
+}
+
+interface InterviewPrep {
+  id: string;
+  job_id: string;
+  questions: string[];
+  tips: string[];
+}
+
+export default function JobTwin() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [matching, setMatching] = useState(false);
+  const [profile, setProfile] = useState<JobTwinProfile | null>(null);
+  const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([]);
+  const [interviewPreps, setInterviewPreps] = useState<InterviewPrep[]>([]);
+  const [candidateId, setCandidateId] = useState<string | null>(null);
+
+  // Form state
+  const [idealRole, setIdealRole] = useState("");
+  const [skills, setSkills] = useState("");
+  const [careerGoals, setCareerGoals] = useState("");
+  const [workStyle, setWorkStyle] = useState("");
+  const [salaryRange, setSalaryRange] = useState("");
+  const [remotePreference, setRemotePreference] = useState("");
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      // Get candidate record
+      const { data: candidate } = await supabase
+        .from("candidates")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!candidate) {
+        setLoading(false);
+        return;
+      }
+
+      setCandidateId(candidate.id);
+
+      // Load Job Twin profile using raw query since types may not be synced
+      const { data: profileData, error: profileError } = await supabase
+        .from("job_twin_profiles" as any)
+        .select("*")
+        .eq("candidate_id", candidate.id)
+        .single();
+
+      if (profileData && !profileError) {
+        const typedProfile = profileData as unknown as JobTwinProfile;
+        setProfile(typedProfile);
+        setIdealRole(typedProfile.ideal_role || "");
+        setSkills(typedProfile.skills?.join(", ") || "");
+        setCareerGoals(typedProfile.career_goals || "");
+        const prefs = typedProfile.preferences || {};
+        setWorkStyle(prefs.work_style || "");
+        setSalaryRange(prefs.salary_range || "");
+        setRemotePreference(prefs.remote_preference || "");
+
+        // Load matched jobs
+        const { data: jobs } = await supabase
+          .from("job_twin_jobs" as any)
+          .select("*, jobs(title, location)")
+          .eq("profile_id", typedProfile.id)
+          .order("match_score", { ascending: false });
+
+        if (jobs) {
+          setMatchedJobs((jobs as any[]).map(j => ({
+            id: j.id,
+            job_id: j.job_id,
+            match_score: j.match_score,
+            match_reasons: j.match_reasons,
+            job: j.jobs
+          })));
+        }
+
+        // Load interview preps
+        const { data: preps } = await supabase
+          .from("job_twin_interview_prep" as any)
+          .select("*")
+          .eq("profile_id", typedProfile.id);
+
+        if (preps) {
+          setInterviewPreps((preps as any[]).map(p => ({
+            id: p.id,
+            job_id: p.job_id,
+            questions: p.questions || [],
+            tips: p.tips || []
+          })));
+        }
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    if (!candidateId) {
+      toast({ title: "Error", description: "Please complete your candidate profile first", variant: "destructive" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const profileData = {
+        candidate_id: candidateId,
+        ideal_role: idealRole,
+        skills: skills.split(",").map(s => s.trim()).filter(Boolean),
+        career_goals: careerGoals,
+        preferences: {
+          work_style: workStyle,
+          salary_range: salaryRange,
+          remote_preference: remotePreference
+        }
+      };
+
+      if (profile?.id) {
+        const { error } = await supabase
+          .from("job_twin_profiles" as any)
+          .update(profileData)
+          .eq("id", profile.id);
+
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("job_twin_profiles" as any)
+          .insert(profileData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        setProfile(data as unknown as JobTwinProfile);
+      }
+
+      toast({ title: "Profile saved", description: "Your Job Twin profile has been updated" });
+      loadProfile();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const runMatching = async () => {
+    if (!profile?.id) {
+      toast({ title: "Save your profile first", variant: "destructive" });
+      return;
+    }
+
+    setMatching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("job-twin-match", {
+        body: { profile_id: profile.id }
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Matching complete", description: `Found ${data.matches?.length || 0} potential matches` });
+      loadProfile();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setMatching(false);
+    }
+  };
+
+  const generateInterviewPrep = async (jobId: string) => {
+    if (!profile?.id) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke("job-twin-interview-prep", {
+        body: { profile_id: profile.id, job_id: jobId }
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Interview prep generated" });
+      loadProfile();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied to clipboard" });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Sparkles className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold">Job Twin</h1>
+          </div>
+          <p className="text-muted-foreground">
+            Your AI-powered career companion. Define your ideal role and let AI find the perfect matches.
+          </p>
+        </div>
+
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="matches" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Matches
+              {matchedJobs.length > 0 && (
+                <Badge variant="secondary" className="ml-1">{matchedJobs.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="prep" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Interview Prep
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Ideal Role</CardTitle>
+                <CardDescription>
+                  Tell us about your dream job and we'll find the best matches
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="idealRole">What role are you looking for?</Label>
+                  <Input
+                    id="idealRole"
+                    placeholder="e.g., Senior Product Manager, Full Stack Developer"
+                    value={idealRole}
+                    onChange={(e) => setIdealRole(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="skills">Your key skills (comma-separated)</Label>
+                  <Input
+                    id="skills"
+                    placeholder="e.g., Python, React, Product Strategy, Data Analysis"
+                    value={skills}
+                    onChange={(e) => setSkills(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="careerGoals">Career goals & aspirations</Label>
+                  <Textarea
+                    id="careerGoals"
+                    placeholder="What do you want to achieve in the next 2-5 years?"
+                    value={careerGoals}
+                    onChange={(e) => setCareerGoals(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="workStyle">Preferred work style</Label>
+                    <Input
+                      id="workStyle"
+                      placeholder="e.g., Collaborative, Independent"
+                      value={workStyle}
+                      onChange={(e) => setWorkStyle(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="salary">Salary expectation</Label>
+                    <Input
+                      id="salary"
+                      placeholder="e.g., $120k-150k"
+                      value={salaryRange}
+                      onChange={(e) => setSalaryRange(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="remote">Remote preference</Label>
+                    <Input
+                      id="remote"
+                      placeholder="e.g., Remote, Hybrid, On-site"
+                      value={remotePreference}
+                      onChange={(e) => setRemotePreference(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button onClick={saveProfile} disabled={saving}>
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Save Profile
+                  </Button>
+                  {profile && (
+                    <Button variant="outline" onClick={runMatching} disabled={matching}>
+                      {matching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                      Find Matches
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="matches">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Job Matches</CardTitle>
+                <CardDescription>
+                  AI-matched positions based on your profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {matchedJobs.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No matches yet. Save your profile and click "Find Matches" to get started.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {matchedJobs.map((match) => (
+                      <Card key={match.id} className="border-l-4 border-l-primary">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg">{match.job?.title || "Job Position"}</h3>
+                              {match.job?.location && (
+                                <p className="text-sm text-muted-foreground">{match.job.location}</p>
+                              )}
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {match.match_reasons?.slice(0, 3).map((reason, i) => (
+                                  <Badge key={i} variant="secondary">{reason}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl font-bold text-primary">{match.match_score}%</span>
+                              </div>
+                              <Progress value={match.match_score} className="w-24 h-2 mt-1" />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="mt-2"
+                                onClick={() => generateInterviewPrep(match.job_id)}
+                              >
+                                <MessageSquare className="h-4 w-4 mr-1" />
+                                Prep
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="prep">
+            <Card>
+              <CardHeader>
+                <CardTitle>Interview Preparation</CardTitle>
+                <CardDescription>
+                  AI-generated questions and tips tailored to your profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {interviewPreps.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No interview prep yet. Click "Prep" on a matched job to generate questions.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {interviewPreps.map((prep) => (
+                      <div key={prep.id} className="space-y-4">
+                        <div>
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Practice Questions
+                          </h4>
+                          <div className="space-y-2">
+                            {prep.questions?.map((q, i) => (
+                              <div key={i} className="flex items-start gap-2 p-3 bg-muted rounded-lg">
+                                <span className="text-muted-foreground">{i + 1}.</span>
+                                <p className="flex-1">{q}</p>
+                                <Button size="icon" variant="ghost" onClick={() => copyToClipboard(q)}>
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        {prep.tips && prep.tips.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-2">Tips</h4>
+                            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                              {prep.tips.map((tip, i) => (
+                                <li key={i}>{tip}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        <Separator />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}
