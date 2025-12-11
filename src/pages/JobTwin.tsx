@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Download } from "lucide-react";
+import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STATUS_OPTIONS = [
@@ -567,10 +567,63 @@ export default function JobTwin() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="matches">
+          <TabsContent value="matches" className="space-y-6">
+            {/* Today's Picks - Top 3 matches */}
+            {matchedJobs.length > 0 && (
+              <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Flame className="h-5 w-5 text-orange-500" />
+                    <CardTitle className="text-lg">Today's Picks</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Top matches based on your profile and preferences
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {matchedJobs.slice(0, 3).map((match, index) => (
+                      <Card key={match.id} className="relative overflow-hidden border-primary/20 hover:border-primary/50 transition-colors">
+                        {index === 0 && (
+                          <div className="absolute top-2 right-2">
+                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          </div>
+                        )}
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-2xl font-bold text-primary">{match.match_score}%</span>
+                            <span className="text-xs text-muted-foreground">match</span>
+                          </div>
+                          <h4 className="font-semibold truncate">{match.job?.title || "Job Position"}</h4>
+                          {match.job?.location && (
+                            <p className="text-sm text-muted-foreground truncate">{match.job.location}</p>
+                          )}
+                          <div className="flex gap-1 mt-2 flex-wrap">
+                            {match.match_reasons?.slice(0, 2).map((reason, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">{reason}</Badge>
+                            ))}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="w-full mt-3"
+                            onClick={() => generateInterviewPrep(match.job_id)}
+                          >
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Prepare
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* All Matches */}
             <Card>
               <CardHeader>
-                <CardTitle>Your Job Matches</CardTitle>
+                <CardTitle>All Matches</CardTitle>
                 <CardDescription>
                   AI-matched positions based on your profile
                 </CardDescription>
