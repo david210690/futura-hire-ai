@@ -116,3 +116,9 @@ verify_jwt = true
 
 [functions.interview-complete-session]
 verify_jwt = true
+
+[functions.voice-interview-start]
+verify_jwt = true
+
+[functions.voice-interview-webhook]
+verify_jwt = false

@@ -17,8 +17,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { 
   ArrowLeft, Briefcase, MessageSquare, Package, Mail, Send, Clock, 
   CheckCircle2, Copy, Loader2, RefreshCw, User, Linkedin, Phone, Globe,
-  Calendar, DollarSign, FileText, Sparkles, Edit, Check
+  Calendar, DollarSign, FileText, Sparkles, Edit, Check, Mic, ExternalLink
 } from "lucide-react";
+import { StartVoiceInterviewDialog } from "@/components/voice-interview/StartVoiceInterviewDialog";
 import { format, formatDistanceToNow } from "date-fns";
 
 interface JobTwinJob {
@@ -764,13 +765,23 @@ export default function JobTwinJobDetail() {
                 <p className="text-muted-foreground">
                   Visit the main Job Twin page to generate application packages for this job.
                 </p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => navigate("/job-twin")}>
                     Go to Job Twin
                   </Button>
-                  <Button onClick={() => navigate(`/interview-practice?job=${jobData?.id}`)} className="gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    Voice Interview Practice
+                  <StartVoiceInterviewDialog 
+                    jobId={jobData?.id}
+                    roleTitle={jobData?.job?.title}
+                    trigger={
+                      <Button className="gap-2">
+                        <Mic className="h-4 w-4" />
+                        Start Live AI Interview (Voice)
+                      </Button>
+                    }
+                  />
+                  <Button variant="ghost" onClick={() => navigate(`/voice-interview?jobId=${jobData?.id}`)} className="gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    View Past Voice Interviews
                   </Button>
                 </div>
               </CardContent>

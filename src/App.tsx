@@ -25,6 +25,8 @@ import JobTwinJobDetail from "./pages/JobTwinJobDetail";
 import InterviewPractice from "./pages/InterviewPractice";
 import InterviewSession from "./pages/InterviewSession";
 import InterviewSessionReview from "./pages/InterviewSessionReview";
+import VoiceInterviewList from "./pages/VoiceInterviewList";
+import VoiceInterviewDetail from "./pages/VoiceInterviewDetail";
 import CareersPage from "./pages/careers/CareersPage";
 import JobDetailPage from "./pages/careers/JobDetailPage";
 import ApplyPage from "./pages/careers/ApplyPage";
@@ -63,6 +65,8 @@ const App = () => (
           <Route path="/interview-practice" element={<InterviewPractice />} />
           <Route path="/interview-practice/session/:sessionId" element={<InterviewSession />} />
           <Route path="/interview-practice/session/:sessionId/review" element={<InterviewSessionReview />} />
+          <Route path="/voice-interview" element={<VoiceInterviewList />} />
+          <Route path="/voice-interview/:sessionId" element={<VoiceInterviewDetail />} />
           <Route path="/s/:token" element={<ShareableShortlist />} />
           
           {/* Candidate-facing career pages */}
