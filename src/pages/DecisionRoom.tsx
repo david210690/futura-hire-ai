@@ -13,6 +13,12 @@ import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { CandidateComparisonModal } from "@/components/decision-room/CandidateComparisonModal";
 import { exportDecisionPDF } from "@/components/decision-room/ExportDecisionPDF";
+import { SnapshotHistorySelector } from "@/components/decision-room/SnapshotHistorySelector";
+
+interface SnapshotHistoryItem {
+  id: string;
+  created_at: string;
+}
 
 interface DimensionScores {
   skills_match: number;
@@ -80,6 +86,8 @@ export default function DecisionRoom() {
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateEvaluation | null>(null);
   const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
   const [showComparison, setShowComparison] = useState(false);
+  const [snapshotHistory, setSnapshotHistory] = useState<SnapshotHistoryItem[]>([]);
+  const [loadingSnapshot, setLoadingSnapshot] = useState(false);
 
   const toggleCompareCandidate = (candidateId: string) => {
     setCompareIds(prev => {
@@ -140,26 +148,31 @@ export default function DecisionRoom() {
         setCandidates(candidateMap);
       }
 
-      // Fetch latest snapshot
-      const { data: snapshotData, error: snapshotError } = await supabase.functions.invoke('get-decision-snapshot', {
-        body: null,
-        headers: {},
-      }).then(() => null).catch(() => null);
-      
-      // Use direct fetch for query params
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-decision-snapshot?jobId=${jobId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-            'Content-Type': 'application/json'
-          }
+      // Fetch all snapshots for history
+      const { data: allSnapshots } = await supabase
+        .from('job_decision_snapshots')
+        .select('id, created_at')
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: false });
+
+      if (allSnapshots && allSnapshots.length > 0) {
+        setSnapshotHistory(allSnapshots);
+        
+        // Load the latest snapshot details
+        const { data: latestSnapshot } = await supabase
+          .from('job_decision_snapshots')
+          .select('*')
+          .eq('id', allSnapshots[0].id)
+          .single();
+        
+        if (latestSnapshot) {
+          setSnapshot({
+            id: latestSnapshot.id,
+            job_id: latestSnapshot.job_id,
+            created_at: latestSnapshot.created_at,
+            data: latestSnapshot.snapshot_json as unknown as SnapshotData,
+          });
         }
-      );
-      
-      const result = await response.json();
-      if (result.success && result.exists) {
-        setSnapshot(result.snapshot);
       }
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -170,6 +183,37 @@ export default function DecisionRoom() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSnapshotById = async (snapshotId: string) => {
+    setLoadingSnapshot(true);
+    try {
+      const { data: snapshotData, error } = await supabase
+        .from('job_decision_snapshots')
+        .select('*')
+        .eq('id', snapshotId)
+        .single();
+
+      if (error) throw error;
+
+      if (snapshotData) {
+        setSnapshot({
+          id: snapshotData.id,
+          job_id: snapshotData.job_id,
+          created_at: snapshotData.created_at,
+          data: snapshotData.snapshot_json as unknown as SnapshotData,
+        });
+        setCompareIds(new Set()); // Reset comparison selection
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load snapshot"
+      });
+    } finally {
+      setLoadingSnapshot(false);
     }
   };
 
@@ -184,6 +228,11 @@ export default function DecisionRoom() {
       
       if (data.success) {
         setSnapshot(data.snapshot);
+        // Update snapshot history
+        setSnapshotHistory(prev => [
+          { id: data.snapshot.id, created_at: data.snapshot.created_at },
+          ...prev
+        ]);
         toast({
           title: "Decision Room Ready",
           description: "AI analysis complete. Review your candidates below."
@@ -297,6 +346,12 @@ export default function DecisionRoom() {
                   Compare ({compareIds.size})
                 </Button>
               )}
+              <SnapshotHistorySelector
+                snapshots={snapshotHistory}
+                currentSnapshotId={snapshot.id}
+                onSelectSnapshot={loadSnapshotById}
+                loading={loadingSnapshot}
+              />
               <Button
                 onClick={() => exportDecisionPDF({
                   jobTitle: job.title,
@@ -313,7 +368,7 @@ export default function DecisionRoom() {
               </Button>
               <Button
                 onClick={generateSnapshot}
-                disabled={generating}
+                disabled={generating || loadingSnapshot}
                 variant="outline"
                 className="gap-2"
               >
