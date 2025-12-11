@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Navbar } from "@/components/layout/Navbar";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, RefreshCw, TrendingUp, Target, Zap, Calendar, DollarSign, Users, Flame, AlertTriangle, ChevronRight, Sparkles, ArrowUp, ArrowRight, Shuffle, Mic, CalendarDays, List } from "lucide-react";
+import { Loader2, RefreshCw, TrendingUp, Target, Zap, Calendar, DollarSign, Users, Flame, AlertTriangle, ChevronRight, Sparkles, ArrowUp, ArrowRight, Shuffle, Mic, CalendarDays, List, Heart, Radar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SnapshotHistory } from "@/components/career-trajectory/SnapshotHistory";
@@ -264,12 +264,19 @@ export default function CareerTrajectory() {
           </div>
         </div>
 
-        {/* Disclaimer */}
-        <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
-          <CardContent className="py-3">
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
-              All projections are approximate guidance based on AI analysis. Salary ranges and timelines are estimates, not guarantees.
+        {/* Supportive Disclaimer - ND-friendly */}
+        <Card className="mb-6 border-primary/20 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Heart className="h-5 w-5 text-primary" />
+              A map, not a verdict
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-sm text-muted-foreground">
+              This page is a snapshot based on your current data. It will change as you learn, rest, or take new steps. 
+              Non-linear paths, pauses, and comebacks are normal. Use this as guidance, not as a final judgment. 
+              Your worth isn't measured by timelines or scores.
             </p>
           </CardContent>
         </Card>
@@ -384,7 +391,7 @@ export default function CareerTrajectory() {
                     <Card key={idx} className="hover:border-primary/50 transition-colors">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{role.title}</CardTitle>
-                        <CardDescription>{role.time_estimate_months} months</CardDescription>
+                        <CardDescription>{role.time_estimate_months} months (at your pace)</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="mb-4">
@@ -396,7 +403,7 @@ export default function CareerTrajectory() {
                         </div>
                         <div className="space-y-3">
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Gaps to Fill</p>
+                            <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Areas to Develop</p>
                             <ul className="text-sm space-y-1">
                               {role.key_gaps_to_fill?.slice(0, 2).map((g, i) => (
                                 <li key={i} className="text-muted-foreground">• {g}</li>
@@ -404,7 +411,7 @@ export default function CareerTrajectory() {
                             </ul>
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Your Leverage</p>
+                            <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Your Strengths</p>
                             <ul className="text-sm space-y-1">
                               {role.leverage_factors?.slice(0, 2).map((l, i) => (
                                 <li key={i} className="text-green-600 dark:text-green-400">• {l}</li>
@@ -412,24 +419,35 @@ export default function CareerTrajectory() {
                             </ul>
                           </div>
                         </div>
-                        <div className="mt-4 pt-3 border-t flex gap-2">
+                        <div className="mt-4 pt-3 border-t space-y-2">
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1 text-xs"
+                              onClick={() => navigate('/job-twin')}
+                            >
+                              <Target className="h-3 w-3 mr-1" />
+                              Find Jobs
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1 text-xs"
+                              onClick={() => navigate(`/voice-interview?role=${encodeURIComponent(role.title)}&difficulty=${role.readiness_score >= 70 ? 'senior' : role.readiness_score >= 40 ? 'mid' : 'junior'}`)}
+                            >
+                              <Mic className="h-3 w-3 mr-1" />
+                              Practice Interview
+                            </Button>
+                          </div>
                           <Button 
-                            variant="outline" 
+                            variant="ghost" 
                             size="sm" 
-                            className="flex-1 text-xs"
-                            onClick={() => navigate('/job-twin')}
+                            className="w-full text-xs"
+                            onClick={() => navigate(`/opportunity-radar?focusRole=${encodeURIComponent(role.title)}`)}
                           >
-                            <Target className="h-3 w-3 mr-1" />
-                            Find Jobs
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex-1 text-xs"
-                            onClick={() => navigate('/voice-interview')}
-                          >
-                            <Mic className="h-3 w-3 mr-1" />
-                            Practice
+                            <Radar className="h-3 w-3 mr-1" />
+                            See on Opportunity Radar
                           </Button>
                         </div>
                       </CardContent>
@@ -520,6 +538,17 @@ export default function CareerTrajectory() {
                               <li key={i} className="text-muted-foreground">• {h}</li>
                             ))}
                           </ul>
+                        </div>
+                        <div className="mt-4 pt-3 border-t">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full text-xs gap-2"
+                            onClick={() => navigate(`/voice-interview?role=${encodeURIComponent(`Interview focusing on ${skill.skill_name}`)}&mode=mixed`)}
+                          >
+                            <Mic className="h-3 w-3" />
+                            Practice this skill in a mock interview
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -654,12 +683,15 @@ export default function CareerTrajectory() {
                       <Users className="h-5 w-5 text-primary" />
                       Peer Comparison
                     </CardTitle>
+                    <CardDescription className="text-xs">
+                      Comparison helps identify focus areas — everyone has their own timeline
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground mb-4">{snapshot.peer_comparison.narrative}</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">Stronger Than Peers</h4>
+                        <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">Your Strengths</h4>
                         <ul className="text-sm space-y-1">
                           {snapshot.peer_comparison.relative_strengths?.map((s, i) => (
                             <li key={i} className="text-muted-foreground">• {s}</li>
@@ -667,7 +699,7 @@ export default function CareerTrajectory() {
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2">Areas to Develop</h4>
+                        <h4 className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2">Growth Opportunities</h4>
                         <ul className="text-sm space-y-1">
                           {snapshot.peer_comparison.relative_weaknesses?.map((w, i) => (
                             <li key={i} className="text-muted-foreground">• {w}</li>
