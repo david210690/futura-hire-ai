@@ -64,6 +64,8 @@ JSON Schema to follow:
     {
       "candidate_id": "string",
       "overall_fit_score": 0-100,
+      "confidence": 0-100,
+      "data_completeness": "high | medium | low",
       "dimension_scores": {
         "skills_match": 0-10,
         "experience_relevance": 0-10,
@@ -82,9 +84,22 @@ JSON Schema to follow:
   "global_summary": {
     "market_insight": "Overall observation about the talent pool quality and diversity",
     "hiring_recommendation": "Strategic recommendation for the hiring manager",
-    "fairness_advisory": "Any notes on maintaining fair evaluation across this candidate pool"
+    "fairness_advisory": "Any notes on maintaining fair evaluation across this candidate pool",
+    "confidence_factors": "Explanation of what affected overall confidence in these evaluations"
   }
-}`;
+}
+
+Confidence scoring guidelines:
+- 90-100: High confidence - abundant data, clear signals, consistent indicators
+- 70-89: Good confidence - sufficient data for reliable assessment
+- 50-69: Moderate confidence - some data gaps, assessment based on available info
+- 30-49: Low confidence - significant data gaps, treat as preliminary
+- 0-29: Very low confidence - minimal data, assessment highly speculative
+
+Data completeness indicators:
+- high: Resume, skills, experience, and additional context all available
+- medium: Core information present but some gaps (e.g., no years of experience)
+- low: Minimal information available, heavy inference required`;
 
 function buildUserPrompt(job: any, candidates: any[]): string {
   const candidatesList = candidates.map(c => ({

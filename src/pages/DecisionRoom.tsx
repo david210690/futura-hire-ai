@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { CandidateComparisonModal } from "@/components/decision-room/CandidateComparisonModal";
 import { exportDecisionPDF } from "@/components/decision-room/ExportDecisionPDF";
 import { SnapshotHistorySelector } from "@/components/decision-room/SnapshotHistorySelector";
+import { ConfidenceIndicator, ConfidenceBar } from "@/components/decision-room/ConfidenceIndicator";
 
 interface SnapshotHistoryItem {
   id: string;
@@ -31,6 +32,8 @@ interface DimensionScores {
 interface CandidateEvaluation {
   candidate_id: string;
   overall_fit_score: number;
+  confidence?: number;
+  data_completeness?: 'high' | 'medium' | 'low';
   dimension_scores?: DimensionScores;
   summary: string;
   strengths?: string[];
@@ -50,6 +53,7 @@ interface GlobalSummary {
   market_insight: string;
   hiring_recommendation: string;
   fairness_advisory?: string;
+  confidence_factors?: string;
 }
 
 interface SnapshotData {
@@ -447,6 +451,15 @@ export default function DecisionRoom() {
                     <p className="text-sm text-blue-600 dark:text-blue-300">{snapshot.data.global_summary.fairness_advisory}</p>
                   </div>
                 )}
+                {snapshot.data.global_summary.confidence_factors && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <h4 className="font-medium text-sm text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Confidence Factors
+                    </h4>
+                    <p className="text-sm text-amber-600 dark:text-amber-300">{snapshot.data.global_summary.confidence_factors}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -492,6 +505,14 @@ export default function DecisionRoom() {
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2 ml-2">
+                                      {evaluation.confidence !== undefined && (
+                                        <ConfidenceIndicator 
+                                          confidence={evaluation.confidence} 
+                                          dataCompleteness={evaluation.data_completeness}
+                                          size="sm"
+                                          showLabel={false}
+                                        />
+                                      )}
                                       <Badge className={getScoreColor(evaluation.overall_fit_score)}>
                                         {evaluation.overall_fit_score}
                                       </Badge>
@@ -508,15 +529,28 @@ export default function DecisionRoom() {
                                 </SheetDescription>
                               </SheetHeader>
                               <div className="mt-6 space-y-6">
-                                {/* Score */}
-                                <div className="flex items-center gap-4">
-                                  <div className={`text-4xl font-bold px-4 py-2 rounded-lg ${getScoreColor(evaluation.overall_fit_score)}`}>
-                                    {evaluation.overall_fit_score}
+                                {/* Score and Confidence */}
+                                <div className="space-y-4">
+                                  <div className="flex items-center gap-4">
+                                    <div className={`text-4xl font-bold px-4 py-2 rounded-lg ${getScoreColor(evaluation.overall_fit_score)}`}>
+                                      {evaluation.overall_fit_score}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">Overall Fit Score</p>
+                                      <p className="text-sm text-muted-foreground">Out of 100</p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <p className="font-medium">Overall Fit Score</p>
-                                    <p className="text-sm text-muted-foreground">Out of 100</p>
-                                  </div>
+                                  {evaluation.confidence !== undefined && (
+                                    <ConfidenceBar confidence={evaluation.confidence} />
+                                  )}
+                                  {evaluation.data_completeness && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                      <span className="text-muted-foreground">Data:</span>
+                                      <Badge variant="outline" className="capitalize">
+                                        {evaluation.data_completeness} completeness
+                                      </Badge>
+                                    </div>
+                                  )}
                                 </div>
 
                                 {/* Dimension Scores */}
