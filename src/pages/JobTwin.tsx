@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame } from "lucide-react";
+import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame, Package, Mail } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STATUS_OPTIONS = [
@@ -66,6 +66,14 @@ interface InterviewPrep {
   tips: string[];
 }
 
+interface ApplicationPackage {
+  cover_letter: string;
+  resume_highlights: string[];
+  key_fit_points: string[];
+  elevator_pitch: string;
+  screening_answers: { question: string; answer: string }[];
+}
+
 export default function JobTwin() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -77,6 +85,8 @@ export default function JobTwin() {
   const [profile, setProfile] = useState<JobTwinProfile | null>(null);
   const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([]);
   const [interviewPreps, setInterviewPreps] = useState<InterviewPrep[]>([]);
+  const [generatingPackage, setGeneratingPackage] = useState<string | null>(null);
+  const [applicationPackages, setApplicationPackages] = useState<Record<string, ApplicationPackage>>({});
 
   // Form state
   const [idealRole, setIdealRole] = useState("");
@@ -344,6 +354,29 @@ export default function JobTwin() {
     }
   };
 
+  const generateApplicationPackage = async (jobId: string, jobTitle: string) => {
+    if (!profile?.id) return;
+    setGeneratingPackage(jobId);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("job-twin-application-package", {
+        body: { profile_id: profile.id, job_id: jobId }
+      });
+
+      if (error) throw error;
+
+      setApplicationPackages(prev => ({
+        ...prev,
+        [jobId]: data as ApplicationPackage
+      }));
+      toast({ title: "Application package generated", description: `Materials ready for ${jobTitle}` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setGeneratingPackage(null);
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: "Copied to clipboard" });
@@ -375,7 +408,7 @@ export default function JobTwin() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
               Profile
@@ -387,9 +420,13 @@ export default function JobTwin() {
                 <Badge variant="secondary" className="ml-1">{matchedJobs.length}</Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="package" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Package
+            </TabsTrigger>
             <TabsTrigger value="prep" className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
-              Interview Prep
+              Prep
             </TabsTrigger>
           </TabsList>
 
@@ -704,6 +741,143 @@ export default function JobTwin() {
                         </Card>
                       );
                     })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="package">
+            <Card>
+              <CardHeader>
+                <CardTitle>Application Package</CardTitle>
+                <CardDescription>
+                  AI-generated cover letters, highlights, and screening answers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {matchedJobs.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No matched jobs yet. Find matches first to generate application materials.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="grid gap-3">
+                      {matchedJobs.slice(0, 5).map((match) => {
+                        const pkg = applicationPackages[match.job_id];
+                        const isGenerating = generatingPackage === match.job_id;
+                        return (
+                          <Card key={match.id} className="border">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between mb-4">
+                                <div>
+                                  <h4 className="font-semibold">{match.job?.title || "Job Position"}</h4>
+                                  {match.job?.location && (
+                                    <p className="text-sm text-muted-foreground">{match.job.location}</p>
+                                  )}
+                                </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => generateApplicationPackage(match.job_id, match.job?.title || "Job")}
+                                  disabled={isGenerating}
+                                >
+                                  {isGenerating ? (
+                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  ) : (
+                                    <Sparkles className="h-4 w-4 mr-2" />
+                                  )}
+                                  {pkg ? "Regenerate" : "Generate"}
+                                </Button>
+                              </div>
+
+                              {pkg && (
+                                <div className="space-y-4">
+                                  {/* Cover Letter */}
+                                  <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h5 className="font-medium flex items-center gap-2">
+                                        <Mail className="h-4 w-4" />
+                                        Cover Letter
+                                      </h5>
+                                      <Button size="sm" variant="ghost" onClick={() => copyToClipboard(pkg.cover_letter)}>
+                                        <Copy className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                    <div className="p-3 bg-muted rounded-lg text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                                      {pkg.cover_letter}
+                                    </div>
+                                  </div>
+
+                                  {/* Elevator Pitch */}
+                                  {pkg.elevator_pitch && (
+                                    <div>
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h5 className="font-medium">Elevator Pitch (30 sec)</h5>
+                                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(pkg.elevator_pitch)}>
+                                          <Copy className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                      <div className="p-3 bg-muted rounded-lg text-sm">
+                                        {pkg.elevator_pitch}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Key Fit Points */}
+                                  {pkg.key_fit_points?.length > 0 && (
+                                    <div>
+                                      <h5 className="font-medium mb-2">Key Fit Points</h5>
+                                      <div className="flex flex-wrap gap-2">
+                                        {pkg.key_fit_points.map((point, i) => (
+                                          <Badge key={i} variant="outline">{point}</Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Resume Highlights */}
+                                  {pkg.resume_highlights?.length > 0 && (
+                                    <div>
+                                      <h5 className="font-medium mb-2">Resume Highlights</h5>
+                                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                                        {pkg.resume_highlights.map((h, i) => (
+                                          <li key={i}>{h}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                  {/* Screening Answers */}
+                                  {pkg.screening_answers?.length > 0 && (
+                                    <div>
+                                      <h5 className="font-medium mb-2">Screening Q&A</h5>
+                                      <div className="space-y-3">
+                                        {pkg.screening_answers.map((qa, i) => (
+                                          <div key={i} className="p-3 bg-muted rounded-lg">
+                                            <p className="font-medium text-sm mb-1">Q: {qa.question}</p>
+                                            <p className="text-sm text-muted-foreground">A: {qa.answer}</p>
+                                            <Button 
+                                              size="sm" 
+                                              variant="ghost" 
+                                              className="mt-2 h-6 text-xs"
+                                              onClick={() => copyToClipboard(qa.answer)}
+                                            >
+                                              <Copy className="h-3 w-3 mr-1" />
+                                              Copy Answer
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </CardContent>
