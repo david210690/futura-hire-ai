@@ -768,7 +768,7 @@ export default function JobTwinJobDetail() {
                   <Button variant="outline" onClick={() => navigate("/job-twin")}>
                     Go to Job Twin
                   </Button>
-                  <Button onClick={() => navigate(`/interview-practice?job=${jobTwinJob?.id}`)}>
+                  <Button onClick={() => navigate(`/interview-practice?job=${jobData?.id}`)}>
                     <Sparkles className="h-4 w-4 mr-2" />
                     Voice Interview Practice
                   </Button>
