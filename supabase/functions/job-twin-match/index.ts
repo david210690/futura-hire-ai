@@ -56,19 +56,37 @@ serve(async (req) => {
       });
     }
 
-    // Use AI to match jobs
+    // Use AI to match jobs with weighted preferences
     const systemPrompt = `You are a job matching AI. Given a candidate's profile and job listings, score each job from 0-100 based on fit and provide 2-3 short match reasons.
+
+IMPORTANT: Consider the candidate's preference priorities:
+- "must_have" (weight 3x): These are dealbreakers. If a job doesn't match, significantly reduce score.
+- "important" (weight 2x): Strong preference. Jobs matching these should score higher.
+- "nice_to_have" (weight 1x): Bonus points if matched, but not critical.
 
 Return a JSON array with this structure:
 [{"job_id": "uuid", "score": 85, "reasons": ["skill match", "culture fit"]}]
 
-Only include jobs with score >= 50.`;
+Only include jobs with score >= 50. Prioritize jobs that match "must_have" preferences.`;
+
+    // Format preferences with priorities
+    const prefs = profile.preferences || {};
+    const formatPref = (key: string) => {
+      const p = prefs[key];
+      if (!p?.value) return null;
+      return `${key}: ${p.value} (${p.priority || 'nice_to_have'})`;
+    };
+
+    const prefsList = ['salary', 'remote', 'location']
+      .map(formatPref)
+      .filter(Boolean)
+      .join(', ');
 
     const userPrompt = `Candidate Profile:
 - Ideal Role: ${profile.ideal_role}
 - Skills: ${profile.skills?.join(", ")}
 - Career Goals: ${profile.career_goals}
-- Preferences: ${JSON.stringify(profile.preferences)}
+- Weighted Preferences: ${prefsList || 'None specified'}
 
 Jobs to evaluate:
 ${jobs.map((j: any) => `- ID: ${j.id}, Title: ${j.title}, Company: ${j.companies?.name || "N/A"}, Requirements: ${j.requirements || "N/A"}, Location: ${j.location || "N/A"}, Remote: ${j.remote_mode || "N/A"}`).join("\n")}`;

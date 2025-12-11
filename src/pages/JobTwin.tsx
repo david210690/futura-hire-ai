@@ -25,6 +25,17 @@ const STATUS_OPTIONS = [
   { value: 'ghosted', label: 'Ghosted', icon: Ghost, color: 'bg-gray-500' },
 ] as const;
 
+const PRIORITY_OPTIONS = [
+  { value: 'must_have', label: 'Must Have', weight: 3 },
+  { value: 'important', label: 'Important', weight: 2 },
+  { value: 'nice_to_have', label: 'Nice to Have', weight: 1 },
+] as const;
+
+interface WeightedPreference {
+  value: string;
+  priority: 'must_have' | 'important' | 'nice_to_have';
+}
+
 interface JobTwinProfile {
   id: string;
   ideal_role: string;
@@ -69,9 +80,12 @@ export default function JobTwin() {
   const [idealRole, setIdealRole] = useState("");
   const [skills, setSkills] = useState("");
   const [careerGoals, setCareerGoals] = useState("");
-  const [workStyle, setWorkStyle] = useState("");
   const [salaryRange, setSalaryRange] = useState("");
+  const [salaryPriority, setSalaryPriority] = useState<'must_have' | 'important' | 'nice_to_have'>('important');
   const [remotePreference, setRemotePreference] = useState("");
+  const [remotePriority, setRemotePriority] = useState<'must_have' | 'important' | 'nice_to_have'>('important');
+  const [locationPreference, setLocationPreference] = useState("");
+  const [locationPriority, setLocationPriority] = useState<'must_have' | 'important' | 'nice_to_have'>('nice_to_have');
 
   useEffect(() => {
     loadProfile();
@@ -99,9 +113,12 @@ export default function JobTwin() {
         setSkills(typedProfile.skills?.join(", ") || "");
         setCareerGoals(typedProfile.career_goals || "");
         const prefs = typedProfile.preferences || {};
-        setWorkStyle(prefs.work_style || "");
-        setSalaryRange(prefs.salary_range || "");
-        setRemotePreference(prefs.remote_preference || "");
+        setSalaryRange(prefs.salary?.value || "");
+        setSalaryPriority(prefs.salary?.priority || "important");
+        setRemotePreference(prefs.remote?.value || "");
+        setRemotePriority(prefs.remote?.priority || "important");
+        setLocationPreference(prefs.location?.value || "");
+        setLocationPriority(prefs.location?.priority || "nice_to_have");
 
         // Load matched jobs
         const { data: jobs } = await supabase
@@ -160,9 +177,9 @@ export default function JobTwin() {
         skills: skills.split(",").map(s => s.trim()).filter(Boolean),
         career_goals: careerGoals,
         preferences: {
-          work_style: workStyle,
-          salary_range: salaryRange,
-          remote_preference: remotePreference
+          salary: { value: salaryRange, priority: salaryPriority },
+          remote: { value: remotePreference, priority: remotePriority },
+          location: { value: locationPreference, priority: locationPriority }
         }
       };
 
@@ -348,35 +365,93 @@ export default function JobTwin() {
 
                 <Separator />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="workStyle">Preferred work style</Label>
-                    <Input
-                      id="workStyle"
-                      placeholder="e.g., Collaborative, Independent"
-                      value={workStyle}
-                      onChange={(e) => setWorkStyle(e.target.value)}
-                    />
-                  </div>
+                <div className="space-y-4">
+                  <h4 className="font-medium">Preferences & Priorities</h4>
+                  <p className="text-sm text-muted-foreground">Set your preferences and how important each is to you</p>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Salary Preference */}
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1 space-y-2">
+                        <Label htmlFor="salary">Salary expectation</Label>
+                        <Input
+                          id="salary"
+                          placeholder="e.g., $120k-150k, ₹15-20 LPA"
+                          value={salaryRange}
+                          onChange={(e) => setSalaryRange(e.target.value)}
+                        />
+                      </div>
+                      <div className="w-36 space-y-2">
+                        <Label>Priority</Label>
+                        <Select value={salaryPriority} onValueChange={(v: any) => setSalaryPriority(v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRIORITY_OPTIONS.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="salary">Salary expectation</Label>
-                    <Input
-                      id="salary"
-                      placeholder="e.g., $120k-150k"
-                      value={salaryRange}
-                      onChange={(e) => setSalaryRange(e.target.value)}
-                    />
-                  </div>
+                    {/* Remote Preference */}
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1 space-y-2">
+                        <Label htmlFor="remote">Work arrangement</Label>
+                        <Select value={remotePreference} onValueChange={setRemotePreference}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select preference" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="remote">Remote Only</SelectItem>
+                            <SelectItem value="hybrid">Hybrid</SelectItem>
+                            <SelectItem value="onsite">On-site</SelectItem>
+                            <SelectItem value="flexible">Flexible</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="w-36 space-y-2">
+                        <Label>Priority</Label>
+                        <Select value={remotePriority} onValueChange={(v: any) => setRemotePriority(v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRIORITY_OPTIONS.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="remote">Remote preference</Label>
-                    <Input
-                      id="remote"
-                      placeholder="e.g., Remote, Hybrid, On-site"
-                      value={remotePreference}
-                      onChange={(e) => setRemotePreference(e.target.value)}
-                    />
+                    {/* Location Preference */}
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1 space-y-2">
+                        <Label htmlFor="location">Preferred location(s)</Label>
+                        <Input
+                          id="location"
+                          placeholder="e.g., New York, London, Bangalore"
+                          value={locationPreference}
+                          onChange={(e) => setLocationPreference(e.target.value)}
+                        />
+                      </div>
+                      <div className="w-36 space-y-2">
+                        <Label>Priority</Label>
+                        <Select value={locationPriority} onValueChange={(v: any) => setLocationPriority(v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRIORITY_OPTIONS.map(opt => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
