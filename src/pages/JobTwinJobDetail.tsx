@@ -465,6 +465,38 @@ export default function JobTwinJobDetail() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Interview Practice Section */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mic className="h-5 w-5" />
+                  Interview Practice
+                </CardTitle>
+                <CardDescription>
+                  Practice with an AI voice interviewer tailored to this role
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3 items-center">
+                  <StartVoiceInterviewDialog 
+                    jobId={jobData?.id}
+                    roleTitle={jobData?.job?.title}
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate(`/voice-interview?jobId=${jobData?.id}`)}
+                    className="gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View Past Sessions
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Get real-time feedback on your interview skills with our AI-powered voice interview simulator.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Communication Tab */}
