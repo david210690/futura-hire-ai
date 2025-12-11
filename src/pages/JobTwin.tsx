@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame, Package, Mail, TrendingUp, BarChart3 } from "lucide-react";
+import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, CheckCircle2, Bookmark, Send, Calendar, Trophy, XCircle, Ghost, FileText, Star, Flame, Package, Mail, TrendingUp, BarChart3, ExternalLink } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STATUS_OPTIONS = [
@@ -703,15 +703,26 @@ export default function JobTwin() {
                               <Badge key={i} variant="outline" className="text-xs">{reason}</Badge>
                             ))}
                           </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="w-full mt-3"
-                            onClick={() => generateInterviewPrep(match.job_id)}
-                          >
-                            <MessageSquare className="h-3 w-3 mr-1" />
-                            Prepare
-                          </Button>
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => navigate(`/job-twin/jobs/${match.id}`)}
+                            >
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              Open
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="flex-1"
+                              onClick={() => generateInterviewPrep(match.job_id)}
+                            >
+                              <MessageSquare className="h-3 w-3 mr-1" />
+                              Prep
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
