@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Radar, RefreshCw, TrendingUp, Target, Lightbulb, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Loader2, Radar, RefreshCw, TrendingUp, Target, Lightbulb, AlertCircle, Mic, Briefcase, Sparkles, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -176,15 +179,19 @@ export default function OpportunityRadar() {
           )}
         </div>
 
-        {/* Empty State */}
+        {/* Empty State - Gentle messaging */}
         {!snapshot && (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Radar className="h-16 w-16 text-muted-foreground mb-4" />
-              <h2 className="text-xl font-semibold mb-2">We haven't mapped your opportunity space yet.</h2>
-              <p className="text-muted-foreground text-center max-w-md mb-6">
-                Generate your opportunity radar to see which role families match your skills, 
-                identify gaps, and discover high-impact skills to focus on.
+              <h2 className="text-xl font-semibold mb-2">Your opportunity map is waiting to be discovered</h2>
+              <p className="text-muted-foreground text-center max-w-md mb-4">
+                We need a bit more data to sharpen this view. Try saving or exploring a few roles 
+                or doing a mock interview — your radar will get clearer over time.
+              </p>
+              <p className="text-sm text-muted-foreground text-center max-w-md mb-6 flex items-center gap-2">
+                <Heart className="h-4 w-4 text-pink-500" />
+                Every career path is unique. This is guidance, not judgment.
               </p>
               <Button onClick={generateRadar} disabled={generating} size="lg">
                 {generating ? (
@@ -200,16 +207,16 @@ export default function OpportunityRadar() {
         {/* Radar Results */}
         {snapshot && (
           <div className="space-y-8">
-            {/* Low Data Warning */}
+            {/* Low Data Warning - Gentle messaging */}
             {snapshot.metadata?.jobs_analyzed !== undefined && snapshot.metadata.jobs_analyzed < 3 && (
-              <Card className="border-yellow-500/30 bg-yellow-500/5">
+              <Card className="border-amber-500/30 bg-amber-500/5">
                 <CardContent className="flex items-start gap-3 py-4">
-                  <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5" />
+                  <Heart className="h-5 w-5 text-amber-500 mt-0.5" />
                   <div>
-                    <p className="font-medium text-yellow-500">Limited data available</p>
+                    <p className="font-medium text-amber-600 dark:text-amber-400">Still gathering insights</p>
                     <p className="text-sm text-muted-foreground">
-                      We need more data from your interactions to make this radar sharper. 
-                      Try saving or applying to a few more roles in your AI Job Twin.
+                      We need a bit more data to sharpen this view. Try saving or exploring a few roles 
+                      or doing a mock interview — your radar will get clearer over time. No rush.
                     </p>
                   </div>
                 </CardContent>
@@ -259,63 +266,7 @@ export default function OpportunityRadar() {
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {snapshot.role_families.map((family) => (
-                    <Card key={family.id} className="flex flex-col">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <CardTitle className="text-lg">{family.label}</CardTitle>
-                          {getReadinessBadge(family.readiness)}
-                        </div>
-                        <div className="mt-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-muted-foreground">Fit Score</span>
-                            <span className={`text-lg font-bold ${getScoreColor(family.score)}`}>
-                              {family.score}%
-                            </span>
-                          </div>
-                          <Progress value={family.score} className="h-2" />
-                        </div>
-                      </CardHeader>
-                      <CardContent className="flex-1 space-y-3">
-                        {family.why_fit && family.why_fit.length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-medium text-green-500 mb-1">Why You're a Fit</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {family.why_fit.slice(0, 2).map((reason, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-green-500">•</span>
-                                  {reason}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {family.key_gaps && family.key_gaps.length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-medium text-orange-500 mb-1">Key Gaps</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {family.key_gaps.slice(0, 2).map((gap, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-orange-500">•</span>
-                                  {gap}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {family.recommended_skills_to_focus && family.recommended_skills_to_focus.length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-medium text-blue-500 mb-1">Focus On</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {family.recommended_skills_to_focus.slice(0, 3).map((skill, i) => (
-                                <Badge key={i} variant="outline" className="text-xs">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <RoleFamilyCard key={family.id} family={family} getReadinessBadge={getReadinessBadge} getScoreColor={getScoreColor} />
                   ))}
                 </div>
               </div>
@@ -360,5 +311,192 @@ export default function OpportunityRadar() {
         )}
       </main>
     </div>
+  );
+}
+
+// Role Family Card Component with CTAs
+function RoleFamilyCard({ 
+  family, 
+  getReadinessBadge, 
+  getScoreColor 
+}: { 
+  family: RoleFamily; 
+  getReadinessBadge: (r: string) => React.ReactNode; 
+  getScoreColor: (s: number) => string;
+}) {
+  const navigate = useNavigate();
+  const [practiceDialogOpen, setPracticeDialogOpen] = useState(false);
+  const [mode, setMode] = useState("mixed");
+  const [difficulty, setDifficulty] = useState("mid");
+  const [starting, setStarting] = useState(false);
+
+  const startPracticeInterview = async () => {
+    setStarting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please log in to continue");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("voice-interview-start", {
+        body: {
+          role_title: family.label,
+          mode,
+          difficulty,
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.session_id) {
+        toast.success("Interview session created!");
+        navigate(`/voice-interview/${data.session_id}`);
+      } else if (data?.join_url) {
+        window.open(data.join_url, '_blank');
+      }
+      setPracticeDialogOpen(false);
+    } catch (error: any) {
+      console.error("Error starting interview:", error);
+      toast.error("Could not start interview. Please try again.");
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  return (
+    <Card className="flex flex-col">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-lg">{family.label}</CardTitle>
+          {getReadinessBadge(family.readiness)}
+        </div>
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm text-muted-foreground">Fit Score</span>
+            <span className={`text-lg font-bold ${getScoreColor(family.score)}`}>
+              {family.score}%
+            </span>
+          </div>
+          <Progress value={family.score} className="h-2" />
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 space-y-3">
+        {family.why_fit && family.why_fit.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-green-500 mb-1">Why You're a Fit</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              {family.why_fit.slice(0, 2).map((reason, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-green-500">•</span>
+                  {reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {family.key_gaps && family.key_gaps.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-amber-500 mb-1">Still Developing</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              {family.key_gaps.slice(0, 2).map((gap, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-amber-500">•</span>
+                  {gap}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {family.recommended_skills_to_focus && family.recommended_skills_to_focus.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-blue-500 mb-1">Focus On</h4>
+            <div className="flex flex-wrap gap-1">
+              {family.recommended_skills_to_focus.slice(0, 3).map((skill, i) => (
+                <Badge key={i} variant="outline" className="text-xs">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Cross-feature CTAs */}
+        <div className="pt-3 border-t space-y-2">
+          <Dialog open={practiceDialogOpen} onOpenChange={setPracticeDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full gap-2">
+                <Mic className="h-3 w-3" />
+                Practice Interview for this Role
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Practice Interview: {family.label}</DialogTitle>
+                <DialogDescription>
+                  Get comfortable with interviews for this role family. Choose your preferred settings below.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Interview Mode</Label>
+                  <Select value={mode} onValueChange={setMode}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="behavioral">Behavioral</SelectItem>
+                      <SelectItem value="mixed">Mixed (Recommended)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Difficulty Level</Label>
+                  <Select value={difficulty} onValueChange={setDifficulty}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="junior">Junior</SelectItem>
+                      <SelectItem value="mid">Mid-Level</SelectItem>
+                      <SelectItem value="senior">Senior</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setPracticeDialogOpen(false)}>Cancel</Button>
+                <Button onClick={startPracticeInterview} disabled={starting}>
+                  {starting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
+                  Start Practice
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={() => navigate('/job-twin')}
+            >
+              <Briefcase className="h-3 w-3 mr-1" />
+              See matching roles
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={() => navigate(`/career-trajectory?focusRoleFamily=${encodeURIComponent(family.id)}`)}
+            >
+              <Sparkles className="h-3 w-3 mr-1" />
+              Impact on trajectory
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

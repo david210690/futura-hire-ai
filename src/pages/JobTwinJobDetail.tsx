@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { 
   ArrowLeft, Briefcase, MessageSquare, Package, Mail, Send, Clock, 
   CheckCircle2, Copy, Loader2, RefreshCw, User, Linkedin, Phone, Globe,
-  Calendar, DollarSign, FileText, Sparkles, Edit, Check, Mic, ExternalLink
+  Calendar, DollarSign, FileText, Sparkles, Edit, Check, Mic, ExternalLink, TrendingUp, Target
 } from "lucide-react";
 import { StartVoiceInterviewDialog } from "@/components/voice-interview/StartVoiceInterviewDialog";
 import { format, formatDistanceToNow } from "date-fns";
@@ -495,6 +495,39 @@ export default function JobTwinJobDetail() {
                 <p className="text-sm text-muted-foreground mt-3">
                   Get real-time feedback on your interview skills with our AI-powered voice interview simulator.
                 </p>
+              </CardContent>
+            </Card>
+
+            {/* Cross-feature CTAs - Career Insights */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Career Insights
+                </CardTitle>
+                <CardDescription>
+                  See how this role fits into your broader career picture
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate(`/career-trajectory?jobId=${jobData?.id}`)}
+                    className="gap-2"
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    See how this role fits into my trajectory
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate(`/opportunity-radar?jobId=${jobData?.id}`)}
+                    className="gap-2"
+                  >
+                    <Target className="h-4 w-4" />
+                    See similar roles on my Opportunity Radar
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

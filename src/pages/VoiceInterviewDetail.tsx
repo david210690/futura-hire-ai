@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mic, Calendar, Target, Briefcase, TrendingUp, Clock, Bot, User } from "lucide-react";
+import { ArrowLeft, Mic, Calendar, Target, Briefcase, TrendingUp, Clock, Bot, User, Heart, Sparkles, Radar, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 
 interface VoiceSession {
@@ -271,16 +271,78 @@ export default function VoiceInterviewDetail() {
           </CardContent>
         </Card>
 
+        {/* Supportive Score Context - ND-friendly messaging */}
+        {session.status === 'completed' && session.overall_score !== null && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <Heart className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-foreground font-medium mb-1">This score is guidance, not judgment</p>
+                  <p className="text-sm text-muted-foreground">
+                    It's here to help you see what to practice next — it does not define your worth or your future. 
+                    Every interview is practice, and growth happens at your own pace.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Cross-feature CTAs for completed sessions */}
+        {session.status === 'completed' && session.overall_score !== null && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                What's Next?
+              </CardTitle>
+              <CardDescription>Use this practice session to inform your career journey</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="outline" asChild>
+                  <Link to={`/career-trajectory?sourceSessionId=${session.id}`}>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    See how this affects my trajectory
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to={`/opportunity-radar?fromSession=${session.id}`}>
+                    <Radar className="h-4 w-4 mr-2" />
+                    Update my Opportunity Radar
+                  </Link>
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Your Radar uses your latest performance signals. Regenerate it after a few practice sessions for more accurate insights.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Feedback Summary */}
         {session.feedback_summary && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>AI Feedback</CardTitle>
-              <CardDescription>Evaluation of your interview performance</CardDescription>
+              <CardDescription>Insights to help you grow — not judgment</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 {renderFeedbackSummary(session.feedback_summary)}
+              </div>
+              
+              {/* Practice again CTA */}
+              <div className="mt-6 pt-4 border-t">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => navigate(`/voice-interview?role=${encodeURIComponent(session.role_title || '')}&mode=${session.mode}&difficulty=${session.difficulty}`)}
+                  className="gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Practice again with same settings
+                </Button>
               </div>
             </CardContent>
           </Card>
