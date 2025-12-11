@@ -1384,6 +1384,45 @@ export type Database = {
           },
         ]
       }
+      job_twin_message_templates: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          subject: string | null
+          template_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          channel?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          subject?: string | null
+          template_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          subject?: string | null
+          template_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       job_twin_negotiation_notes: {
         Row: {
           candidate_desired_salary: string | null
