@@ -2666,6 +2666,106 @@ export type Database = {
           },
         ]
       }
+      voice_interview_sessions: {
+        Row: {
+          created_at: string
+          difficulty: string
+          ended_at: string | null
+          feedback_summary: string | null
+          id: string
+          job_twin_job_id: string | null
+          mode: string
+          overall_score: number | null
+          retell_session_id: string | null
+          role_title: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          ended_at?: string | null
+          feedback_summary?: string | null
+          id?: string
+          job_twin_job_id?: string | null
+          mode?: string
+          overall_score?: number | null
+          retell_session_id?: string | null
+          role_title?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          ended_at?: string | null
+          feedback_summary?: string | null
+          id?: string
+          job_twin_job_id?: string | null
+          mode?: string
+          overall_score?: number | null
+          retell_session_id?: string | null
+          role_title?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_interview_sessions_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_interview_turns: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          turn_index: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          turn_index: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          turn_index?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_interview_turns_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "voice_interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
