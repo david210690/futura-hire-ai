@@ -42,11 +42,12 @@ serve(async (req) => {
       });
     }
 
-    // Get available jobs
+    // Get available PUBLIC jobs across all orgs
     const { data: jobs, error: jobsError } = await supabase
       .from("jobs")
-      .select("id, title, description, requirements, location, remote_mode, seniority")
+      .select("id, title, description, requirements, location, remote_mode, seniority, companies(name)")
       .eq("status", "open")
+      .eq("is_public", true)
       .limit(20);
 
     if (jobsError || !jobs || jobs.length === 0) {
@@ -70,7 +71,7 @@ Only include jobs with score >= 50.`;
 - Preferences: ${JSON.stringify(profile.preferences)}
 
 Jobs to evaluate:
-${jobs.map(j => `- ID: ${j.id}, Title: ${j.title}, Requirements: ${j.requirements || "N/A"}, Location: ${j.location || "N/A"}, Remote: ${j.remote_mode || "N/A"}`).join("\n")}`;
+${jobs.map((j: any) => `- ID: ${j.id}, Title: ${j.title}, Company: ${j.companies?.name || "N/A"}, Requirements: ${j.requirements || "N/A"}, Location: ${j.location || "N/A"}, Remote: ${j.remote_mode || "N/A"}`).join("\n")}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
