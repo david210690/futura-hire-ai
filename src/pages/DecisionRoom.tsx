@@ -63,10 +63,19 @@ export default function DecisionRoom() {
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateEvaluation | null>(null);
 
   useEffect(() => {
-    loadData();
+    if (jobId && jobId !== ':id') {
+      loadData();
+    } else {
+      setLoading(false);
+    }
   }, [jobId]);
 
   const loadData = async () => {
+    if (!jobId || jobId === ':id') {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     try {
       // Fetch job details
@@ -191,12 +200,24 @@ export default function DecisionRoom() {
     );
   }
 
-  if (!job) {
+  if (!job || !jobId || jobId === ':id') {
     return (
       <div className="min-h-screen bg-background">
         <Navbar userRole="recruiter" />
         <main className="container mx-auto px-4 py-8">
-          <p className="text-muted-foreground">Job not found</p>
+          <Card className="max-w-md mx-auto mt-12">
+            <CardHeader className="text-center">
+              <CardTitle>Job Not Found</CardTitle>
+              <CardDescription>
+                Please select a job from your dashboard to access the Decision Room.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <Button onClick={() => navigate('/dashboard')}>
+                Go to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
         </main>
       </div>
     );
