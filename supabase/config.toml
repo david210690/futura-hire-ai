@@ -104,3 +104,15 @@ verify_jwt = true
 
 [functions.job-twin-generate-templates]
 verify_jwt = true
+
+[functions.interview-generate-questions]
+verify_jwt = true
+
+[functions.interview-evaluate-answer]
+verify_jwt = true
+
+[functions.interview-transcribe-audio]
+verify_jwt = true
+
+[functions.interview-complete-session]
+verify_jwt = true

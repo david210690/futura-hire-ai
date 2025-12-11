@@ -1151,6 +1151,160 @@ export type Database = {
           },
         ]
       }
+      interview_simulation_answers: {
+        Row: {
+          audio_url: string | null
+          created_at: string | null
+          feedback: string | null
+          id: string
+          question_id: string
+          score: number | null
+          session_id: string
+          transcript: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          question_id: string
+          score?: number | null
+          session_id: string
+          transcript?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          question_id?: string
+          score?: number | null
+          session_id?: string
+          transcript?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_simulation_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "interview_simulation_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_simulation_answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_simulation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_simulation_questions: {
+        Row: {
+          created_at: string | null
+          id: string
+          ideal_answer_points: string | null
+          question_index: number
+          question_text: string
+          question_type: string
+          session_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ideal_answer_points?: string | null
+          question_index: number
+          question_text: string
+          question_type: string
+          session_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ideal_answer_points?: string | null
+          question_index?: number
+          question_text?: string
+          question_type?: string
+          session_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_simulation_questions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_simulation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_simulation_sessions: {
+        Row: {
+          completed_questions: number | null
+          created_at: string | null
+          difficulty: string
+          feedback_summary: string | null
+          id: string
+          job_twin_job_id: string | null
+          mode: string
+          overall_score: number | null
+          role_title: string
+          status: string
+          total_questions: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_questions?: number | null
+          created_at?: string | null
+          difficulty?: string
+          feedback_summary?: string | null
+          id?: string
+          job_twin_job_id?: string | null
+          mode?: string
+          overall_score?: number | null
+          role_title: string
+          status?: string
+          total_questions?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_questions?: number | null
+          created_at?: string | null
+          difficulty?: string
+          feedback_summary?: string | null
+          id?: string
+          job_twin_job_id?: string | null
+          mode?: string
+          overall_score?: number | null
+          role_title?: string
+          status?: string
+          total_questions?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_simulation_sessions_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interviews: {
         Row: {
           candidate_id: string
