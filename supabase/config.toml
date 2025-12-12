@@ -194,3 +194,12 @@ verify_jwt = true
 
 [functions.get-hiring-autopilot]
 verify_jwt = true
+
+[functions.execute-autopilot-action]
+verify_jwt = true
+
+[functions.get-autopilot-activity]
+verify_jwt = true
+
+[functions.bulk-generate-offer-likelihood]
+verify_jwt = true

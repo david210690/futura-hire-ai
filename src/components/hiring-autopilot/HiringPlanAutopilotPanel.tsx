@@ -19,10 +19,16 @@ import {
   Linkedin,
   Clock,
   BarChart3,
-  Download
+  Download,
+  Dna,
+  Mic,
+  ArrowRight
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ExecuteActionButton } from '@/components/autopilot/ExecuteActionButton';
+import { AutopilotActivityLog } from '@/components/autopilot/AutopilotActivityLog';
+import { executeAutopilotAction } from '@/lib/autopilotActions';
 
 interface HiringPlanAutopilotPanelProps {
   jobTwinJobId: string;
@@ -437,6 +443,48 @@ END:VEVENT
                     <CheckCircle2 className="h-3 w-3" />
                     <span>{c.next_action}</span>
                   </div>
+                  {/* Quick Actions for Priority Candidates */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={async () => {
+                        const result = await executeAutopilotAction('fit_request_sent', jobTwinJobId, c.candidateId);
+                        if (result.success) toast.success('Fit request sent');
+                        else toast.error(result.error || 'Failed');
+                      }}
+                    >
+                      <Dna className="h-3 w-3" />
+                      Fit Request
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={async () => {
+                        const result = await executeAutopilotAction('voice_interview_requested', jobTwinJobId, c.candidateId);
+                        if (result.success) toast.success('Interview requested');
+                        else toast.error(result.error || 'Failed');
+                      }}
+                    >
+                      <Mic className="h-3 w-3" />
+                      Interview
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={async () => {
+                        const result = await executeAutopilotAction('stage_updated', jobTwinJobId, c.candidateId, { newStage: c.suggested_stage_move });
+                        if (result.success) toast.success('Stage updated');
+                        else toast.error(result.error || 'Failed');
+                      }}
+                    >
+                      <ArrowRight className="h-3 w-3" />
+                      Move Stage
+                    </Button>
+                  </div>
                 </div>
               ))}
             </CollapsibleContent>
@@ -658,16 +706,27 @@ END:VEVENT
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Email Follow-up</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(
-                    `Subject: ${snapshot.templates.email_followup.subject}\n\n${snapshot.templates.email_followup.body}`,
-                    'Email template'
-                  )}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <ExecuteActionButton
+                    jobId={jobTwinJobId}
+                    actionType="email_sent"
+                    template={{
+                      subject: snapshot.templates.email_followup.subject,
+                      body: snapshot.templates.email_followup.body
+                    }}
+                    compact
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(
+                      `Subject: ${snapshot.templates.email_followup.subject}\n\n${snapshot.templates.email_followup.body}`,
+                      'Email template'
+                    )}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
               <div className="bg-muted/50 p-2 rounded text-xs">
                 <p className="font-medium">Subject: {snapshot.templates.email_followup.subject}</p>
@@ -682,13 +741,23 @@ END:VEVENT
                   <Linkedin className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">LinkedIn Message</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(snapshot.templates.linkedin_message, 'LinkedIn message')}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <ExecuteActionButton
+                    jobId={jobTwinJobId}
+                    actionType="linkedin_message_sent"
+                    template={{
+                      body: snapshot.templates.linkedin_message
+                    }}
+                    compact
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(snapshot.templates.linkedin_message, 'LinkedIn message')}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
               <div className="bg-muted/50 p-2 rounded text-xs whitespace-pre-wrap">
                 {snapshot.templates.linkedin_message}
@@ -702,13 +771,24 @@ END:VEVENT
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Scheduling Message</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(snapshot.templates.scheduling_message, 'Scheduling message')}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <ExecuteActionButton
+                    jobId={jobTwinJobId}
+                    actionType="email_sent"
+                    template={{
+                      subject: 'Interview Scheduling',
+                      body: snapshot.templates.scheduling_message
+                    }}
+                    compact
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(snapshot.templates.scheduling_message, 'Scheduling message')}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
               <div className="bg-muted/50 p-2 rounded text-xs whitespace-pre-wrap">
                 {snapshot.templates.scheduling_message}
@@ -749,9 +829,12 @@ END:VEVENT
           </CollapsibleContent>
         </Collapsible>
 
+        {/* Autopilot Activity Log */}
+        <AutopilotActivityLog jobTwinJobId={jobTwinJobId} />
+
         {/* Footer Note */}
         <p className="text-xs text-muted-foreground text-center pt-2 border-t border-border/50">
-          AI-generated plan. Use structured interviews and human judgment alongside this guidance.
+          AI-generated plan. Autopilot assists execution; final decisions remain human.
         </p>
       </CardContent>
     </Card>
