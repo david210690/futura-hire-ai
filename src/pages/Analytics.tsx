@@ -383,10 +383,10 @@ export default function Analytics() {
                         <div 
                           key={idx} 
                           className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
-                          onClick={() => navigate(`/recruiter/jobs/${job.jobId}`)}
+                          onClick={() => navigate(`/jobs/${job.jobId}`)}
                           role="button"
                           tabIndex={0}
-                          onKeyDown={(e) => e.key === 'Enter' && navigate(`/recruiter/jobs/${job.jobId}`)}
+                          onKeyDown={(e) => e.key === 'Enter' && navigate(`/jobs/${job.jobId}`)}
                         >
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{job.title}</p>
@@ -441,9 +441,9 @@ export default function Analytics() {
                         isLast={idx === funnelStages.length - 1}
                         onClick={() => {
                           if (jobPerformance.length > 0) {
-                            navigate(`/recruiter/jobs/${jobPerformance[0].jobId}?stage=${stageKey}`);
+                            navigate(`/jobs/${jobPerformance[0].jobId}?stage=${stageKey}`);
                           } else {
-                            navigate('/recruiter');
+                            navigate('/dashboard');
                           }
                         }}
                       />
