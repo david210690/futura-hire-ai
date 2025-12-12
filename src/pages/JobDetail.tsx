@@ -198,6 +198,7 @@ export default function JobDetail() {
               <CandidatePipelineView 
                 applications={applications} 
                 jobId={id!} 
+                jobTitle={job.title}
                 onRefresh={loadData} 
               />
             )}
