@@ -1932,6 +1932,70 @@ export type Database = {
           },
         ]
       }
+      offer_likelihood_scores: {
+        Row: {
+          candidate_user_id: string
+          created_at: string
+          id: string
+          job_twin_job_id: string
+          likelihood_band: string
+          likelihood_score: number
+          reasoning_json: Json
+          recruiter_user_id: string
+          role_dna_fit_id: string | null
+          shortlist_score_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          candidate_user_id: string
+          created_at?: string
+          id?: string
+          job_twin_job_id: string
+          likelihood_band: string
+          likelihood_score: number
+          reasoning_json: Json
+          recruiter_user_id: string
+          role_dna_fit_id?: string | null
+          shortlist_score_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          candidate_user_id?: string
+          created_at?: string
+          id?: string
+          job_twin_job_id?: string
+          likelihood_band?: string
+          likelihood_score?: number
+          reasoning_json?: Json
+          recruiter_user_id?: string
+          role_dna_fit_id?: string | null
+          shortlist_score_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_likelihood_scores_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_likelihood_scores_role_dna_fit_id_fkey"
+            columns: ["role_dna_fit_id"]
+            isOneToOne: false
+            referencedRelation: "role_dna_fit_scores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_likelihood_scores_shortlist_score_id_fkey"
+            columns: ["shortlist_score_id"]
+            isOneToOne: false
+            referencedRelation: "shortlist_predictive_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunity_radar_snapshots: {
         Row: {
           created_at: string
@@ -2011,6 +2075,41 @@ export type Database = {
           slug?: string | null
         }
         Relationships: []
+      }
+      pipeline_health_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          job_twin_job_id: string
+          recruiter_user_id: string
+          snapshot_json: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_twin_job_id: string
+          recruiter_user_id: string
+          snapshot_json: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_twin_job_id?: string
+          recruiter_user_id?: string
+          snapshot_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_health_snapshots_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       predictive_scores: {
         Row: {
