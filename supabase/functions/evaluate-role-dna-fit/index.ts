@@ -285,6 +285,21 @@ Return ONLY valid JSON matching the schema described in the system prompt.
 
     console.log("Role DNA fit evaluation saved:", insertedScore.id);
 
+    // Auto-update any pending fit request for this user + job to "completed"
+    const { error: updateRequestError } = await supabaseClient
+      .from("role_dna_fit_requests")
+      .update({ status: "completed", updated_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .eq("job_twin_job_id", jobId)
+      .eq("status", "pending");
+
+    if (updateRequestError) {
+      console.warn("Could not update fit request status:", updateRequestError);
+      // Not a blocking error - continue
+    } else {
+      console.log("Updated pending fit request(s) to completed for job:", jobId);
+    }
+
     // 12. Return response
     return new Response(
       JSON.stringify({
