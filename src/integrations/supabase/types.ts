@@ -55,6 +55,56 @@ export type Database = {
           },
         ]
       }
+      ai_decision_audit_logs: {
+        Row: {
+          candidate_user_id: string | null
+          created_at: string
+          decision_type: string
+          explanation: string
+          fairness_checks: Json
+          id: string
+          input_summary: Json
+          job_twin_job_id: string | null
+          model_metadata: Json
+          output_summary: Json
+          recruiter_user_id: string | null
+        }
+        Insert: {
+          candidate_user_id?: string | null
+          created_at?: string
+          decision_type: string
+          explanation: string
+          fairness_checks?: Json
+          id?: string
+          input_summary?: Json
+          job_twin_job_id?: string | null
+          model_metadata?: Json
+          output_summary?: Json
+          recruiter_user_id?: string | null
+        }
+        Update: {
+          candidate_user_id?: string | null
+          created_at?: string
+          decision_type?: string
+          explanation?: string
+          fairness_checks?: Json
+          id?: string
+          input_summary?: Json
+          job_twin_job_id?: string | null
+          model_metadata?: Json
+          output_summary?: Json
+          recruiter_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_decision_audit_logs_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_runs: {
         Row: {
           created_at: string | null

@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, TrendingUp, AlertCircle, CheckCircle2, Target, ArrowRight, RefreshCw } from "lucide-react";
+import { CandidateTransparencyNote } from "@/components/explainability/CandidateTransparencyNote";
 
 interface FitDimensionScores {
   cognitive_fit: number;
@@ -333,6 +334,23 @@ export function RoleFitInsightPanel({ jobTwinJobId }: RoleFitInsightPanelProps) 
             </p>
           </div>
         )}
+
+        {/* How this was estimated */}
+        <CandidateTransparencyNote
+          title="How this fit is estimated"
+          variant="fit"
+          keyFactors={[
+            "Your skills and experience from profile",
+            "Role DNA expectations (cognitive, communication, execution style)",
+            "Pattern matching against role requirements",
+            "Interview signals if available"
+          ]}
+          limitations={[
+            "Based only on available profile data",
+            "Role DNA is recruiter-configured and may vary",
+            "This is directional guidance, not a final judgment"
+          ]}
+        />
 
         {/* Disclaimer */}
         <p className="text-xs text-muted-foreground text-center border-t pt-4">

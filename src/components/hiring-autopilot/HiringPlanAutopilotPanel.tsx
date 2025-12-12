@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { ExecuteActionButton } from '@/components/autopilot/ExecuteActionButton';
 import { AutopilotActivityLog } from '@/components/autopilot/AutopilotActivityLog';
 import { executeAutopilotAction } from '@/lib/autopilotActions';
+import { HowThisWasGenerated } from '@/components/explainability/HowThisWasGenerated';
 
 interface HiringPlanAutopilotPanelProps {
   jobTwinJobId: string;
@@ -417,6 +418,18 @@ END:VEVENT
               </div>
             )}
             <p className="text-xs text-muted-foreground italic">{snapshot.overview.disclaimer}</p>
+            
+            {/* How this plan was generated */}
+            <HowThisWasGenerated
+              signalsUsed={[
+                "Role DNA blueprint for this position",
+                "Current pipeline stage distribution",
+                "Candidate fit scores and interview signals",
+                "Hiring velocity and bottleneck patterns"
+              ]}
+              disclaimer="This plan is generated to assist prioritization, not to automate decisions. All actions require your explicit approval."
+              className="mt-4"
+            />
           </CollapsibleContent>
         </Collapsible>
 
