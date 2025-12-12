@@ -22,6 +22,7 @@ import {
 import { StartVoiceInterviewDialog } from "@/components/voice-interview/StartVoiceInterviewDialog";
 import { RoleDnaPanel } from "@/components/role-dna/RoleDnaPanel";
 import { RoleFitInsightPanel } from "@/components/role-dna/RoleFitInsightPanel";
+import { InterviewPrepPanel } from "@/components/interview-prep/InterviewPrepPanel";
 import { format, formatDistanceToNow } from "date-fns";
 
 interface JobTwinJob {
@@ -541,6 +542,11 @@ export default function JobTwinJobDetail() {
             {/* Role Fit Insight (Candidate's fit against the Role DNA) */}
             <div className="mt-6">
               <RoleFitInsightPanel jobTwinJobId={jobData.id} />
+            </div>
+
+            {/* AI Interview Prep Panel */}
+            <div className="mt-6">
+              <InterviewPrepPanel jobTwinJobId={jobData.id} roleTitle={jobData.job?.title} />
             </div>
           </TabsContent>
 

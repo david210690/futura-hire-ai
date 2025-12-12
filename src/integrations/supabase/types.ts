@@ -1089,6 +1089,51 @@ export type Database = {
           },
         ]
       }
+      interview_prep_plans: {
+        Row: {
+          created_at: string
+          id: string
+          job_twin_job_id: string
+          plan_json: Json
+          role_dna_fit_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_twin_job_id: string
+          plan_json: Json
+          role_dna_fit_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_twin_job_id?: string
+          plan_json?: Json
+          role_dna_fit_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_prep_plans_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_prep_plans_role_dna_fit_id_fkey"
+            columns: ["role_dna_fit_id"]
+            isOneToOne: false
+            referencedRelation: "role_dna_fit_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_questions: {
         Row: {
           created_at: string | null
