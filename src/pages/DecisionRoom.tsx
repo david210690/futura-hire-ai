@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap, Send, Clock } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
@@ -117,6 +117,8 @@ export default function DecisionRoom() {
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
   const [assessingAll, setAssessingAll] = useState(false);
+  const [fitRequestStatus, setFitRequestStatus] = useState<Map<string, 'pending' | 'completed' | 'requesting'>>(new Map());
+  const [candidateUserIds, setCandidateUserIds] = useState<Map<string, string>>(new Map());
 
   // Helper to get DNA fit score color (neutral-to-positive, no scary red)
   const getDnaScoreColor = (score: number) => {
@@ -307,6 +309,7 @@ export default function DecisionRoom() {
           if (snapshotData.candidates && snapshotData.candidates.length > 0) {
             const candidateIds = snapshotData.candidates.map(c => c.candidate_id);
             await loadRoleDnaFitScores(jobId, candidateIds);
+            await loadFitRequestsAndUserIds(jobId, candidateIds);
           }
         }
       }
@@ -359,6 +362,89 @@ export default function DecisionRoom() {
     }
   };
 
+  // Load fit request statuses and candidate user IDs
+  const loadFitRequestsAndUserIds = async (jobTwinJobId: string, candidateIds: string[]) => {
+    try {
+      // First, get user_ids for all candidates
+      const { data: candidateData } = await supabase
+        .from('candidates')
+        .select('id, user_id')
+        .in('id', candidateIds);
+
+      if (candidateData) {
+        const userIdMap = new Map<string, string>();
+        candidateData.forEach(c => {
+          userIdMap.set(c.id, c.user_id);
+        });
+        setCandidateUserIds(userIdMap);
+
+        // Now fetch fit request statuses for each candidate
+        const userIds = candidateData.map(c => c.user_id);
+        const { data: requests } = await supabase
+          .from('role_dna_fit_requests')
+          .select('user_id, status')
+          .eq('job_twin_job_id', jobTwinJobId)
+          .in('user_id', userIds)
+          .order('created_at', { ascending: false });
+
+        if (requests) {
+          const statusMap = new Map<string, 'pending' | 'completed' | 'requesting'>();
+          // Map from user_id back to candidate_id
+          for (const req of requests) {
+            const candidateId = candidateData.find(c => c.user_id === req.user_id)?.id;
+            if (candidateId && !statusMap.has(candidateId)) {
+              statusMap.set(candidateId, req.status as 'pending' | 'completed');
+            }
+          }
+          setFitRequestStatus(statusMap);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading fit requests:', error);
+    }
+  };
+
+  // Request fit check for a candidate
+  const requestFitCheck = async (candidateId: string) => {
+    const userId = candidateUserIds.get(candidateId);
+    if (!userId || !jobId) return;
+
+    setFitRequestStatus(prev => new Map(prev).set(candidateId, 'requesting'));
+
+    try {
+      const { error } = await supabase.functions.invoke('create-fit-request', {
+        body: { candidateUserId: userId, jobTwinJobId: jobId }
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not send fit check request"
+        });
+        setFitRequestStatus(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(candidateId);
+          return newMap;
+        });
+        return;
+      }
+
+      setFitRequestStatus(prev => new Map(prev).set(candidateId, 'pending'));
+      toast({
+        title: "Request Sent",
+        description: "The candidate has been invited to complete their fit check."
+      });
+    } catch (error) {
+      console.error('Error requesting fit check:', error);
+      setFitRequestStatus(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(candidateId);
+        return newMap;
+      });
+    }
+  };
+
   const loadSnapshotById = async (snapshotId: string) => {
     setLoadingSnapshot(true);
     try {
@@ -384,6 +470,7 @@ export default function DecisionRoom() {
         if (parsedData.candidates && parsedData.candidates.length > 0) {
           const candidateIds = parsedData.candidates.map(c => c.candidate_id);
           await loadRoleDnaFitScores(snapshotData.job_id, candidateIds);
+          await loadFitRequestsAndUserIds(snapshotData.job_id, candidateIds);
         }
       }
     } catch (error: any) {
@@ -832,22 +919,70 @@ export default function DecisionRoom() {
                                           </Tooltip>
                                         </TooltipProvider>
                                       ) : (
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <span className="text-xs text-muted-foreground/70 italic flex items-center gap-1">
-                                                Not yet assessed
-                                                <Info className="h-3 w-3" />
+                                        (() => {
+                                          const requestStatus = fitRequestStatus.get(candidateId);
+                                          const hasUserProfile = candidateUserIds.has(candidateId);
+                                          
+                                          if (requestStatus === 'completed') {
+                                            return (
+                                              <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                                <CheckCircle className="h-3 w-3" />
+                                                Fit Completed
                                               </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top" className="max-w-xs">
-                                              <p className="text-xs">
-                                                Role DNA Fit appears once the candidate has a FuturHire profile 
-                                                and has checked their fit for this role.
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
+                                            );
+                                          }
+                                          
+                                          if (requestStatus === 'pending') {
+                                            return (
+                                              <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                                <Clock className="h-3 w-3" />
+                                                Check Requested
+                                              </span>
+                                            );
+                                          }
+                                          
+                                          if (requestStatus === 'requesting') {
+                                            return (
+                                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                                Sending...
+                                              </span>
+                                            );
+                                          }
+                                          
+                                          if (!hasUserProfile) {
+                                            return (
+                                              <TooltipProvider>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <span className="text-xs text-muted-foreground/70 italic flex items-center gap-1">
+                                                      No profile
+                                                      <Info className="h-3 w-3" />
+                                                    </span>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="top" className="max-w-xs">
+                                                    <p className="text-xs">
+                                                      Fit Check requires an active FuturHire candidate profile.
+                                                    </p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                            );
+                                          }
+                                          
+                                          return (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                requestFitCheck(candidateId);
+                                              }}
+                                              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 hover:underline"
+                                            >
+                                              <Send className="h-3 w-3" />
+                                              Request Fit Check
+                                            </button>
+                                          );
+                                        })()
                                       )}
                                     </div>
                                   </div>
