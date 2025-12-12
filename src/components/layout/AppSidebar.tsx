@@ -4,6 +4,7 @@ import {
   Briefcase, 
   ClipboardList, 
   DollarSign,
+  BarChart3,
   Users,
   Settings,
   Bot,
@@ -49,6 +50,7 @@ const recruiterNavGroups = [
     label: "Overview",
     items: [
       { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+      { label: "Analytics", path: "/analytics", icon: BarChart3, description: "Hiring metrics" },
     ],
   },
   {

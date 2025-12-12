@@ -29,6 +29,7 @@ import InterviewSessionReview from "./pages/InterviewSessionReview";
 import VoiceInterviewList from "./pages/VoiceInterviewList";
 import VoiceInterviewDetail from "./pages/VoiceInterviewDetail";
 import OpportunityRadar from "./pages/OpportunityRadar";
+import Analytics from "./pages/Analytics";
 import CareerTrajectory from "./pages/CareerTrajectory";
 import CareersPage from "./pages/careers/CareersPage";
 import JobDetailPage from "./pages/careers/JobDetailPage";
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/assessments/:id" element={<AssessmentDetail />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/dashboard" element={<RecruiterDashboard />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
           <Route path="/candidate/profile" element={<CandidateProfile />} />
           <Route path="/candidate/video" element={<CandidateVideo />} />
