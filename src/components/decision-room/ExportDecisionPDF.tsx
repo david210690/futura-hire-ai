@@ -48,12 +48,27 @@ interface CandidateDetails {
   years_experience: number | null;
 }
 
+interface RoleDnaFitData {
+  fit_score: number;
+  fit_dimension_scores: {
+    cognitive_fit?: number;
+    communication_fit?: number;
+    execution_fit?: number;
+    problem_solving_fit?: number;
+    culture_fit?: number;
+    strengths?: string[];
+    gaps?: string[];
+  };
+  summary: string | null;
+}
+
 interface ExportDecisionPDFProps {
   jobTitle: string;
   companyName: string;
   snapshotDate: string;
   snapshotData: SnapshotData;
   candidatesMap: Map<string, CandidateDetails>;
+  roleDnaFitMap?: Map<string, RoleDnaFitData>;
 }
 
 const dimensionLabels: Record<string, string> = {
@@ -64,12 +79,21 @@ const dimensionLabels: Record<string, string> = {
   role_alignment: "Role Alignment",
 };
 
+const dnaDimensionLabels: Record<string, string> = {
+  cognitive_fit: "Cognitive",
+  communication_fit: "Communication",
+  execution_fit: "Execution",
+  problem_solving_fit: "Problem-Solving",
+  culture_fit: "Culture",
+};
+
 export function exportDecisionPDF({
   jobTitle,
   companyName,
   snapshotDate,
   snapshotData,
   candidatesMap,
+  roleDnaFitMap,
 }: ExportDecisionPDFProps) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -155,8 +179,10 @@ export function exportDecisionPDF({
     doc.setFont("helvetica", "normal");
     cluster.candidate_ids.forEach((id) => {
       const candidate = snapshotData.candidates.find((c) => c.candidate_id === id);
+      const dnaFit = roleDnaFitMap?.get(id);
       if (candidate) {
-        doc.text(`• ${getCandidateName(id)} (Score: ${candidate.overall_fit_score})`, 18, yPos);
+        const dnaText = dnaFit ? ` | DNA: ${dnaFit.fit_score}` : "";
+        doc.text(`• ${getCandidateName(id)} (Score: ${candidate.overall_fit_score}${dnaText})`, 18, yPos);
         yPos += 5;
       }
     });
@@ -174,24 +200,29 @@ export function exportDecisionPDF({
 
   const tableData = snapshotData.candidates
     .sort((a, b) => b.overall_fit_score - a.overall_fit_score)
-    .map((c) => [
-      getCandidateName(c.candidate_id),
-      c.overall_fit_score.toString(),
-      c.recommended_next_action,
-      c.summary.substring(0, 80) + (c.summary.length > 80 ? "..." : ""),
-    ]);
+    .map((c) => {
+      const dnaFit = roleDnaFitMap?.get(c.candidate_id);
+      return [
+        getCandidateName(c.candidate_id),
+        c.overall_fit_score.toString(),
+        dnaFit ? dnaFit.fit_score.toString() : "—",
+        c.recommended_next_action,
+        c.summary.substring(0, 60) + (c.summary.length > 60 ? "..." : ""),
+      ];
+    });
 
   autoTable(doc, {
     startY: yPos,
-    head: [["Candidate", "Score", "Recommended Action", "Summary"]],
+    head: [["Candidate", "AI Score", "DNA Fit", "Recommended Action", "Summary"]],
     body: tableData,
     headStyles: { fillColor: [79, 70, 229] },
     styles: { fontSize: 8, cellPadding: 2 },
     columnStyles: {
-      0: { cellWidth: 35 },
+      0: { cellWidth: 32 },
       1: { cellWidth: 15, halign: "center" },
-      2: { cellWidth: 35 },
-      3: { cellWidth: "auto" },
+      2: { cellWidth: 15, halign: "center" },
+      3: { cellWidth: 32 },
+      4: { cellWidth: "auto" },
     },
   });
 
@@ -207,17 +238,22 @@ export function exportDecisionPDF({
   snapshotData.candidates
     .sort((a, b) => b.overall_fit_score - a.overall_fit_score)
     .forEach((candidate, idx) => {
-      if (yPos > 220) {
+      if (yPos > 200) {
         doc.addPage();
         yPos = 20;
       }
+
+      const dnaFit = roleDnaFitMap?.get(candidate.candidate_id);
 
       // Candidate header
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
       doc.text(`${idx + 1}. ${getCandidateName(candidate.candidate_id)}`, 14, yPos);
       doc.setFont("helvetica", "normal");
-      doc.text(`Score: ${candidate.overall_fit_score}/100`, pageWidth - 40, yPos);
+      const scoreText = dnaFit 
+        ? `AI: ${candidate.overall_fit_score} | DNA: ${dnaFit.fit_score}`
+        : `Score: ${candidate.overall_fit_score}/100`;
+      doc.text(scoreText, pageWidth - 50, yPos);
       yPos += 8;
 
       // Summary
@@ -226,10 +262,45 @@ export function exportDecisionPDF({
       doc.text(summaryLines, 14, yPos);
       yPos += summaryLines.length * 4 + 3;
 
+      // Role DNA Fit Section
+      if (dnaFit) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Role DNA Fit:", 14, yPos);
+        yPos += 5;
+        doc.setFont("helvetica", "normal");
+        
+        // DNA Dimension scores
+        if (dnaFit.fit_dimension_scores) {
+          const dims = Object.entries(dnaFit.fit_dimension_scores)
+            .filter(([key]) => key !== 'strengths' && key !== 'gaps' && key !== 'recommended_next_steps')
+            .slice(0, 5);
+          dims.forEach(([key, value]) => {
+            if (typeof value === 'number') {
+              doc.text(`  ${dnaDimensionLabels[key] || key}: ${value}/100`, 14, yPos);
+              yPos += 4;
+            }
+          });
+        }
+
+        // DNA Strengths
+        if (dnaFit.fit_dimension_scores?.strengths && dnaFit.fit_dimension_scores.strengths.length > 0) {
+          doc.text("  DNA Strengths: " + dnaFit.fit_dimension_scores.strengths.slice(0, 2).join(", "), 14, yPos);
+          yPos += 4;
+        }
+
+        // DNA Gaps (use supportive language)
+        if (dnaFit.fit_dimension_scores?.gaps && dnaFit.fit_dimension_scores.gaps.length > 0) {
+          doc.text("  Growth Areas: " + dnaFit.fit_dimension_scores.gaps.slice(0, 2).join(", "), 14, yPos);
+          yPos += 4;
+        }
+
+        yPos += 2;
+      }
+
       // Dimension scores
       if (candidate.dimension_scores) {
         doc.setFont("helvetica", "bold");
-        doc.text("Dimension Scores:", 14, yPos);
+        doc.text("AI Dimension Scores:", 14, yPos);
         yPos += 5;
         doc.setFont("helvetica", "normal");
         Object.entries(candidate.dimension_scores).forEach(([key, value]) => {
@@ -256,7 +327,7 @@ export function exportDecisionPDF({
       // Risks
       if (candidate.risks.length > 0) {
         doc.setFont("helvetica", "bold");
-        doc.text("Risks:", 14, yPos);
+        doc.text("Considerations:", 14, yPos);
         yPos += 5;
         doc.setFont("helvetica", "normal");
         candidate.risks.slice(0, 3).forEach((r) => {
