@@ -188,3 +188,9 @@ verify_jwt = true
 
 [functions.get-pipeline-health]
 verify_jwt = true
+
+[functions.generate-hiring-autopilot]
+verify_jwt = true
+
+[functions.get-hiring-autopilot]
+verify_jwt = true
