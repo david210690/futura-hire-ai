@@ -32,9 +32,18 @@ export default function RecruiterDashboard() {
   const [stats, setStats] = useState({ openJobs: 0, candidates: 0, avgCultureFit: 0 });
   const [jobs, setJobs] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
-  const [hasCompany, setHasCompany] = useState<boolean | null>(null); // null = loading
+  const [hasCompany, setHasCompany] = useState<boolean | null>(null);
   const [showCopilot, setShowCopilot] = useState(false);
   const [showUpgradeFAB, setShowUpgradeFAB] = useState(false);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [pipelineStats, setPipelineStats] = useState({
+    newApplications: 0,
+    inReview: 0,
+    interviewed: 0,
+    offered: 0,
+    pendingAssessments: 0,
+    pendingInterviews: 0
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentOrg, loading: orgLoading } = useCurrentOrg();
@@ -136,7 +145,7 @@ export default function RecruiterDashboard() {
 
     const { data: appsData } = await supabase
       .from('applications')
-      .select('culture_fit_score, job_id')
+      .select('culture_fit_score, job_id, status, stage, created_at, candidate_id')
       .eq('org_id', currentOrg.id);
 
     const avgCulture = appsData && appsData.length > 0
@@ -150,6 +159,58 @@ export default function RecruiterDashboard() {
       candidates: uniqueCandidates,
       avgCultureFit: avgCulture,
     });
+
+    // Pipeline stats
+    const newApps = appsData?.filter(a => a.stage === 'new' || a.stage === 'applied').length || 0;
+    const inReview = appsData?.filter(a => a.stage === 'review' || a.status === 'review').length || 0;
+    const interviewed = appsData?.filter(a => a.stage === 'interview' || a.stage === 'interviewed').length || 0;
+    const offered = appsData?.filter(a => a.stage === 'offer' || a.status === 'hired').length || 0;
+
+    // Pending assessments
+    const { count: pendingAssessments } = await supabase
+      .from('assignments')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+
+    // Pending interviews
+    const { count: pendingInterviews } = await supabase
+      .from('interviews')
+      .select('*', { count: 'exact', head: true })
+      .is('ended_at', null);
+
+    setPipelineStats({
+      newApplications: newApps,
+      inReview,
+      interviewed,
+      offered,
+      pendingAssessments: pendingAssessments || 0,
+      pendingInterviews: pendingInterviews || 0
+    });
+
+    // Recent activity - get recent applications with job info
+    const { data: recentApps } = await supabase
+      .from('applications')
+      .select(`
+        id,
+        created_at,
+        stage,
+        status,
+        job_id,
+        jobs!inner(title)
+      `)
+      .eq('org_id', currentOrg.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    const activities = (recentApps || []).map(app => ({
+      id: app.id,
+      type: 'application',
+      message: `New application for ${(app.jobs as any)?.title || 'Unknown Job'}`,
+      time: app.created_at,
+      stage: app.stage
+    }));
+
+    setRecentActivity(activities);
   };
 
   const createCompany = async () => {
@@ -373,52 +434,139 @@ export default function RecruiterDashboard() {
           </Card>
         </div>
 
-        {/* Recent Jobs */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent Jobs</CardTitle>
-              <CardDescription>Your latest job postings</CardDescription>
-            </div>
-            {jobs.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')} className="gap-1">
-                View all <ArrowRight className="w-4 h-4" />
-              </Button>
-            )}
+        {/* Pipeline Summary */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Pipeline Overview
+            </CardTitle>
+            <CardDescription>Current hiring funnel status</CardDescription>
           </CardHeader>
           <CardContent>
-            {jobs.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                <p>No jobs yet. Create your first job posting!</p>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              <div className="text-center p-3 rounded-lg bg-blue-500/10">
+                <div className="text-2xl font-bold text-blue-600">{pipelineStats.newApplications}</div>
+                <p className="text-xs text-muted-foreground">New</p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {jobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                  >
-                    <div>
-                      <h3 className="font-semibold">{job.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {job.location} • {job.employment_type}
-                      </p>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      job.status === 'open' 
-                        ? 'bg-success/10 text-success' 
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {job.status}
-                    </div>
-                  </div>
-                ))}
+              <div className="text-center p-3 rounded-lg bg-amber-500/10">
+                <div className="text-2xl font-bold text-amber-600">{pipelineStats.inReview}</div>
+                <p className="text-xs text-muted-foreground">In Review</p>
               </div>
-            )}
+              <div className="text-center p-3 rounded-lg bg-purple-500/10">
+                <div className="text-2xl font-bold text-purple-600">{pipelineStats.interviewed}</div>
+                <p className="text-xs text-muted-foreground">Interviewed</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-green-500/10">
+                <div className="text-2xl font-bold text-green-600">{pipelineStats.offered}</div>
+                <p className="text-xs text-muted-foreground">Offered/Hired</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                <div className="text-2xl font-bold text-orange-600">{pipelineStats.pendingAssessments}</div>
+                <p className="text-xs text-muted-foreground">Pending Tests</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                <div className="text-2xl font-bold text-rose-600">{pipelineStats.pendingInterviews}</div>
+                <p className="text-xs text-muted-foreground">Pending Interviews</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Two Column Layout: Recent Jobs + Activity Feed */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Jobs */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Recent Jobs</CardTitle>
+                <CardDescription>Your latest job postings</CardDescription>
+              </div>
+              {jobs.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')} className="gap-1">
+                  View all <ArrowRight className="w-4 h-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {jobs.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>No jobs yet. Create your first job posting!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {jobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/jobs/${job.id}`)}
+                    >
+                      <div>
+                        <h3 className="font-medium text-sm">{job.title}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {job.location} • {job.employment_type}
+                        </p>
+                      </div>
+                      <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        job.status === 'open' 
+                          ? 'bg-success/10 text-success' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {job.status}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Activity Feed */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Latest updates from your hiring pipeline</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {recentActivity.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>No recent activity yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentActivity.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="p-1.5 rounded-full bg-primary/10 text-primary mt-0.5">
+                        <Users className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{activity.message}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(activity.time).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      {activity.stage && (
+                        <div className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+                          {activity.stage}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {currentOrg?.id && (
