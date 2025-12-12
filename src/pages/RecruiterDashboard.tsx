@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/layout/Navbar";
+import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Briefcase, Users, TrendingUp, Building2, Settings, MessageSquare } from "lucide-react";
@@ -186,8 +186,7 @@ export default function RecruiterDashboard() {
 
   if (!hasCompany) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar userName={user?.name} userRole="recruiter" />
+      <SidebarLayout userRole="recruiter" userName={user?.name} orgName={currentOrg?.name}>
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center space-y-6">
             <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary mx-auto">
@@ -205,13 +204,12 @@ export default function RecruiterDashboard() {
             </Button>
           </div>
         </div>
-      </div>
+      </SidebarLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar userName={user?.name} userRole="recruiter" />
+    <SidebarLayout userRole="recruiter" userName={user?.name} orgName={currentOrg?.name}>
       {currentOrg?.id && <TrialBanner orgId={currentOrg.id} />}
       
       <div className="container mx-auto px-4 py-8">
@@ -345,6 +343,6 @@ export default function RecruiterDashboard() {
           <GlobalCopilotFAB />
         </>
       )}
-    </div>
+    </SidebarLayout>
   );
 }

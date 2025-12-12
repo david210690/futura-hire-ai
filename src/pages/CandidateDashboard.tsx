@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/layout/Navbar";
+import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CareerCoachCard } from "@/components/career/CareerCoachCard";
@@ -50,9 +50,7 @@ export default function CandidateDashboard() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar userName={user?.user_metadata?.name} userRole="candidate" />
-      
+    <SidebarLayout userRole="candidate" userName={user?.user_metadata?.name}>
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome, {user?.user_metadata?.name || 'Candidate'}</h1>
@@ -166,6 +164,6 @@ export default function CandidateDashboard() {
           </Card>
         </div>
       </main>
-    </div>
+    </SidebarLayout>
   );
 }
