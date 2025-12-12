@@ -290,9 +290,23 @@ serve(async (req) => {
             throw new Error('candidateId and newStage required for stage update');
           }
 
+          // Map stage names to valid values
+          const stageMap: Record<string, string> = {
+            'interview_pending': 'interview',
+            'offer_pending': 'offer',
+            'new': 'new',
+            'shortlisted': 'shortlisted',
+            'interview': 'interview',
+            'offer': 'offer',
+            'hired': 'hired',
+            'rejected': 'rejected'
+          };
+          
+          const validStage = stageMap[payload.newStage] || payload.newStage;
+
           const { error: stageError } = await supabase
             .from('applications')
-            .update({ stage: payload.newStage })
+            .update({ stage: validStage })
             .eq('candidate_id', candidateId)
             .eq('job_id', jobId);
 
@@ -302,7 +316,8 @@ serve(async (req) => {
           }
           
           actionPayload.previous_stage = payload.previousStage;
-          console.log('Stage updated to:', payload.newStage);
+          actionPayload.new_stage = validStage;
+          console.log('Stage updated to:', validStage);
           break;
 
         default:
@@ -314,22 +329,65 @@ serve(async (req) => {
       actionPayload.error = actionError instanceof Error ? actionError.message : 'Unknown error';
     }
 
-    // Log the action
-    const { data: logEntry, error: logError } = await supabase
-      .from('autopilot_action_logs')
-      .insert({
-        recruiter_user_id: user.id,
-        job_twin_job_id: jobId,
-        candidate_user_id: candidateId || null,
-        action_type: actionType,
-        action_payload: actionPayload,
-        status
-      })
-      .select()
+    // Log the action - need to find or create job_twin_jobs entry for logging
+    let logJobTwinJobId: string | null = null;
+    
+    // Try to find an existing job_twin_jobs entry for this job
+    const { data: existingJtj } = await supabase
+      .from('job_twin_jobs')
+      .select('id')
+      .eq('job_id', jobId)
+      .limit(1)
       .single();
+    
+    if (existingJtj) {
+      logJobTwinJobId = existingJtj.id;
+    } else {
+      // Create a minimal job_twin_profile and job_twin_jobs entry for logging
+      const { data: newProfile } = await supabase
+        .from('job_twin_profiles')
+        .insert({ user_id: user.id })
+        .select('id')
+        .single();
+      
+      if (newProfile) {
+        const { data: newJtj } = await supabase
+          .from('job_twin_jobs')
+          .insert({
+            job_id: jobId,
+            profile_id: newProfile.id,
+            status: 'new'
+          })
+          .select('id')
+          .single();
+        
+        if (newJtj) {
+          logJobTwinJobId = newJtj.id;
+        }
+      }
+    }
 
-    if (logError) {
-      console.error('Log error:', logError);
+    let logEntry = null;
+    if (logJobTwinJobId) {
+      const { data: entry, error: logError } = await supabase
+        .from('autopilot_action_logs')
+        .insert({
+          recruiter_user_id: user.id,
+          job_twin_job_id: logJobTwinJobId,
+          candidate_user_id: candidateId || null,
+          action_type: actionType,
+          action_payload: actionPayload,
+          status
+        })
+        .select()
+        .single();
+      
+      logEntry = entry;
+      if (logError) {
+        console.error('Log error:', logError);
+      }
+    } else {
+      console.log('Skipping action log - no job_twin_jobs entry available');
     }
 
     return new Response(
