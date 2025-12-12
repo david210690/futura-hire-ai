@@ -123,6 +123,7 @@ serve(async (req) => {
     }
 
     // Get all candidates with resumes using admin client (bypasses RLS)
+    console.log('Fetching candidates with admin client...');
     const { data: candidates, error: candidatesError } = await supabaseAdmin
       .from('candidates')
       .select(`
@@ -135,7 +136,12 @@ serve(async (req) => {
         resumes(parsed_text)
       `);
 
-    if (candidatesError) throw candidatesError;
+    console.log('Candidates query result:', { count: candidates?.length, error: candidatesError });
+
+    if (candidatesError) {
+      console.error('Candidates error:', candidatesError);
+      throw candidatesError;
+    }
 
     if (!candidates || candidates.length === 0) {
       throw new Error('No candidates found in the system');
