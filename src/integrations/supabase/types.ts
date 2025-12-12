@@ -2321,6 +2321,57 @@ export type Database = {
           },
         ]
       }
+      role_dna_fit_scores: {
+        Row: {
+          created_at: string
+          fit_dimension_scores: Json
+          fit_score: number
+          id: string
+          job_twin_job_id: string
+          role_dna_snapshot_id: string | null
+          summary: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fit_dimension_scores?: Json
+          fit_score?: number
+          id?: string
+          job_twin_job_id: string
+          role_dna_snapshot_id?: string | null
+          summary?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fit_dimension_scores?: Json
+          fit_score?: number
+          id?: string
+          job_twin_job_id?: string
+          role_dna_snapshot_id?: string | null
+          summary?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_dna_fit_scores_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_dna_fit_scores_role_dna_snapshot_id_fkey"
+            columns: ["role_dna_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "role_dna_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_dna_snapshots: {
         Row: {
           created_at: string

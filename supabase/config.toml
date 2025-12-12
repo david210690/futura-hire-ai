@@ -149,3 +149,9 @@ verify_jwt = true
 
 [functions.get-role-dna]
 verify_jwt = true
+
+[functions.evaluate-role-dna-fit]
+verify_jwt = true
+
+[functions.get-role-dna-fit]
+verify_jwt = true

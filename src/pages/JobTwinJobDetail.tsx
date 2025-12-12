@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { StartVoiceInterviewDialog } from "@/components/voice-interview/StartVoiceInterviewDialog";
 import { RoleDnaPanel } from "@/components/role-dna/RoleDnaPanel";
+import { RoleFitInsightPanel } from "@/components/role-dna/RoleFitInsightPanel";
 import { format, formatDistanceToNow } from "date-fns";
 
 interface JobTwinJob {
@@ -532,9 +533,14 @@ export default function JobTwinJobDetail() {
               </CardContent>
             </Card>
 
-            {/* Role DNA Blueprint */}
+            {/* Role DNA Blueprint (Recruiter info about the role) */}
             <div className="mt-6">
               <RoleDnaPanel jobTwinJobId={jobData.id} />
+            </div>
+
+            {/* Role Fit Insight (Candidate's fit against the Role DNA) */}
+            <div className="mt-6">
+              <RoleFitInsightPanel jobTwinJobId={jobData.id} />
             </div>
           </TabsContent>
 
