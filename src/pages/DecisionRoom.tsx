@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap, Send, Clock } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap, Send, Clock, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
@@ -95,8 +95,20 @@ interface RoleDnaFitData {
   created_at: string;
 }
 
-type SortOption = 'default' | 'dna_high' | 'dna_low';
+type SortOption = 'default' | 'dna_high' | 'dna_low' | 'shortlist_high' | 'shortlist_low';
 type FilterOption = 'all' | 'assessed' | 'unassessed' | 'fit_75' | 'fit_50';
+
+interface ShortlistScoreData {
+  score: number;
+  reasoning: {
+    role_dna_alignment_weight?: string;
+    decision_room_cluster_weight?: string;
+    experience_alignment_weight?: string;
+    interview_signal_weight?: string;
+    final_summary?: string;
+  };
+  createdAt: string;
+}
 
 export default function DecisionRoom() {
   const { id: jobId } = useParams();
@@ -119,6 +131,8 @@ export default function DecisionRoom() {
   const [assessingAll, setAssessingAll] = useState(false);
   const [fitRequestStatus, setFitRequestStatus] = useState<Map<string, 'pending' | 'completed' | 'requesting'>>(new Map());
   const [candidateUserIds, setCandidateUserIds] = useState<Map<string, string>>(new Map());
+  const [shortlistScoreMap, setShortlistScoreMap] = useState<Map<string, ShortlistScoreData>>(new Map());
+  const [generatingShortlistScore, setGeneratingShortlistScore] = useState<Set<string>>(new Set());
 
   // Helper to get DNA fit score color (neutral-to-positive, no scary red)
   const getDnaScoreColor = (score: number) => {
@@ -154,6 +168,17 @@ export default function DecisionRoom() {
     if (sortBy === 'default') return filtered;
     
     return [...filtered].sort((a, b) => {
+      if (sortBy === 'shortlist_high' || sortBy === 'shortlist_low') {
+        const scoreA = shortlistScoreMap.get(a)?.score;
+        const scoreB = shortlistScoreMap.get(b)?.score;
+        
+        if (scoreA === undefined && scoreB === undefined) return 0;
+        if (scoreA === undefined) return 1;
+        if (scoreB === undefined) return -1;
+        
+        return sortBy === 'shortlist_high' ? scoreB - scoreA : scoreA - scoreB;
+      }
+      
       const fitA = roleDnaFitMap.get(a)?.fit_score;
       const fitB = roleDnaFitMap.get(b)?.fit_score;
       
@@ -305,11 +330,12 @@ export default function DecisionRoom() {
             data: snapshotData,
           });
           
-          // Fetch Role DNA Fit scores for all candidates in this snapshot
+          // Fetch Role DNA Fit scores and shortlist scores for all candidates in this snapshot
           if (snapshotData.candidates && snapshotData.candidates.length > 0) {
             const candidateIds = snapshotData.candidates.map(c => c.candidate_id);
             await loadRoleDnaFitScores(jobId, candidateIds);
             await loadFitRequestsAndUserIds(jobId, candidateIds);
+            await loadShortlistScores(jobId, candidateIds);
           }
         }
       }
@@ -404,6 +430,86 @@ export default function DecisionRoom() {
     }
   };
 
+  // Load shortlist predictive scores for candidates
+  const loadShortlistScores = async (jobId: string, candidateIds: string[]) => {
+    try {
+      const { data: scores, error } = await supabase
+        .from('shortlist_predictive_scores')
+        .select('user_id, score, reasoning_json, created_at')
+        .eq('job_twin_job_id', jobId)
+        .in('user_id', candidateIds)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching shortlist scores:', error);
+        return;
+      }
+
+      const scoreMap = new Map<string, ShortlistScoreData>();
+      if (scores) {
+        for (const s of scores) {
+          if (!scoreMap.has(s.user_id)) {
+            scoreMap.set(s.user_id, {
+              score: s.score,
+              reasoning: s.reasoning_json as ShortlistScoreData['reasoning'],
+              createdAt: s.created_at,
+            });
+          }
+        }
+      }
+      setShortlistScoreMap(scoreMap);
+    } catch (error) {
+      console.error('Error loading shortlist scores:', error);
+    }
+  };
+
+  // Generate shortlist score for a candidate
+  const generateShortlistScore = async (candidateId: string) => {
+    if (!jobId) return;
+    
+    setGeneratingShortlistScore(prev => new Set(prev).add(candidateId));
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-shortlist-score', {
+        body: { candidateId, jobId }
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not generate shortlist score"
+        });
+        return;
+      }
+
+      if (data?.success) {
+        setShortlistScoreMap(prev => new Map(prev).set(candidateId, {
+          score: data.score,
+          reasoning: data.reasoning,
+          createdAt: new Date().toISOString(),
+        }));
+        toast({
+          title: "Score Generated",
+          description: `Shortlist Predictive Score: ${data.score}/100`
+        });
+      }
+    } catch (error) {
+      console.error('Error generating shortlist score:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to generate shortlist score"
+      });
+    } finally {
+      setGeneratingShortlistScore(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(candidateId);
+        return newSet;
+      });
+    }
+  };
+
   // Request fit check for a candidate
   const requestFitCheck = async (candidateId: string) => {
     const userId = candidateUserIds.get(candidateId);
@@ -466,11 +572,12 @@ export default function DecisionRoom() {
         });
         setCompareIds(new Set()); // Reset comparison selection
         
-        // Reload Role DNA Fit scores for this snapshot's candidates
+        // Reload Role DNA Fit scores and shortlist scores for this snapshot's candidates
         if (parsedData.candidates && parsedData.candidates.length > 0) {
           const candidateIds = parsedData.candidates.map(c => c.candidate_id);
           await loadRoleDnaFitScores(snapshotData.job_id, candidateIds);
           await loadFitRequestsAndUserIds(snapshotData.job_id, candidateIds);
+          await loadShortlistScores(snapshotData.job_id, candidateIds);
         }
       }
     } catch (error: any) {
@@ -790,6 +897,8 @@ export default function DecisionRoom() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="default">Default (AI Clusters)</SelectItem>
+                      <SelectItem value="shortlist_high">Shortlist Score (High → Low)</SelectItem>
+                      <SelectItem value="shortlist_low">Shortlist Score (Low → High)</SelectItem>
                       <SelectItem value="dna_high">DNA Fit (High → Low)</SelectItem>
                       <SelectItem value="dna_low">DNA Fit (Low → High)</SelectItem>
                     </SelectContent>
@@ -816,6 +925,7 @@ export default function DecisionRoom() {
                     {sortCandidates(cluster.candidate_ids).map(candidateId => {
                         const evaluation = snapshot.data.candidates.find(c => c.candidate_id === candidateId);
                         const roleDnaFit = roleDnaFitMap.get(candidateId);
+                        const shortlistScore = shortlistScoreMap.get(candidateId);
                         if (!evaluation) return null;
                         
                         return (
@@ -985,6 +1095,20 @@ export default function DecisionRoom() {
                                         })()
                                       )}
                                     </div>
+                                    
+                                    {/* Shortlist Score Compact */}
+                                    {shortlistScore && (
+                                      <div className="flex items-center gap-2 pt-1 border-t border-border/50">
+                                        <TrendingUp className="h-3 w-3 text-teal-500 flex-shrink-0" />
+                                        <span className="text-xs text-muted-foreground">Shortlist:</span>
+                                        <Badge 
+                                          variant="outline" 
+                                          className={`text-xs ${getDnaScoreColor(shortlistScore.score)}`}
+                                        >
+                                          {shortlistScore.score}/100
+                                        </Badge>
+                                      </div>
+                                    )}
                                   </div>
                                 </button>
                               </SheetTrigger>
@@ -1215,6 +1339,58 @@ export default function DecisionRoom() {
                                     </div>
                                   </div>
                                 )}
+
+                                {/* Shortlist Predictive Score Section */}
+                                <div className="pt-4 border-t">
+                                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                                    <TrendingUp className="h-4 w-4 text-teal-500" />
+                                    Shortlist Predictive Score
+                                  </h4>
+                                  {shortlistScore ? (
+                                    <div className="space-y-3">
+                                      <div className="flex items-center gap-3">
+                                        <div className={`text-2xl font-bold px-3 py-1 rounded-lg ${getDnaScoreColor(shortlistScore.score)}`}>
+                                          {shortlistScore.score}
+                                        </div>
+                                        <div>
+                                          <p className="font-medium text-sm">Shortlist Score</p>
+                                          <p className="text-xs text-muted-foreground">AI-predicted promise for this role</p>
+                                        </div>
+                                      </div>
+                                      {shortlistScore.reasoning?.final_summary && (
+                                        <p className="text-sm text-muted-foreground bg-teal-50 dark:bg-teal-900/20 p-2 rounded">
+                                          {shortlistScore.reasoning.final_summary}
+                                        </p>
+                                      )}
+                                      <p className="text-xs text-muted-foreground/70 italic">
+                                        This score is directional guidance, not judgment. Always combine with interviews.
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      {!roleDnaFit ? (
+                                        <p className="text-sm text-muted-foreground">
+                                          Generate Role DNA Fit first to enable shortlist scoring.
+                                        </p>
+                                      ) : (
+                                        <Button
+                                          onClick={() => generateShortlistScore(candidateId)}
+                                          disabled={generatingShortlistScore.has(candidateId)}
+                                          variant="outline"
+                                          size="sm"
+                                          className="gap-2"
+                                        >
+                                          {generatingShortlistScore.has(candidateId) ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <TrendingUp className="h-4 w-4" />
+                                          )}
+                                          Generate Shortlist Score
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
 
                                 {/* Candidate Details */}
                                 {candidates.get(candidateId) && (

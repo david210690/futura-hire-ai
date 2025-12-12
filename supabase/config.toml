@@ -164,3 +164,9 @@ verify_jwt = true
 
 [functions.get-pending-fit-requests]
 verify_jwt = true
+
+[functions.generate-shortlist-score]
+verify_jwt = true
+
+[functions.get-shortlist-score]
+verify_jwt = true

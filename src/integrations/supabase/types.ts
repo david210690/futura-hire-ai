@@ -2452,6 +2452,64 @@ export type Database = {
           },
         ]
       }
+      shortlist_predictive_scores: {
+        Row: {
+          created_at: string
+          decision_room_snapshot_id: string
+          id: string
+          job_twin_job_id: string
+          reasoning_json: Json
+          role_dna_fit_id: string | null
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision_room_snapshot_id: string
+          id?: string
+          job_twin_job_id: string
+          reasoning_json?: Json
+          role_dna_fit_id?: string | null
+          score: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decision_room_snapshot_id?: string
+          id?: string
+          job_twin_job_id?: string
+          reasoning_json?: Json
+          role_dna_fit_id?: string | null
+          score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shortlist_predictive_scores_decision_room_snapshot_id_fkey"
+            columns: ["decision_room_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "job_decision_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shortlist_predictive_scores_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shortlist_predictive_scores_role_dna_fit_id_fkey"
+            columns: ["role_dna_fit_id"]
+            isOneToOne: false
+            referencedRelation: "role_dna_fit_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       streaks: {
         Row: {
           current_streak: number
