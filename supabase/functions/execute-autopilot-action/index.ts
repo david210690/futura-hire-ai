@@ -177,13 +177,96 @@ serve(async (req) => {
             throw new Error('candidateId required for voice interview');
           }
           
-          // Create a voice interview session entry
+          // Get candidate user_id and job info
+          const { data: candidateForInterview } = await supabase
+            .from('candidates')
+            .select('user_id')
+            .eq('id', candidateId)
+            .single();
+
+          if (!candidateForInterview) {
+            throw new Error('Candidate not found');
+          }
+
+          // Get job title for the interview
+          const { data: jobForInterview } = await supabase
+            .from('jobs')
+            .select('title')
+            .eq('id', jobId)
+            .single();
+
+          // Find or create job_twin_jobs entry (similar to fit_request_sent)
+          let interviewJobTwinJobId: string | null = null;
+          
+          const { data: interviewProfile } = await supabase
+            .from('job_twin_profiles')
+            .select('id')
+            .eq('user_id', candidateForInterview.user_id)
+            .single();
+          
+          if (interviewProfile) {
+            const { data: existingInterviewJtj } = await supabase
+              .from('job_twin_jobs')
+              .select('id')
+              .eq('job_id', jobId)
+              .eq('profile_id', interviewProfile.id)
+              .single();
+            
+            if (existingInterviewJtj) {
+              interviewJobTwinJobId = existingInterviewJtj.id;
+            } else {
+              const { data: newInterviewJtj, error: jtjErr } = await supabase
+                .from('job_twin_jobs')
+                .insert({
+                  job_id: jobId,
+                  profile_id: interviewProfile.id,
+                  status: 'new'
+                })
+                .select('id')
+                .single();
+              
+              if (jtjErr) {
+                console.error('Error creating job_twin_jobs for interview:', jtjErr);
+                throw new Error('Failed to create job tracking entry');
+              }
+              interviewJobTwinJobId = newInterviewJtj.id;
+            }
+          } else {
+            const { data: newInterviewProfile, error: profErr } = await supabase
+              .from('job_twin_profiles')
+              .insert({ user_id: candidateForInterview.user_id })
+              .select('id')
+              .single();
+            
+            if (profErr) {
+              console.error('Error creating job_twin_profile:', profErr);
+              throw new Error('Failed to create candidate profile');
+            }
+            
+            const { data: newInterviewJtj, error: jtjErr } = await supabase
+              .from('job_twin_jobs')
+              .insert({
+                job_id: jobId,
+                profile_id: newInterviewProfile.id,
+                status: 'new'
+              })
+              .select('id')
+              .single();
+            
+            if (jtjErr) {
+              console.error('Error creating job_twin_jobs for interview:', jtjErr);
+              throw new Error('Failed to create job tracking entry');
+            }
+            interviewJobTwinJobId = newInterviewJtj.id;
+          }
+          
+          // Create a voice interview session entry with correct user_id and job_twin_job_id
           const { data: interviewSession, error: interviewError } = await supabase
             .from('interview_simulation_sessions')
             .insert({
-              user_id: candidateId,
-              job_twin_job_id: jobId,
-              role_title: payload.roleTitle || 'Interview',
+              user_id: candidateForInterview.user_id,
+              job_twin_job_id: interviewJobTwinJobId,
+              role_title: jobForInterview?.title || payload.roleTitle || 'Interview',
               mode: 'mixed',
               difficulty: 'mid',
               status: 'pending'
@@ -197,6 +280,7 @@ serve(async (req) => {
           }
           
           actionPayload.session_id = interviewSession?.id;
+          actionPayload.candidate_user_id = candidateForInterview.user_id;
           console.log('Voice interview session created:', interviewSession?.id);
           break;
 
