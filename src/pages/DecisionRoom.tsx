@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { CandidateComparisonModal } from "@/components/decision-room/CandidateComparisonModal";
@@ -77,6 +77,22 @@ interface CandidateDetails {
   years_experience: number | null;
 }
 
+interface RoleDnaFitData {
+  fit_score: number;
+  fit_dimension_scores: {
+    cognitive_fit?: number;
+    communication_fit?: number;
+    execution_fit?: number;
+    problem_solving_fit?: number;
+    culture_fit?: number;
+    strengths?: string[];
+    gaps?: string[];
+    recommended_next_steps?: string[];
+  };
+  summary: string | null;
+  created_at: string;
+}
+
 export default function DecisionRoom() {
   const { id: jobId } = useParams();
   const navigate = useNavigate();
@@ -92,6 +108,7 @@ export default function DecisionRoom() {
   const [showComparison, setShowComparison] = useState(false);
   const [snapshotHistory, setSnapshotHistory] = useState<SnapshotHistoryItem[]>([]);
   const [loadingSnapshot, setLoadingSnapshot] = useState(false);
+  const [roleDnaFitMap, setRoleDnaFitMap] = useState<Map<string, RoleDnaFitData>>(new Map());
 
   const toggleCompareCandidate = (candidateId: string) => {
     setCompareIds(prev => {
@@ -170,12 +187,19 @@ export default function DecisionRoom() {
           .single();
         
         if (latestSnapshot) {
+          const snapshotData = latestSnapshot.snapshot_json as unknown as SnapshotData;
           setSnapshot({
             id: latestSnapshot.id,
             job_id: latestSnapshot.job_id,
             created_at: latestSnapshot.created_at,
-            data: latestSnapshot.snapshot_json as unknown as SnapshotData,
+            data: snapshotData,
           });
+          
+          // Fetch Role DNA Fit scores for all candidates in this snapshot
+          if (snapshotData.candidates && snapshotData.candidates.length > 0) {
+            const candidateIds = snapshotData.candidates.map(c => c.candidate_id);
+            await loadRoleDnaFitScores(jobId, candidateIds);
+          }
         }
       }
     } catch (error: any) {
@@ -187,6 +211,43 @@ export default function DecisionRoom() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRoleDnaFitScores = async (jobId: string, candidateIds: string[]) => {
+    try {
+      // Query role_dna_fit_scores for all candidates in this job
+      // We need to get the latest fit score for each candidate
+      const { data: fitScores, error } = await supabase
+        .from('role_dna_fit_scores')
+        .select('user_id, fit_score, fit_dimension_scores, summary, created_at')
+        .eq('job_twin_job_id', jobId)
+        .in('user_id', candidateIds)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching Role DNA Fit scores:', error);
+        return;
+      }
+
+      // Build a map with only the latest score per user
+      const fitMap = new Map<string, RoleDnaFitData>();
+      if (fitScores) {
+        for (const score of fitScores) {
+          // Since we ordered by created_at DESC, first occurrence is the latest
+          if (!fitMap.has(score.user_id)) {
+            fitMap.set(score.user_id, {
+              fit_score: score.fit_score,
+              fit_dimension_scores: score.fit_dimension_scores as RoleDnaFitData['fit_dimension_scores'],
+              summary: score.summary,
+              created_at: score.created_at,
+            });
+          }
+        }
+      }
+      setRoleDnaFitMap(fitMap);
+    } catch (error) {
+      console.error('Error loading Role DNA Fit scores:', error);
     }
   };
 
@@ -202,13 +263,20 @@ export default function DecisionRoom() {
       if (error) throw error;
 
       if (snapshotData) {
+        const parsedData = snapshotData.snapshot_json as unknown as SnapshotData;
         setSnapshot({
           id: snapshotData.id,
           job_id: snapshotData.job_id,
           created_at: snapshotData.created_at,
-          data: snapshotData.snapshot_json as unknown as SnapshotData,
+          data: parsedData,
         });
         setCompareIds(new Set()); // Reset comparison selection
+        
+        // Reload Role DNA Fit scores for this snapshot's candidates
+        if (parsedData.candidates && parsedData.candidates.length > 0) {
+          const candidateIds = parsedData.candidates.map(c => c.candidate_id);
+          await loadRoleDnaFitScores(snapshotData.job_id, candidateIds);
+        }
       }
     } catch (error: any) {
       toast({
@@ -478,8 +546,9 @@ export default function DecisionRoom() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {cluster.candidate_ids.map(candidateId => {
+                    {cluster.candidate_ids.map(candidateId => {
                         const evaluation = snapshot.data.candidates.find(c => c.candidate_id === candidateId);
+                        const roleDnaFit = roleDnaFitMap.get(candidateId);
                         if (!evaluation) return null;
                         
                         return (
@@ -505,6 +574,15 @@ export default function DecisionRoom() {
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2 ml-2">
+                                      {roleDnaFit && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className="text-xs border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20"
+                                        >
+                                          <Dna className="h-3 w-3 mr-1" />
+                                          DNA {roleDnaFit.fit_score}
+                                        </Badge>
+                                      )}
                                       {evaluation.confidence !== undefined && (
                                         <ConfidenceIndicator 
                                           confidence={evaluation.confidence} 
@@ -651,6 +729,104 @@ export default function DecisionRoom() {
                                   </Badge>
                                 </div>
 
+                                {/* Role DNA Fit Section */}
+                                {roleDnaFit && (
+                                  <div className="pt-4 border-t">
+                                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                                      <Dna className="h-4 w-4 text-purple-500" />
+                                      Role DNA Fit
+                                    </h4>
+                                    <div className="space-y-4">
+                                      {/* Overall DNA Fit Score */}
+                                      <div className="flex items-center gap-3">
+                                        <div className="text-2xl font-bold px-3 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                          {roleDnaFit.fit_score}
+                                        </div>
+                                        <div>
+                                          <p className="font-medium text-sm">Role DNA Fit Score</p>
+                                          <p className="text-xs text-muted-foreground">How well they align with this role's deeper expectations</p>
+                                        </div>
+                                      </div>
+
+                                      {/* DNA Dimension Scores */}
+                                      {roleDnaFit.fit_dimension_scores && (
+                                        <div className="space-y-2">
+                                          <p className="text-sm font-medium text-muted-foreground">DNA Dimensions</p>
+                                          <div className="grid grid-cols-2 gap-2">
+                                            {roleDnaFit.fit_dimension_scores.cognitive_fit !== undefined && (
+                                              <div className="flex items-center justify-between text-sm p-2 rounded bg-muted/50">
+                                                <span>Cognitive</span>
+                                                <span className="font-medium">{roleDnaFit.fit_dimension_scores.cognitive_fit}</span>
+                                              </div>
+                                            )}
+                                            {roleDnaFit.fit_dimension_scores.communication_fit !== undefined && (
+                                              <div className="flex items-center justify-between text-sm p-2 rounded bg-muted/50">
+                                                <span>Communication</span>
+                                                <span className="font-medium">{roleDnaFit.fit_dimension_scores.communication_fit}</span>
+                                              </div>
+                                            )}
+                                            {roleDnaFit.fit_dimension_scores.execution_fit !== undefined && (
+                                              <div className="flex items-center justify-between text-sm p-2 rounded bg-muted/50">
+                                                <span>Execution</span>
+                                                <span className="font-medium">{roleDnaFit.fit_dimension_scores.execution_fit}</span>
+                                              </div>
+                                            )}
+                                            {roleDnaFit.fit_dimension_scores.problem_solving_fit !== undefined && (
+                                              <div className="flex items-center justify-between text-sm p-2 rounded bg-muted/50">
+                                                <span>Problem-Solving</span>
+                                                <span className="font-medium">{roleDnaFit.fit_dimension_scores.problem_solving_fit}</span>
+                                              </div>
+                                            )}
+                                            {roleDnaFit.fit_dimension_scores.culture_fit !== undefined && (
+                                              <div className="flex items-center justify-between text-sm p-2 rounded bg-muted/50">
+                                                <span>Culture</span>
+                                                <span className="font-medium">{roleDnaFit.fit_dimension_scores.culture_fit}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* DNA Strengths */}
+                                      {roleDnaFit.fit_dimension_scores?.strengths && roleDnaFit.fit_dimension_scores.strengths.length > 0 && (
+                                        <div>
+                                          <p className="text-sm font-medium text-muted-foreground mb-1">DNA Alignment Strengths</p>
+                                          <ul className="space-y-1">
+                                            {roleDnaFit.fit_dimension_scores.strengths.slice(0, 3).map((s, i) => (
+                                              <li key={i} className="text-sm flex items-start gap-2">
+                                                <span className="text-green-500 mt-0.5">✓</span>
+                                                <span className="text-muted-foreground">{s}</span>
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+
+                                      {/* DNA Gaps */}
+                                      {roleDnaFit.fit_dimension_scores?.gaps && roleDnaFit.fit_dimension_scores.gaps.length > 0 && (
+                                        <div>
+                                          <p className="text-sm font-medium text-muted-foreground mb-1">Areas for Growth</p>
+                                          <ul className="space-y-1">
+                                            {roleDnaFit.fit_dimension_scores.gaps.slice(0, 3).map((g, i) => (
+                                              <li key={i} className="text-sm flex items-start gap-2">
+                                                <span className="text-amber-500 mt-0.5">○</span>
+                                                <span className="text-muted-foreground">{g}</span>
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+
+                                      {/* Summary */}
+                                      {roleDnaFit.summary && (
+                                        <p className="text-xs text-muted-foreground italic bg-purple-50 dark:bg-purple-900/20 p-2 rounded">
+                                          {roleDnaFit.summary}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* Candidate Details */}
                                 {candidates.get(candidateId) && (
                                   <div className="pt-4 border-t">
@@ -711,30 +887,42 @@ export default function DecisionRoom() {
                 <div className="space-y-2">
                   {snapshot.data.candidates
                     .sort((a, b) => b.overall_fit_score - a.overall_fit_score)
-                    .map((evaluation) => (
-                      <div
-                        key={evaluation.candidate_id}
-                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-                      >
-                        <Checkbox
-                          checked={compareIds.has(evaluation.candidate_id)}
-                          onCheckedChange={() => toggleCompareCandidate(evaluation.candidate_id)}
-                          disabled={!compareIds.has(evaluation.candidate_id) && compareIds.size >= 4}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium">{getCandidateName(evaluation.candidate_id)}</p>
-                          <p className="text-sm text-muted-foreground truncate">{evaluation.summary}</p>
+                    .map((evaluation) => {
+                      const roleDnaFit = roleDnaFitMap.get(evaluation.candidate_id);
+                      return (
+                        <div
+                          key={evaluation.candidate_id}
+                          className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                        >
+                          <Checkbox
+                            checked={compareIds.has(evaluation.candidate_id)}
+                            onCheckedChange={() => toggleCompareCandidate(evaluation.candidate_id)}
+                            disabled={!compareIds.has(evaluation.candidate_id) && compareIds.size >= 4}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium">{getCandidateName(evaluation.candidate_id)}</p>
+                            <p className="text-sm text-muted-foreground truncate">{evaluation.summary}</p>
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            {roleDnaFit && (
+                              <Badge 
+                                variant="outline" 
+                                className="text-xs border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/20"
+                              >
+                                <Dna className="h-3 w-3 mr-1" />
+                                DNA {roleDnaFit.fit_score}
+                              </Badge>
+                            )}
+                            <Badge variant="secondary" className="text-xs whitespace-nowrap">
+                              {evaluation.recommended_next_action}
+                            </Badge>
+                            <Badge className={getScoreColor(evaluation.overall_fit_score)}>
+                              {evaluation.overall_fit_score}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 ml-4">
-                          <Badge variant="secondary" className="text-xs whitespace-nowrap">
-                            {evaluation.recommended_next_action}
-                          </Badge>
-                          <Badge className={getScoreColor(evaluation.overall_fit_score)}>
-                            {evaluation.overall_fit_score}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>
