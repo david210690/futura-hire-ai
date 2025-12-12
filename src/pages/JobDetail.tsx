@@ -11,6 +11,7 @@ import { BiasReport } from "@/components/recruiter/BiasReport";
 import { MarketingAssets } from "@/components/recruiter/MarketingAssets";
 import { CultureMatchBadge } from "@/components/shared/CultureMatchBadge";
 import { PredictiveScoreChip } from "@/components/recruiter/PredictiveScoreChip";
+import { CandidatePipelineView } from "@/components/pipeline/CandidatePipelineView";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Sparkles, Loader2, Brain } from "lucide-react";
 import { UsageBadge } from "@/components/usage/UsageBadge";
@@ -191,6 +192,15 @@ export default function JobDetail() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Candidate Pipeline View */}
+            {applications.length > 0 && (
+              <CandidatePipelineView 
+                applications={applications} 
+                jobId={id!} 
+                onRefresh={loadData} 
+              />
+            )}
 
             {/* Marketing Assets */}
             <MarketingAssets jobId={id!} />
