@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
@@ -17,7 +18,8 @@ import {
   Mail,
   Linkedin,
   Clock,
-  BarChart3
+  BarChart3,
+  Download
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -88,10 +90,77 @@ export function HiringPlanAutopilotPanel({ jobTwinJobId }: HiringPlanAutopilotPa
   const [snapshot, setSnapshot] = useState<HiringPlanSnapshot | null>(null);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<string[]>(['overview']);
+  const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchHiringPlan();
+    fetchCompletedTasks();
   }, [jobTwinJobId]);
+
+  const fetchCompletedTasks = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from('hiring_plan_task_completions')
+        .select('task_key')
+        .eq('job_twin_job_id', jobTwinJobId)
+        .eq('user_id', session.user.id);
+
+      if (error) throw error;
+      setCompletedTasks(new Set(data?.map(t => t.task_key) || []));
+    } catch (error) {
+      console.error('Error fetching completed tasks:', error);
+    }
+  };
+
+  const toggleTaskCompletion = async (taskKey: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const isCompleted = completedTasks.has(taskKey);
+
+      if (isCompleted) {
+        // Remove completion
+        await supabase
+          .from('hiring_plan_task_completions')
+          .delete()
+          .eq('job_twin_job_id', jobTwinJobId)
+          .eq('user_id', session.user.id)
+          .eq('task_key', taskKey);
+
+        setCompletedTasks(prev => {
+          const next = new Set(prev);
+          next.delete(taskKey);
+          return next;
+        });
+      } else {
+        // Add completion
+        await supabase
+          .from('hiring_plan_task_completions')
+          .insert({
+            job_twin_job_id: jobTwinJobId,
+            user_id: session.user.id,
+            task_key: taskKey
+          });
+
+        setCompletedTasks(prev => new Set([...prev, taskKey]));
+        toast.success('Task marked complete');
+      }
+    } catch (error) {
+      console.error('Error toggling task:', error);
+      toast.error('Failed to update task');
+    }
+  };
+
+  const getTaskKey = (section: string, index: number, taskIndex?: number) => {
+    if (taskIndex !== undefined) {
+      return `${section}-${index}-${taskIndex}`;
+    }
+    return `${section}-${index}`;
+  };
 
   const fetchHiringPlan = async () => {
     setLoading(true);
@@ -174,6 +243,73 @@ export function HiringPlanAutopilotPanel({ jobTwinJobId }: HiringPlanAutopilotPa
     toast.success(`${label} copied to clipboard`);
   };
 
+  const exportToCalendar = () => {
+    if (!snapshot) return;
+
+    const today = new Date();
+    let icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//FuturHire//Hiring Plan//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+`;
+
+    // Add 7-day plan events
+    snapshot.plan_7_days?.forEach((day) => {
+      const eventDate = new Date(today);
+      eventDate.setDate(today.getDate() + day.day - 1);
+      const dateStr = eventDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const endDate = new Date(eventDate);
+      endDate.setHours(endDate.getHours() + 1);
+      const endDateStr = endDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+      const description = day.tasks.join('\\n• ');
+
+      icsContent += `BEGIN:VEVENT
+DTSTART:${dateStr}
+DTEND:${endDateStr}
+SUMMARY:Day ${day.day}: ${day.focus}
+DESCRIPTION:Tasks:\\n• ${description}
+END:VEVENT
+`;
+    });
+
+    // Add weekly milestones
+    snapshot.plan_30_days?.forEach((week) => {
+      const eventDate = new Date(today);
+      eventDate.setDate(today.getDate() + (week.week * 7) - 6);
+      const dateStr = eventDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const endDate = new Date(eventDate);
+      endDate.setHours(endDate.getHours() + 1);
+      const endDateStr = endDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+      const description = week.tasks.join('\\n• ');
+
+      icsContent += `BEGIN:VEVENT
+DTSTART:${dateStr}
+DTEND:${endDateStr}
+SUMMARY:Week ${week.week}: ${week.goal}
+DESCRIPTION:Tasks:\\n• ${description}
+END:VEVENT
+`;
+    });
+
+    icsContent += 'END:VCALENDAR';
+
+    // Download the file
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'hiring-plan.ics';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success('Calendar exported! Import the .ics file into your calendar app.');
+  };
+
   if (loading) {
     return (
       <Card className="border-border/50">
@@ -236,10 +372,16 @@ export function HiringPlanAutopilotPanel({ jobTwinJobId }: HiringPlanAutopilotPa
             </p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={generateHiringPlan} disabled={generating}>
-          {generating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          <span className="ml-2 hidden sm:inline">Regenerate</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportToCalendar}>
+            <Download className="h-4 w-4" />
+            <span className="ml-2 hidden sm:inline">Export</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={generateHiringPlan} disabled={generating}>
+            {generating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            <span className="ml-2 hidden sm:inline">Regenerate</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Overview */}
@@ -351,13 +493,27 @@ export function HiringPlanAutopilotPanel({ jobTwinJobId }: HiringPlanAutopilotPa
                     <Badge variant="secondary" className="text-xs">Day {day.day}</Badge>
                     <span className="text-sm font-medium">{day.focus}</span>
                   </div>
-                  <ul className="text-xs space-y-1">
-                    {day.tasks.map((t, j) => (
-                      <li key={j} className="flex items-start gap-1">
-                        <span className="text-muted-foreground">•</span>
-                        <span>{t}</span>
-                      </li>
-                    ))}
+                  <ul className="text-xs space-y-2">
+                    {day.tasks.map((t, j) => {
+                      const taskKey = getTaskKey('7day', i, j);
+                      const isCompleted = completedTasks.has(taskKey);
+                      return (
+                        <li key={j} className="flex items-start gap-2">
+                          <Checkbox 
+                            id={taskKey}
+                            checked={isCompleted}
+                            onCheckedChange={() => toggleTaskCompletion(taskKey)}
+                            className="mt-0.5"
+                          />
+                          <label 
+                            htmlFor={taskKey}
+                            className={`cursor-pointer ${isCompleted ? 'line-through text-muted-foreground' : ''}`}
+                          >
+                            {t}
+                          </label>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}
@@ -382,13 +538,27 @@ export function HiringPlanAutopilotPanel({ jobTwinJobId }: HiringPlanAutopilotPa
                     <Badge className="text-xs">Week {week.week}</Badge>
                     <span className="text-sm font-medium">{week.goal}</span>
                   </div>
-                  <ul className="text-xs space-y-1">
-                    {week.tasks.map((t, j) => (
-                      <li key={j} className="flex items-start gap-1">
-                        <span className="text-muted-foreground">•</span>
-                        <span>{t}</span>
-                      </li>
-                    ))}
+                  <ul className="text-xs space-y-2">
+                    {week.tasks.map((t, j) => {
+                      const taskKey = getTaskKey('30day', i, j);
+                      const isCompleted = completedTasks.has(taskKey);
+                      return (
+                        <li key={j} className="flex items-start gap-2">
+                          <Checkbox 
+                            id={taskKey}
+                            checked={isCompleted}
+                            onCheckedChange={() => toggleTaskCompletion(taskKey)}
+                            className="mt-0.5"
+                          />
+                          <label 
+                            htmlFor={taskKey}
+                            className={`cursor-pointer ${isCompleted ? 'line-through text-muted-foreground' : ''}`}
+                          >
+                            {t}
+                          </label>
+                        </li>
+                      );
+                    })}
                   </ul>
                   {week.success_criteria?.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-border/50">

@@ -1089,6 +1089,41 @@ export type Database = {
           },
         ]
       }
+      hiring_plan_task_completions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          job_twin_job_id: string
+          task_key: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          job_twin_job_id: string
+          task_key: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          job_twin_job_id?: string
+          task_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hiring_plan_task_completions_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imports: {
         Row: {
           created_at: string
