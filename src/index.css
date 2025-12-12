@@ -53,6 +53,16 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 10% 10%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 60% 95%;
+    --sidebar-accent-foreground: 270 91% 35%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 239 84% 67%;
+
     /* Score colors */
     --score-high: 142 76% 36%;
     --score-medium: 38 92% 50%;
@@ -104,6 +114,16 @@ All colors MUST be HSL.
     --border: 240 4% 16%;
     --input: 240 4% 16%;
     --ring: 239 84% 67%;
+
+    /* Sidebar Dark */
+    --sidebar-background: 240 10% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 60% 20%;
+    --sidebar-accent-foreground: 270 91% 75%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 239 84% 67%;
 
     --score-high: 142 76% 36%;
     --score-medium: 38 92% 50%;
