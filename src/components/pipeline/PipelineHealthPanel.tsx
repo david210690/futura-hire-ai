@@ -8,9 +8,10 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
+import { jsPDF } from "jspdf";
 import { 
   Activity, AlertTriangle, CheckCircle2, Users, TrendingUp,
-  Loader2, RefreshCw, ChevronDown, ChevronUp, Target, Clock, ListChecks, Zap
+  Loader2, RefreshCw, ChevronDown, ChevronUp, Target, Clock, ListChecks, Zap, FileDown
 } from "lucide-react";
 
 interface PipelineHealthPanelProps {
@@ -165,6 +166,131 @@ export function PipelineHealthPanel({ jobTwinJobId }: PipelineHealthPanelProps) 
     return "bg-red-500";
   };
 
+  const exportToPDF = () => {
+    if (!snapshot) return;
+
+    const doc = new jsPDF();
+    let yPos = 20;
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Pipeline Health Report", 20, yPos);
+    yPos += 15;
+
+    // Date
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, yPos);
+    yPos += 15;
+
+    // Health Score
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Overall Health: ${snapshot.health_score}/100`, 20, yPos);
+    yPos += 10;
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    const summaryLines = doc.splitTextToSize(snapshot.summary, 170);
+    doc.text(summaryLines, 20, yPos);
+    yPos += summaryLines.length * 5 + 10;
+
+    // Stage Distribution
+    if (snapshot.stage_distribution?.length > 0) {
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Stage Distribution", 20, yPos);
+      yPos += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      snapshot.stage_distribution.forEach(stage => {
+        doc.text(`• ${stage.stage}: ${stage.count} candidates`, 25, yPos);
+        yPos += 6;
+      });
+      yPos += 5;
+    }
+
+    // Bottlenecks
+    if (snapshot.bottlenecks?.length > 0) {
+      if (yPos > 250) { doc.addPage(); yPos = 20; }
+      
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Bottlenecks", 20, yPos);
+      yPos += 8;
+
+      snapshot.bottlenecks.forEach(b => {
+        if (yPos > 270) { doc.addPage(); yPos = 20; }
+        
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text(`[${b.stage}] ${b.issue}`, 25, yPos);
+        yPos += 6;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const evidenceLines = doc.splitTextToSize(`Evidence: ${b.evidence}`, 160);
+        doc.text(evidenceLines, 25, yPos);
+        yPos += evidenceLines.length * 5;
+
+        const fixLines = doc.splitTextToSize(`Fix: ${b.fix}`, 160);
+        doc.text(fixLines, 25, yPos);
+        yPos += fixLines.length * 5 + 5;
+      });
+    }
+
+    // Risk Flags
+    if (snapshot.risk_flags?.length > 0) {
+      if (yPos > 250) { doc.addPage(); yPos = 20; }
+      
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Risk Flags", 20, yPos);
+      yPos += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      snapshot.risk_flags.forEach(flag => {
+        if (yPos > 280) { doc.addPage(); yPos = 20; }
+        const flagLines = doc.splitTextToSize(`• ${flag}`, 165);
+        doc.text(flagLines, 25, yPos);
+        yPos += flagLines.length * 5;
+      });
+      yPos += 5;
+    }
+
+    // 7-Day Plan
+    if (snapshot.next_7_days_plan?.length > 0) {
+      if (yPos > 250) { doc.addPage(); yPos = 20; }
+      
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Next 7 Days Plan", 20, yPos);
+      yPos += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      snapshot.next_7_days_plan.forEach((item, i) => {
+        if (yPos > 280) { doc.addPage(); yPos = 20; }
+        const itemLines = doc.splitTextToSize(`${i + 1}. ${item}`, 165);
+        doc.text(itemLines, 25, yPos);
+        yPos += itemLines.length * 5;
+      });
+    }
+
+    // Footer
+    doc.setFontSize(8);
+    doc.text("AI-generated report. Use structured interviews and human judgment.", 20, 285);
+
+    doc.save("pipeline-health-report.pdf");
+    toast({
+      title: "PDF exported",
+      description: "Pipeline health report saved"
+    });
+  };
+
   if (loading) {
     return (
       <Card>
@@ -240,6 +366,14 @@ export function PipelineHealthPanel({ jobTwinJobId }: PipelineHealthPanelProps) 
             </CardDescription>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={exportToPDF}
+            >
+              <FileDown className="h-4 w-4" />
+              <span className="ml-2 hidden sm:inline">PDF</span>
+            </Button>
             <Button 
               variant="outline" 
               size="sm" 
