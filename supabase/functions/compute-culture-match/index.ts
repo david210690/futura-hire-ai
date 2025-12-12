@@ -32,8 +32,27 @@ serve(async (req) => {
 
     if (profileError) throw profileError;
 
+    // If no culture profile exists, return a default neutral score
     if (!profile) {
-      throw new Error('No culture profile found for org');
+      const defaultMatch = {
+        org_id,
+        candidate_id,
+        match_score: 50,
+        factors: { rationale: 'No culture profile defined yet. Using neutral baseline.', top_factors: [] },
+      };
+      
+      // Save default culture match
+      const { data: match, error: matchError } = await supabase
+        .from('culture_matches')
+        .upsert(defaultMatch)
+        .select()
+        .single();
+      
+      if (matchError) throw matchError;
+      
+      return new Response(JSON.stringify(match), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const orgVector = profile.vector as Record<string, number>;
