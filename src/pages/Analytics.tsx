@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { 
   Briefcase, 
-  Users, 
+  Users,
   Clock, 
   TrendingUp, 
   Target,
@@ -79,24 +80,34 @@ interface FunnelStepProps {
   color: string;
   dropoff?: number;
   isLast?: boolean;
+  onClick?: () => void;
 }
 
-function FunnelStep({ label, count, color, dropoff, isLast }: FunnelStepProps) {
+function FunnelStep({ label, count, color, dropoff, isLast, onClick }: FunnelStepProps) {
   return (
-    <div className="flex items-center gap-3">
+    <div 
+      className="flex items-center gap-3 cursor-pointer group"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+    >
       <div 
-        className="w-20 h-20 rounded-xl flex flex-col items-center justify-center text-white font-bold shadow-lg"
+        className="w-20 h-20 rounded-xl flex flex-col items-center justify-center text-white font-bold shadow-lg transition-all group-hover:scale-105 group-hover:shadow-xl"
         style={{ backgroundColor: color }}
       >
         <span className="text-2xl">{count}</span>
       </div>
       <div className="flex-1">
-        <p className="font-semibold text-lg">{label}</p>
+        <p className="font-semibold text-lg group-hover:text-primary transition-colors">{label}</p>
         {dropoff !== undefined && dropoff > 0 && (
           <p className="text-sm text-muted-foreground">
             {dropoff}% moved to next stage
           </p>
         )}
+        <p className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+          Click to view candidates →
+        </p>
       </div>
       {!isLast && (
         <div className="flex flex-col items-center text-muted-foreground">
@@ -144,6 +155,7 @@ const STAGE_CONFIG = [
 ];
 
 export default function Analytics() {
+  const navigate = useNavigate();
   const { currentOrg } = useCurrentOrg();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({
@@ -156,7 +168,7 @@ export default function Analytics() {
   });
   const [stageCounts, setStageCounts] = useState<Record<string, number>>({});
   const [weeklyData, setWeeklyData] = useState<WeekData[]>([]);
-  const [jobPerformance, setJobPerformance] = useState<{ title: string; applications: number; hired: number }[]>([]);
+  const [jobPerformance, setJobPerformance] = useState<{ title: string; applications: number; hired: number; jobId: string }[]>([]);
 
   useEffect(() => {
     if (currentOrg?.id) {
@@ -237,6 +249,7 @@ export default function Analytics() {
           title: job.title.length > 30 ? job.title.substring(0, 30) + "..." : job.title,
           applications: jobApps.length,
           hired: jobHired,
+          jobId: job.id,
         };
       }) || [];
       setJobPerformance(jobPerf);
@@ -367,7 +380,14 @@ export default function Analytics() {
                   {jobPerformance.length > 0 ? (
                     <div className="space-y-4">
                       {jobPerformance.map((job, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <div 
+                          key={idx} 
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
+                          onClick={() => navigate(`/recruiter/jobs/${job.jobId}`)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => e.key === 'Enter' && navigate(`/recruiter/jobs/${job.jobId}`)}
+                        >
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{job.title}</p>
                             <p className="text-sm text-muted-foreground">
@@ -419,6 +439,13 @@ export default function Analytics() {
                         color={config.color}
                         dropoff={idx > 0 ? progression : undefined}
                         isLast={idx === funnelStages.length - 1}
+                        onClick={() => {
+                          if (jobPerformance.length > 0) {
+                            navigate(`/recruiter/jobs/${jobPerformance[0].jobId}?stage=${stageKey}`);
+                          } else {
+                            navigate('/recruiter');
+                          }
+                        }}
                       />
                     );
                   })}
