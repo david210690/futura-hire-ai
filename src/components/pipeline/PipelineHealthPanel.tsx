@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useToast } from "@/hooks/use-toast";
 import { 
   Activity, AlertTriangle, CheckCircle2, Users, TrendingUp,
-  Loader2, RefreshCw, ChevronDown, ChevronUp, Target, Clock, ListChecks
+  Loader2, RefreshCw, ChevronDown, ChevronUp, Target, Clock, ListChecks, Zap
 } from "lucide-react";
 
 interface PipelineHealthPanelProps {
@@ -41,6 +41,7 @@ export function PipelineHealthPanel({ jobTwinJobId }: PipelineHealthPanelProps) 
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [bulkAssessing, setBulkAssessing] = useState(false);
   const [snapshot, setSnapshot] = useState<PipelineHealthSnapshot | null>(null);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -116,6 +117,40 @@ export function PipelineHealthPanel({ jobTwinJobId }: PipelineHealthPanelProps) 
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const bulkAssessOfferLikelihood = async () => {
+    setBulkAssessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("bulk-generate-offer-likelihood", {
+        body: { jobId: jobTwinJobId }
+      });
+
+      if (error) throw error;
+
+      if (!data.success) {
+        throw new Error(data.message);
+      }
+
+      toast({
+        title: "Bulk assessment complete",
+        description: `Assessed ${data.processed} candidates${data.skipped > 0 ? `, skipped ${data.skipped} already assessed` : ''}${data.errors > 0 ? `, ${data.errors} errors` : ''}`
+      });
+
+      // Regenerate pipeline health after bulk assessment
+      if (data.processed > 0) {
+        await generatePipelineHealth();
+      }
+    } catch (error: any) {
+      console.error("Error in bulk assessment:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to bulk assess candidates",
+        variant: "destructive"
+      });
+    } finally {
+      setBulkAssessing(false);
+    }
   };
 
   const getHealthColor = (score: number) => {
@@ -204,19 +239,34 @@ export function PipelineHealthPanel({ jobTwinJobId }: PipelineHealthPanelProps) 
               )}
             </CardDescription>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={generatePipelineHealth}
-            disabled={generating}
-          >
-            {generating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            <span className="ml-2 hidden sm:inline">Regenerate</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={bulkAssessOfferLikelihood}
+              disabled={bulkAssessing || generating}
+            >
+              {bulkAssessing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4" />
+              )}
+              <span className="ml-2 hidden sm:inline">Assess All</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={generatePipelineHealth}
+              disabled={generating || bulkAssessing}
+            >
+              {generating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              <span className="ml-2 hidden sm:inline">Regenerate</span>
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
