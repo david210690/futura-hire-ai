@@ -79,11 +79,84 @@ serve(async (req) => {
             .single();
 
           if (candidate) {
+            // First, find or create a job_twin_jobs entry for this job+user
+            let jobTwinJobId: string | null = null;
+            
+            // Check if candidate has a job_twin_profile
+            const { data: profile } = await supabase
+              .from('job_twin_profiles')
+              .select('id')
+              .eq('user_id', candidate.user_id)
+              .single();
+            
+            if (profile) {
+              // Check if there's already a job_twin_jobs entry for this job+profile
+              const { data: existingJtj } = await supabase
+                .from('job_twin_jobs')
+                .select('id')
+                .eq('job_id', jobId)
+                .eq('profile_id', profile.id)
+                .single();
+              
+              if (existingJtj) {
+                jobTwinJobId = existingJtj.id;
+              } else {
+                // Create a new job_twin_jobs entry
+                const { data: newJtj, error: jtjError } = await supabase
+                  .from('job_twin_jobs')
+                  .insert({
+                    job_id: jobId,
+                    profile_id: profile.id,
+                    status: 'new'
+                  })
+                  .select('id')
+                  .single();
+                
+                if (jtjError) {
+                  console.error('Error creating job_twin_jobs:', jtjError);
+                  throw new Error('Failed to create job tracking entry');
+                }
+                jobTwinJobId = newJtj.id;
+              }
+            } else {
+              // Create a job_twin_profile for the candidate first
+              const { data: newProfile, error: profileError } = await supabase
+                .from('job_twin_profiles')
+                .insert({
+                  user_id: candidate.user_id
+                })
+                .select('id')
+                .single();
+              
+              if (profileError) {
+                console.error('Error creating job_twin_profile:', profileError);
+                throw new Error('Failed to create candidate profile');
+              }
+              
+              // Now create job_twin_jobs entry
+              const { data: newJtj, error: jtjError } = await supabase
+                .from('job_twin_jobs')
+                .insert({
+                  job_id: jobId,
+                  profile_id: newProfile.id,
+                  status: 'new'
+                })
+                .select('id')
+                .single();
+              
+              if (jtjError) {
+                console.error('Error creating job_twin_jobs:', jtjError);
+                throw new Error('Failed to create job tracking entry');
+              }
+              jobTwinJobId = newJtj.id;
+            }
+            
+            // Now create the fit request with the proper job_twin_job_id
             const { error: fitError } = await supabase
               .from('role_dna_fit_requests')
               .insert({
                 user_id: candidate.user_id,
-                job_twin_job_id: jobId,
+                job_twin_job_id: jobTwinJobId,
                 requested_by_user_id: user.id,
                 status: 'pending'
               });
@@ -93,6 +166,7 @@ serve(async (req) => {
               throw new Error('Failed to create fit request');
             }
             actionPayload.candidate_user_id = candidate.user_id;
+            actionPayload.job_twin_job_id = jobTwinJobId;
           }
           console.log('Fit request created for candidate:', candidateId);
           break;
