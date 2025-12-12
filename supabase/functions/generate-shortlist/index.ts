@@ -32,6 +32,7 @@ serve(async (req) => {
 
   const startTime = Date.now();
   let supabase;
+  let supabaseAdmin;
 
   try {
     const { jobId } = await req.json();
@@ -39,10 +40,17 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
     
+    // User-scoped client for auth and RLS-protected operations
     supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Admin client for querying all candidates (bypasses RLS)
+    supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
     // Get current user
@@ -114,8 +122,8 @@ serve(async (req) => {
       throw new Error('Rate limit exceeded. Maximum 5 shortlists per hour.');
     }
 
-    // Get all candidates with resumes
-    const { data: candidates, error: candidatesError } = await supabase
+    // Get all candidates with resumes using admin client (bypasses RLS)
+    const { data: candidates, error: candidatesError } = await supabaseAdmin
       .from('candidates')
       .select(`
         id,
