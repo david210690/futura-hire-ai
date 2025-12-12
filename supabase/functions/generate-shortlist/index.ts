@@ -211,13 +211,24 @@ ${JSON.stringify(candidateProfiles, null, 2)}`
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const result = JSON.parse(jsonMatch ? jsonMatch[0] : content);
 
+    // Helper to generate apply token (avoids trigger using gen_random_bytes)
+    const generateToken = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let token = '';
+      for (let i = 0; i < 32; i++) {
+        token += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return token;
+    };
+
     // Insert applications (use "top" key from schema)
     const matches = result.top || result.matches || result.top_matches || [];
     for (const match of matches.slice(0, 5)) {
       const { error: insertError } = await supabaseAdmin.from('applications').insert({
         job_id: jobId,
         candidate_id: match.candidate_id,
-        org_id: job.org_id, // Required field
+        org_id: job.org_id,
+        apply_token: generateToken(), // Provide token to bypass trigger
         skill_fit_score: match.skill_fit_score,
         culture_fit_score: 0,
         overall_score: Math.round(match.skill_fit_score * 0.6),
