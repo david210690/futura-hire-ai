@@ -16,7 +16,10 @@ import {
   Wand2,
   Target,
   Zap,
-  ArrowRight
+  ArrowRight,
+  Clock,
+  Gauge,
+  Percent
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +46,12 @@ export default function RecruiterDashboard() {
     offered: 0,
     pendingAssessments: 0,
     pendingInterviews: 0
+  });
+  const [metrics, setMetrics] = useState({
+    avgTimeToHire: 0,
+    hiringVelocity: 0,
+    conversionRate: 0,
+    interviewToOfferRate: 0
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -185,6 +194,52 @@ export default function RecruiterDashboard() {
       offered,
       pendingAssessments: pendingAssessments || 0,
       pendingInterviews: pendingInterviews || 0
+    });
+
+    // Calculate richer metrics
+    // Get hires data for time-to-hire calculation
+    const { data: hiresData } = await supabase
+      .from('hires')
+      .select('created_at, application_id, applications!inner(created_at)')
+      .eq('org_id', currentOrg.id);
+
+    // Average time to hire (days from application to hire)
+    let avgTimeToHire = 0;
+    if (hiresData && hiresData.length > 0) {
+      const totalDays = hiresData.reduce((sum, hire) => {
+        const appDate = new Date((hire.applications as any)?.created_at);
+        const hireDate = new Date(hire.created_at);
+        const days = Math.ceil((hireDate.getTime() - appDate.getTime()) / (1000 * 60 * 60 * 24));
+        return sum + days;
+      }, 0);
+      avgTimeToHire = Math.round(totalDays / hiresData.length);
+    }
+
+    // Hiring velocity (hires in last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const { count: recentHires } = await supabase
+      .from('hires')
+      .select('*', { count: 'exact', head: true })
+      .eq('org_id', currentOrg.id)
+      .gte('created_at', thirtyDaysAgo.toISOString());
+
+    // Conversion rate (hired / total applications)
+    const totalApps = appsData?.length || 0;
+    const hiredCount = hiresData?.length || 0;
+    const conversionRate = totalApps > 0 ? Math.round((hiredCount / totalApps) * 100) : 0;
+
+    // Interview to offer rate
+    const interviewedCount = appsData?.filter(a => 
+      a.stage === 'interview' || a.stage === 'interviewed' || a.stage === 'offer' || a.status === 'hired'
+    ).length || 0;
+    const interviewToOfferRate = interviewedCount > 0 ? Math.round((offered / interviewedCount) * 100) : 0;
+
+    setMetrics({
+      avgTimeToHire,
+      hiringVelocity: recentHires || 0,
+      conversionRate,
+      interviewToOfferRate
     });
 
     // Recent activity - get recent applications with job info
@@ -367,6 +422,55 @@ export default function RecruiterDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.avgCultureFit}%</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Hiring Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="border-l-4 border-l-primary">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-primary" />
+                <span className="text-xs text-muted-foreground font-medium">Time to Hire</span>
+              </div>
+              <div className="text-2xl font-bold">
+                {metrics.avgTimeToHire > 0 ? `${metrics.avgTimeToHire}d` : '—'}
+              </div>
+              <p className="text-xs text-muted-foreground">avg days to hire</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-green-500">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Gauge className="w-4 h-4 text-green-500" />
+                <span className="text-xs text-muted-foreground font-medium">Hiring Velocity</span>
+              </div>
+              <div className="text-2xl font-bold">{metrics.hiringVelocity}</div>
+              <p className="text-xs text-muted-foreground">hires last 30 days</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-blue-500">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Percent className="w-4 h-4 text-blue-500" />
+                <span className="text-xs text-muted-foreground font-medium">Conversion Rate</span>
+              </div>
+              <div className="text-2xl font-bold">{metrics.conversionRate}%</div>
+              <p className="text-xs text-muted-foreground">applications → hired</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-purple-500">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-purple-500" />
+                <span className="text-xs text-muted-foreground font-medium">Interview → Offer</span>
+              </div>
+              <div className="text-2xl font-bold">{metrics.interviewToOfferRate}%</div>
+              <p className="text-xs text-muted-foreground">interview success rate</p>
             </CardContent>
           </Card>
         </div>
