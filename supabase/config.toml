@@ -170,3 +170,9 @@ verify_jwt = true
 
 [functions.get-shortlist-score]
 verify_jwt = true
+
+[functions.generate-interview-prep]
+verify_jwt = true
+
+[functions.get-interview-prep]
+verify_jwt = true
