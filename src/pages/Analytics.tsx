@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,8 @@ import {
   Calendar,
   BarChart3,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  Radio
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -158,6 +159,8 @@ export default function Analytics() {
   const navigate = useNavigate();
   const { currentOrg } = useCurrentOrg();
   const [loading, setLoading] = useState(true);
+  const [isLive, setIsLive] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [metrics, setMetrics] = useState({
     totalJobs: 0,
     activeJobs: 0,
@@ -170,15 +173,13 @@ export default function Analytics() {
   const [weeklyData, setWeeklyData] = useState<WeekData[]>([]);
   const [jobPerformance, setJobPerformance] = useState<{ title: string; applications: number; hired: number; jobId: string }[]>([]);
 
-  useEffect(() => {
-    if (currentOrg?.id) {
-      loadAnalytics();
-    }
-  }, [currentOrg?.id]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     if (!currentOrg?.id) return;
-    setLoading(true);
+    
+    // Don't show loading skeleton on realtime updates
+    if (!lastUpdate) {
+      setLoading(true);
+    }
 
     try {
       const { data: jobs } = await supabase
@@ -253,13 +254,63 @@ export default function Analytics() {
         };
       }) || [];
       setJobPerformance(jobPerf);
+      setLastUpdate(new Date());
 
     } catch (error) {
       console.error("Error loading analytics:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentOrg?.id, lastUpdate]);
+
+  useEffect(() => {
+    if (currentOrg?.id) {
+      loadAnalytics();
+    }
+  }, [currentOrg?.id]);
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!currentOrg?.id) return;
+
+    const channel = supabase
+      .channel('analytics-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'applications',
+          filter: `org_id=eq.${currentOrg.id}`
+        },
+        (payload) => {
+          console.log('Realtime update:', payload);
+          loadAnalytics();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'hires',
+          filter: `org_id=eq.${currentOrg.id}`
+        },
+        (payload) => {
+          console.log('Realtime hires update:', payload);
+          loadAnalytics();
+        }
+      )
+      .subscribe((status) => {
+        setIsLive(status === 'SUBSCRIBED');
+        console.log('Realtime subscription status:', status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentOrg?.id, loadAnalytics]);
+
 
   if (loading) {
     return (
@@ -288,10 +339,18 @@ export default function Analytics() {
             <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
             <p className="text-muted-foreground">Your hiring at a glance</p>
           </div>
-          <Badge variant="outline" className="gap-1.5">
-            <Calendar className="w-3.5 h-3.5" />
-            Last 30 days
-          </Badge>
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <Badge variant="outline" className="gap-1.5 border-green-500/50 text-green-600 bg-green-500/10">
+                <Radio className="w-3 h-3 animate-pulse" />
+                Live
+              </Badge>
+            )}
+            <Badge variant="outline" className="gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              Last 30 days
+            </Badge>
+          </div>
         </div>
 
         {/* Key Metrics - Big Numbers */}
