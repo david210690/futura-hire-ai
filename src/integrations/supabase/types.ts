@@ -1054,6 +1054,41 @@ export type Database = {
           },
         ]
       }
+      hiring_plan_autopilot_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          job_twin_job_id: string
+          recruiter_user_id: string
+          snapshot_json: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_twin_job_id: string
+          recruiter_user_id: string
+          snapshot_json: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_twin_job_id?: string
+          recruiter_user_id?: string
+          snapshot_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hiring_plan_autopilot_snapshots_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imports: {
         Row: {
           created_at: string
