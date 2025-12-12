@@ -4,24 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  Legend,
-  Funnel,
-  FunnelChart,
-  LabelList
-} from "recharts";
+import { Progress } from "@/components/ui/progress";
 import { 
   Briefcase, 
   Users, 
@@ -29,53 +12,136 @@ import {
   TrendingUp, 
   Target,
   CheckCircle,
-  XCircle,
   Calendar,
-  BarChart3
+  BarChart3,
+  ArrowRight,
+  ChevronDown
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+import { format, subDays, eachWeekOfInterval, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 
 interface MetricCardProps {
   title: string;
   value: string | number;
   description?: string;
   icon: React.ReactNode;
-  trend?: { value: number; label: string };
+  highlight?: boolean;
 }
 
-function MetricCard({ title, value, description, icon, trend }: MetricCardProps) {
+function MetricCard({ title, value, description, icon, highlight }: MetricCardProps) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <div className="text-muted-foreground">{icon}</div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
-        {trend && (
-          <div className={`flex items-center gap-1 mt-2 text-xs ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            <TrendingUp className={`w-3 h-3 ${trend.value < 0 ? 'rotate-180' : ''}`} />
-            {trend.value >= 0 ? '+' : ''}{trend.value}% {trend.label}
+    <Card className={highlight ? "border-primary/50 bg-primary/5" : ""}>
+      <CardContent className="pt-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+            <p className="text-3xl font-bold tracking-tight">{value}</p>
+            {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
           </div>
-        )}
+          <div className="p-2 rounded-lg bg-muted">{icon}</div>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-const STAGE_COLORS: Record<string, string> = {
-  new: "hsl(var(--muted-foreground))",
-  shortlisted: "hsl(217, 91%, 60%)",
-  interview: "hsl(45, 93%, 47%)",
-  offer: "hsl(271, 91%, 65%)",
-  hired: "hsl(142, 71%, 45%)",
-  rejected: "hsl(0, 84%, 60%)",
-};
+interface StageRowProps {
+  label: string;
+  count: number;
+  total: number;
+  color: string;
+}
 
-const PIE_COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#64748b"];
+function StageRow({ label, count, total, color }: StageRowProps) {
+  const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="text-muted-foreground">
+          <span className="font-semibold text-foreground">{count}</span> candidates ({percentage}%)
+        </span>
+      </div>
+      <div className="h-3 bg-muted rounded-full overflow-hidden">
+        <div 
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${percentage}%`, backgroundColor: color }}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface FunnelStepProps {
+  label: string;
+  count: number;
+  color: string;
+  dropoff?: number;
+  isLast?: boolean;
+}
+
+function FunnelStep({ label, count, color, dropoff, isLast }: FunnelStepProps) {
+  return (
+    <div className="flex items-center gap-3">
+      <div 
+        className="w-20 h-20 rounded-xl flex flex-col items-center justify-center text-white font-bold shadow-lg"
+        style={{ backgroundColor: color }}
+      >
+        <span className="text-2xl">{count}</span>
+      </div>
+      <div className="flex-1">
+        <p className="font-semibold text-lg">{label}</p>
+        {dropoff !== undefined && dropoff > 0 && (
+          <p className="text-sm text-muted-foreground">
+            {dropoff}% moved to next stage
+          </p>
+        )}
+      </div>
+      {!isLast && (
+        <div className="flex flex-col items-center text-muted-foreground">
+          <ChevronDown className="w-6 h-6" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface WeekData {
+  week: string;
+  count: number;
+}
+
+function WeeklyTrend({ data, max }: { data: WeekData[]; max: number }) {
+  return (
+    <div className="space-y-3">
+      {data.map((week, idx) => (
+        <div key={idx} className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground w-24 shrink-0">{week.week}</span>
+          <div className="flex-1 h-8 bg-muted rounded-lg overflow-hidden">
+            <div 
+              className="h-full bg-primary rounded-lg flex items-center justify-end px-3 transition-all duration-500"
+              style={{ width: max > 0 ? `${(week.count / max) * 100}%` : '0%', minWidth: week.count > 0 ? '40px' : '0' }}
+            >
+              {week.count > 0 && (
+                <span className="text-sm font-semibold text-primary-foreground">{week.count}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const STAGE_CONFIG = [
+  { key: "new", label: "New Applications", color: "#64748b" },
+  { key: "shortlisted", label: "Shortlisted", color: "#3b82f6" },
+  { key: "interview", label: "In Interviews", color: "#f59e0b" },
+  { key: "offer", label: "Offer Stage", color: "#8b5cf6" },
+  { key: "hired", label: "Hired", color: "#22c55e" },
+  { key: "rejected", label: "Rejected", color: "#ef4444" },
+];
 
 export default function Analytics() {
   const { currentOrg } = useCurrentOrg();
@@ -88,9 +154,8 @@ export default function Analytics() {
     avgTimeToHire: 0,
     conversionRate: 0,
   });
-  const [stageDistribution, setStageDistribution] = useState<{ stage: string; count: number; fill: string }[]>([]);
-  const [applicationsTrend, setApplicationsTrend] = useState<{ date: string; applications: number }[]>([]);
-  const [funnelData, setFunnelData] = useState<{ stage: string; value: number; fill: string }[]>([]);
+  const [stageCounts, setStageCounts] = useState<Record<string, number>>({});
+  const [weeklyData, setWeeklyData] = useState<WeekData[]>([]);
   const [jobPerformance, setJobPerformance] = useState<{ title: string; applications: number; hired: number }[]>([]);
 
   useEffect(() => {
@@ -104,19 +169,16 @@ export default function Analytics() {
     setLoading(true);
 
     try {
-      // Fetch jobs
       const { data: jobs } = await supabase
         .from("jobs")
         .select("id, title, status, created_at")
         .eq("org_id", currentOrg.id);
 
-      // Fetch applications
       const { data: applications } = await supabase
         .from("applications")
         .select("id, stage, status, created_at, job_id")
         .eq("org_id", currentOrg.id);
 
-      // Fetch hires
       const { data: hires } = await supabase
         .from("hires")
         .select("id, created_at, start_date, application_id")
@@ -126,14 +188,10 @@ export default function Analytics() {
       const activeJobs = jobs?.filter(j => j.status === "open").length || 0;
       const totalApplications = applications?.length || 0;
       const totalHired = hires?.length || 0;
-
-      // Calculate conversion rate
       const conversionRate = totalApplications > 0 
         ? Math.round((totalHired / totalApplications) * 100) 
         : 0;
-
-      // Calculate avg time to hire (mock - would need actual hire dates)
-      const avgTimeToHire = totalHired > 0 ? 18 : 0; // Placeholder
+      const avgTimeToHire = totalHired > 0 ? 18 : 0;
 
       setMetrics({
         totalJobs,
@@ -145,65 +203,38 @@ export default function Analytics() {
       });
 
       // Stage distribution
-      const stageCounts: Record<string, number> = {
-        new: 0,
-        shortlisted: 0,
-        interview: 0,
-        offer: 0,
-        hired: 0,
-        rejected: 0,
+      const counts: Record<string, number> = {
+        new: 0, shortlisted: 0, interview: 0, offer: 0, hired: 0, rejected: 0,
       };
       applications?.forEach(app => {
         const stage = app.stage || "new";
-        if (stageCounts[stage] !== undefined) {
-          stageCounts[stage]++;
-        }
+        if (counts[stage] !== undefined) counts[stage]++;
       });
-      setStageDistribution(
-        Object.entries(stageCounts).map(([stage, count]) => ({
-          stage: stage.charAt(0).toUpperCase() + stage.slice(1),
-          count,
-          fill: STAGE_COLORS[stage] || "#64748b",
-        }))
-      );
+      setStageCounts(counts);
 
-      // Funnel data
-      const funnelStages = ["new", "shortlisted", "interview", "offer", "hired"];
-      let cumulativeCount = totalApplications;
-      setFunnelData(
-        funnelStages.map(stage => {
-          const stageCount = stageCounts[stage] || 0;
-          // For funnel, show cumulative progression
-          const value = stage === "new" ? totalApplications : stageCounts[stage];
-          return {
-            stage: stage.charAt(0).toUpperCase() + stage.slice(1),
-            value,
-            fill: STAGE_COLORS[stage],
-          };
-        })
-      );
-
-      // Applications trend (last 30 days)
-      const thirtyDaysAgo = subDays(new Date(), 30);
-      const days = eachDayOfInterval({ start: thirtyDaysAgo, end: new Date() });
-      const trendData = days.map(day => {
-        const dayStr = format(day, "yyyy-MM-dd");
-        const count = applications?.filter(app => 
-          app.created_at && format(new Date(app.created_at), "yyyy-MM-dd") === dayStr
-        ).length || 0;
+      // Weekly trend (last 6 weeks)
+      const sixWeeksAgo = subDays(new Date(), 42);
+      const weeks = eachWeekOfInterval({ start: sixWeeksAgo, end: new Date() });
+      const weeklyTrend = weeks.slice(-6).map(weekStart => {
+        const weekEnd = endOfWeek(weekStart);
+        const count = applications?.filter(app => {
+          if (!app.created_at) return false;
+          const appDate = new Date(app.created_at);
+          return isWithinInterval(appDate, { start: weekStart, end: weekEnd });
+        }).length || 0;
         return {
-          date: format(day, "MMM d"),
-          applications: count,
+          week: format(weekStart, "MMM d"),
+          count,
         };
       });
-      setApplicationsTrend(trendData);
+      setWeeklyData(weeklyTrend);
 
       // Job performance
       const jobPerf = jobs?.slice(0, 5).map(job => {
         const jobApps = applications?.filter(app => app.job_id === job.id) || [];
         const jobHired = jobApps.filter(app => app.stage === "hired").length;
         return {
-          title: job.title.length > 20 ? job.title.substring(0, 20) + "..." : job.title,
+          title: job.title.length > 30 ? job.title.substring(0, 30) + "..." : job.title,
           applications: jobApps.length,
           hired: jobHired,
         };
@@ -233,13 +264,16 @@ export default function Analytics() {
     );
   }
 
+  const funnelStages = ["new", "shortlisted", "interview", "offer", "hired"];
+  const maxWeekly = Math.max(...weeklyData.map(w => w.count), 1);
+
   return (
     <SidebarLayout userRole="recruiter">
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 max-w-6xl">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
-            <p className="text-muted-foreground">Hiring metrics and insights for your organization</p>
+            <p className="text-muted-foreground">Your hiring at a glance</p>
           </div>
           <Badge variant="outline" className="gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
@@ -247,39 +281,40 @@ export default function Analytics() {
           </Badge>
         </div>
 
-        {/* Key Metrics */}
+        {/* Key Metrics - Big Numbers */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
-            title="Total Jobs"
-            value={metrics.totalJobs}
-            description={`${metrics.activeJobs} active`}
-            icon={<Briefcase className="w-4 h-4" />}
+            title="Open Jobs"
+            value={metrics.activeJobs}
+            description={`${metrics.totalJobs} total jobs created`}
+            icon={<Briefcase className="w-5 h-5" />}
           />
           <MetricCard
-            title="Applications"
+            title="Total Applications"
             value={metrics.totalApplications}
-            description="Total received"
-            icon={<Users className="w-4 h-4" />}
+            description="Candidates applied"
+            icon={<Users className="w-5 h-5" />}
           />
           <MetricCard
-            title="Hires"
+            title="Successful Hires"
             value={metrics.totalHired}
-            description={`${metrics.conversionRate}% conversion`}
-            icon={<CheckCircle className="w-4 h-4" />}
+            description={`${metrics.conversionRate}% of applicants`}
+            icon={<CheckCircle className="w-5 h-5" />}
+            highlight={metrics.totalHired > 0}
           />
           <MetricCard
-            title="Avg. Time to Hire"
-            value={metrics.avgTimeToHire > 0 ? `${metrics.avgTimeToHire} days` : "N/A"}
-            description="From application to offer"
-            icon={<Clock className="w-4 h-4" />}
+            title="Time to Hire"
+            value={metrics.avgTimeToHire > 0 ? `${metrics.avgTimeToHire} days` : "—"}
+            description="Average hiring time"
+            icon={<Clock className="w-5 h-5" />}
           />
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-4">
+        <Tabs defaultValue="pipeline" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="overview" className="gap-2">
+            <TabsTrigger value="pipeline" className="gap-2">
               <BarChart3 className="w-4 h-4" />
-              Overview
+              Pipeline
             </TabsTrigger>
             <TabsTrigger value="funnel" className="gap-2">
               <Target className="w-4 h-4" />
@@ -287,75 +322,76 @@ export default function Analytics() {
             </TabsTrigger>
             <TabsTrigger value="trends" className="gap-2">
               <TrendingUp className="w-4 h-4" />
-              Trends
+              Weekly Trends
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Stage Distribution */}
+          <TabsContent value="pipeline" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Pipeline Distribution - Simple Progress Bars */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Pipeline Distribution</CardTitle>
-                  <CardDescription>Candidates by stage</CardDescription>
+                  <CardTitle className="text-lg">Where are your candidates?</CardTitle>
+                  <CardDescription>Current pipeline breakdown</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={stageDistribution} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                        <XAxis type="number" />
-                        <YAxis dataKey="stage" type="category" width={80} />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: 'hsl(var(--popover))', 
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px'
-                          }} 
-                        />
-                        <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                          {stageDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                <CardContent className="space-y-5">
+                  {STAGE_CONFIG.filter(s => s.key !== "rejected").map(stage => (
+                    <StageRow
+                      key={stage.key}
+                      label={stage.label}
+                      count={stageCounts[stage.key] || 0}
+                      total={metrics.totalApplications}
+                      color={stage.color}
+                    />
+                  ))}
+                  {stageCounts.rejected > 0 && (
+                    <div className="pt-4 border-t">
+                      <StageRow
+                        label="Rejected"
+                        count={stageCounts.rejected}
+                        total={metrics.totalApplications}
+                        color="#ef4444"
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Job Performance */}
+              {/* Top Jobs - Simple List */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Top Jobs</CardTitle>
-                  <CardDescription>Applications vs hires</CardDescription>
+                  <CardTitle className="text-lg">Your Top Jobs</CardTitle>
+                  <CardDescription>Most applications received</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64">
-                    {jobPerformance.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={jobPerformance}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="title" tick={{ fontSize: 12 }} />
-                          <YAxis />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(var(--popover))', 
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px'
-                            }} 
-                          />
-                          <Legend />
-                          <Bar dataKey="applications" fill="#6366f1" name="Applications" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="hired" fill="#22c55e" name="Hired" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        No job data yet
-                      </div>
-                    )}
-                  </div>
+                  {jobPerformance.length > 0 ? (
+                    <div className="space-y-4">
+                      {jobPerformance.map((job, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{job.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {job.applications} applications
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            {job.hired > 0 ? (
+                              <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                                {job.hired} hired
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">No hires yet</Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Briefcase className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                      <p>No jobs created yet</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -365,46 +401,42 @@ export default function Analytics() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Hiring Funnel</CardTitle>
-                <CardDescription>Candidate progression through stages</CardDescription>
+                <CardDescription>How candidates move through your process</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={funnelData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="stage" />
-                      <YAxis />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--popover))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }} 
-                      />
-                      <Bar dataKey="value" name="Candidates" radius={[4, 4, 0, 0]}>
-                        {funnelData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Funnel Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t">
-                  {funnelData.map((stage, idx) => {
-                    const prevValue = idx > 0 ? funnelData[idx - 1].value : stage.value;
-                    const dropoff = prevValue > 0 ? Math.round(((prevValue - stage.value) / prevValue) * 100) : 0;
+                <div className="space-y-4 max-w-md mx-auto py-4">
+                  {funnelStages.map((stageKey, idx) => {
+                    const config = STAGE_CONFIG.find(s => s.key === stageKey)!;
+                    const count = stageCounts[stageKey] || 0;
+                    const prevCount = idx > 0 ? (stageCounts[funnelStages[idx - 1]] || 0) : count;
+                    const progression = prevCount > 0 ? Math.round((count / prevCount) * 100) : 0;
+                    
                     return (
-                      <div key={stage.stage} className="text-center">
-                        <div className="text-2xl font-bold">{stage.value}</div>
-                        <div className="text-sm text-muted-foreground">{stage.stage}</div>
-                        {idx > 0 && dropoff > 0 && (
-                          <div className="text-xs text-red-500 mt-1">-{dropoff}% dropoff</div>
-                        )}
-                      </div>
+                      <FunnelStep
+                        key={stageKey}
+                        label={config.label}
+                        count={count}
+                        color={config.color}
+                        dropoff={idx > 0 ? progression : undefined}
+                        isLast={idx === funnelStages.length - 1}
+                      />
                     );
                   })}
+                </div>
+
+                {/* Summary */}
+                <div className="mt-8 p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Overall conversion</p>
+                      <p className="text-2xl font-bold">{metrics.conversionRate}%</p>
+                    </div>
+                    <ArrowRight className="w-6 h-6 text-muted-foreground" />
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Out of {metrics.totalApplications} applicants</p>
+                      <p className="text-2xl font-bold text-green-600">{metrics.totalHired} hired</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -413,37 +445,28 @@ export default function Analytics() {
           <TabsContent value="trends" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Applications Over Time</CardTitle>
-                <CardDescription>Last 30 days</CardDescription>
+                <CardTitle className="text-lg">Weekly Applications</CardTitle>
+                <CardDescription>Applications received per week</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={applicationsTrend}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="date" 
-                        tick={{ fontSize: 11 }}
-                        interval="preserveStartEnd"
-                      />
-                      <YAxis />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--popover))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }} 
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="applications" 
-                        stroke="#6366f1" 
-                        strokeWidth={2}
-                        dot={false}
-                        name="Applications"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                <WeeklyTrend data={weeklyData} max={maxWeekly} />
+                
+                {/* Summary */}
+                <div className="mt-6 pt-6 border-t">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-muted/50 rounded-lg text-center">
+                      <p className="text-sm text-muted-foreground">This week</p>
+                      <p className="text-3xl font-bold">{weeklyData[weeklyData.length - 1]?.count || 0}</p>
+                      <p className="text-sm text-muted-foreground">applications</p>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg text-center">
+                      <p className="text-sm text-muted-foreground">6-week average</p>
+                      <p className="text-3xl font-bold">
+                        {Math.round(weeklyData.reduce((sum, w) => sum + w.count, 0) / Math.max(weeklyData.length, 1))}
+                      </p>
+                      <p className="text-sm text-muted-foreground">per week</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
