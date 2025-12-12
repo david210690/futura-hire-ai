@@ -9,14 +9,16 @@ import { CreateAssessmentFromAI } from "@/components/assessments/CreateAssessmen
 import { CreateAssessmentFromBank } from "@/components/assessments/CreateAssessmentFromBank";
 import { ImportAssessment } from "@/components/assessments/ImportAssessment";
 import { AssessmentsList } from "@/components/assessments/AssessmentsList";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Assessments = () => {
   const [activeTab, setActiveTab] = useState("list");
   const navigate = useNavigate();
+  const { role } = useUserRole();
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navbar userRole={role || 'recruiter'} />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Assessments</h1>
