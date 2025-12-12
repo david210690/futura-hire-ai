@@ -117,7 +117,7 @@ serve(async (req) => {
         )
       `)
       .eq('job_id', jobId)
-      .eq('stage', 'shortlist')
+      .eq('stage', 'shortlisted')
       .limit(50);
 
     if (!applications || applications.length === 0) {
