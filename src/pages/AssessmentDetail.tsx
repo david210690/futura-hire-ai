@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Clock, Target, FileText, Share2, Eye, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -16,9 +19,18 @@ const AssessmentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { currentOrg } = useCurrentOrg();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    duration_minutes: 60,
+    passing_score: 70
+  });
+  const [saving, setSaving] = useState(false);
 
   const { data: assessment, isLoading } = useQuery({
     queryKey: ["assessment", id],
@@ -150,7 +162,15 @@ const AssessmentDetail = () => {
                   <Eye className="w-4 h-4 mr-2" />
                   Preview Assessment
                 </Button>
-                <Button variant="outline" onClick={() => navigate(`/assessments/${id}/edit`)}>
+                <Button variant="outline" onClick={() => {
+                  setEditForm({
+                    name: assessment?.name || "",
+                    description: assessment?.description || "",
+                    duration_minutes: assessment?.duration_minutes || 60,
+                    passing_score: assessment?.passing_score || 70
+                  });
+                  setEditOpen(true);
+                }}>
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
@@ -296,6 +316,87 @@ const AssessmentDetail = () => {
                   navigate("/dashboard");
                 }}>
                   Go to Jobs
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Assessment Dialog */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Assessment</DialogTitle>
+              <DialogDescription>
+                Update assessment details
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-duration">Duration (minutes)</Label>
+                  <Input
+                    id="edit-duration"
+                    type="number"
+                    value={editForm.duration_minutes}
+                    onChange={(e) => setEditForm({ ...editForm, duration_minutes: parseInt(e.target.value) || 60 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-passing">Passing Score (%)</Label>
+                  <Input
+                    id="edit-passing"
+                    type="number"
+                    value={editForm.passing_score}
+                    onChange={(e) => setEditForm({ ...editForm, passing_score: parseInt(e.target.value) || 70 })}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button variant="outline" onClick={() => setEditOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  disabled={saving}
+                  onClick={async () => {
+                    setSaving(true);
+                    const { error } = await supabase
+                      .from("assessments")
+                      .update({
+                        name: editForm.name,
+                        description: editForm.description,
+                        duration_minutes: editForm.duration_minutes,
+                        passing_score: editForm.passing_score
+                      })
+                      .eq("id", id);
+                    
+                    setSaving(false);
+                    if (error) {
+                      toast({ title: "Error", description: error.message, variant: "destructive" });
+                    } else {
+                      toast({ title: "Success", description: "Assessment updated" });
+                      queryClient.invalidateQueries({ queryKey: ["assessment", id] });
+                      setEditOpen(false);
+                    }
+                  }}
+                >
+                  {saving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </div>
