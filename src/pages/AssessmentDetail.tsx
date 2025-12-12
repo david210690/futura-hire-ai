@@ -293,7 +293,7 @@ const AssessmentDetail = () => {
                 </Button>
                 <Button onClick={() => {
                   setAssignOpen(false);
-                  navigate("/recruiter");
+                  navigate("/dashboard");
                 }}>
                   Go to Jobs
                 </Button>
