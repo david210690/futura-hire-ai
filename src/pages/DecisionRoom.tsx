@@ -21,6 +21,9 @@ import { SnapshotHistorySelector } from "@/components/decision-room/SnapshotHist
 import { ConfidenceIndicator, ConfidenceBar } from "@/components/decision-room/ConfidenceIndicator";
 import { AutopilotQuickActions } from "@/components/autopilot/AutopilotQuickActions";
 import { AutopilotActivityLog } from "@/components/autopilot/AutopilotActivityLog";
+import { WhyThisModal } from "@/components/explainability/WhyThisModal";
+import { FairnessDisclaimer } from "@/components/explainability/FairnessDisclaimer";
+import { FACTORS_NOT_CONSIDERED } from "@/lib/explainability";
 
 interface SnapshotHistoryItem {
   id: string;
@@ -1642,6 +1645,73 @@ export default function DecisionRoom() {
                                     </div>
                                   </div>
                                 )}
+
+                                {/* Why This? Explainability */}
+                                <div className="pt-4 border-t space-y-3">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {roleDnaFit && (
+                                      <WhyThisModal
+                                        title="Role DNA Fit Explanation"
+                                        whatWasEvaluated="How well this candidate's profile aligns with the deeper expectations of this role, based on cognitive style, communication patterns, execution preferences, and culture signals."
+                                        keyFactors={[
+                                          "Candidate skills and experience",
+                                          "Role DNA blueprint dimensions",
+                                          "Interview signals if available",
+                                          "Profile completeness and quality"
+                                        ]}
+                                        factorsNotConsidered={FACTORS_NOT_CONSIDERED}
+                                        confidenceLevel={roleDnaFit.fit_score >= 75 ? "high" : roleDnaFit.fit_score >= 50 ? "medium" : "low"}
+                                        limitations={[
+                                          "Based only on available profile data",
+                                          "Role DNA is recruiter-configured",
+                                          "Cannot assess soft skills without interview"
+                                        ]}
+                                        timestamp={roleDnaFit.created_at}
+                                      />
+                                    )}
+                                    {shortlistScore && (
+                                      <WhyThisModal
+                                        title="Shortlist Score Explanation"
+                                        whatWasEvaluated="A predictive score estimating how likely this candidate is to succeed in advancing through the hiring pipeline for this role."
+                                        keyFactors={[
+                                          "Role DNA alignment",
+                                          "Decision Room clustering position",
+                                          "Experience relevance",
+                                          "Interview signals if available"
+                                        ]}
+                                        factorsNotConsidered={FACTORS_NOT_CONSIDERED}
+                                        confidenceLevel={shortlistScore.score >= 75 ? "high" : shortlistScore.score >= 50 ? "medium" : "low"}
+                                        limitations={[
+                                          "Historical patterns may not apply to all contexts",
+                                          "Does not predict cultural fit perfectly",
+                                          "Should be combined with structured interviews"
+                                        ]}
+                                        timestamp={shortlistScore.createdAt}
+                                      />
+                                    )}
+                                    {offerLikelihoodMap.get(candidateId) && (
+                                      <WhyThisModal
+                                        title="Offer Likelihood Explanation"
+                                        whatWasEvaluated="An estimate of how likely this candidate is to both receive and accept an offer for this position."
+                                        keyFactors={[
+                                          "Role DNA fit alignment",
+                                          "Shortlist predictive score",
+                                          "Pipeline stage progression",
+                                          "Interview performance signals"
+                                        ]}
+                                        factorsNotConsidered={FACTORS_NOT_CONSIDERED}
+                                        confidenceLevel={offerLikelihoodMap.get(candidateId)?.likelihood_band === "high" ? "high" : offerLikelihoodMap.get(candidateId)?.likelihood_band === "medium" ? "medium" : "low"}
+                                        limitations={[
+                                          "Market conditions may affect candidate decisions",
+                                          "Compensation expectations not fully known",
+                                          "Personal circumstances cannot be predicted"
+                                        ]}
+                                        timestamp={offerLikelihoodMap.get(candidateId)?.createdAt}
+                                      />
+                                    )}
+                                  </div>
+                                  <FairnessDisclaimer variant="recruiter" />
+                                </div>
 
                                 {/* Actions */}
                                 <div className="pt-4 border-t flex gap-2">
