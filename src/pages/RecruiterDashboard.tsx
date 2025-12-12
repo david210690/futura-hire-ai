@@ -3,7 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Briefcase, Users, TrendingUp, Building2, Settings, MessageSquare } from "lucide-react";
+import { 
+  Plus, 
+  Briefcase, 
+  Users, 
+  TrendingUp, 
+  Building2, 
+  Settings, 
+  MessageSquare,
+  BarChart3,
+  FileText,
+  Wand2,
+  Target,
+  Zap,
+  ArrowRight
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -296,11 +310,81 @@ export default function RecruiterDashboard() {
           </Card>
         </div>
 
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card 
+            className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
+            onClick={() => navigate('/role-designer')}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Wand2 className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Role Designer</p>
+                <p className="text-xs text-muted-foreground">AI job creation</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
+            onClick={() => navigate('/assessments')}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary/50 text-secondary-foreground group-hover:bg-secondary transition-colors">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Assessments</p>
+                <p className="text-xs text-muted-foreground">Test candidates</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
+            onClick={() => navigate('/analytics')}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-accent text-accent-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Analytics</p>
+                <p className="text-xs text-muted-foreground">Hiring insights</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
+            onClick={() => navigate('/billing')}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Upgrade</p>
+                <p className="text-xs text-muted-foreground">Plans & billing</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Recent Jobs */}
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Jobs</CardTitle>
-            <CardDescription>Your latest job postings</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Recent Jobs</CardTitle>
+              <CardDescription>Your latest job postings</CardDescription>
+            </div>
+            {jobs.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')} className="gap-1">
+                View all <ArrowRight className="w-4 h-4" />
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {jobs.length === 0 ? (
