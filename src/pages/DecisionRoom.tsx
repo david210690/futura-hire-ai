@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap, Send, Clock, TrendingUp, ChevronDown, ChevronUp, Target } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap, Send, Clock, TrendingUp, ChevronDown, ChevronUp, Target, MoreHorizontal, Mic, ArrowRight } from "lucide-react";
 import { PipelineHealthPanel } from "@/components/pipeline/PipelineHealthPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,6 +19,8 @@ import { CandidateComparisonModal } from "@/components/decision-room/CandidateCo
 import { exportDecisionPDF } from "@/components/decision-room/ExportDecisionPDF";
 import { SnapshotHistorySelector } from "@/components/decision-room/SnapshotHistorySelector";
 import { ConfidenceIndicator, ConfidenceBar } from "@/components/decision-room/ConfidenceIndicator";
+import { AutopilotQuickActions } from "@/components/autopilot/AutopilotQuickActions";
+import { AutopilotActivityLog } from "@/components/autopilot/AutopilotActivityLog";
 
 interface SnapshotHistoryItem {
   id: string;
@@ -856,6 +858,9 @@ export default function DecisionRoom() {
           <div className="space-y-6">
             {/* Pipeline Health Panel */}
             {jobId && <PipelineHealthPanel jobTwinJobId={jobId} />}
+            
+            {/* Autopilot Activity Log */}
+            {jobId && <AutopilotActivityLog jobTwinJobId={jobId} />}
 
             {/* Metadata */}
             <p className="text-sm text-muted-foreground">
@@ -998,6 +1003,15 @@ export default function DecisionRoom() {
                               onCheckedChange={() => toggleCompareCandidate(candidateId)}
                               disabled={!compareIds.has(candidateId) && compareIds.size >= 4}
                             />
+                            {/* Quick Actions Dropdown */}
+                            {jobId && (
+                              <AutopilotQuickActions
+                                jobId={jobId}
+                                candidateId={candidateId}
+                                candidateName={getCandidateName(candidateId)}
+                                onActionComplete={() => loadData()}
+                              />
+                            )}
                             <Sheet>
                               <SheetTrigger asChild>
                                 <button

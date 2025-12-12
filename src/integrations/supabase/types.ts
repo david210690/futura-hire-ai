@@ -517,6 +517,47 @@ export type Database = {
         }
         Relationships: []
       }
+      autopilot_action_logs: {
+        Row: {
+          action_payload: Json | null
+          action_type: string
+          candidate_user_id: string | null
+          created_at: string
+          id: string
+          job_twin_job_id: string
+          recruiter_user_id: string
+          status: string
+        }
+        Insert: {
+          action_payload?: Json | null
+          action_type: string
+          candidate_user_id?: string | null
+          created_at?: string
+          id?: string
+          job_twin_job_id: string
+          recruiter_user_id: string
+          status?: string
+        }
+        Update: {
+          action_payload?: Json | null
+          action_type?: string
+          candidate_user_id?: string | null
+          created_at?: string
+          id?: string
+          job_twin_job_id?: string
+          recruiter_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_action_logs_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bias_reports: {
         Row: {
           created_at: string | null
