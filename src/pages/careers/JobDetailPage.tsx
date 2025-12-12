@@ -128,57 +128,76 @@ export default function JobDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold">1. Application</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Submit your application and resume
-                  </p>
-                </div>
-              </div>
-              
-              {job.assessments && (
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 p-3 rounded-full">
-                    <Clock className="h-5 w-5 text-primary" />
+              {(() => {
+                let stepNum = 1;
+                const steps = [];
+                
+                // Step 1: Application (always shown)
+                steps.push(
+                  <div key="application" className="flex items-start gap-4">
+                    <div className="bg-primary/10 p-3 rounded-full">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{stepNum++}. Application</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Submit your application and resume
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold">2. AI Assessment</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Complete {job.assessments.name} ({job.assessments.duration_minutes} minutes)
-                    </p>
+                );
+                
+                // Step: AI Assessment (conditional)
+                if (job.assessments) {
+                  steps.push(
+                    <div key="assessment" className="flex items-start gap-4">
+                      <div className="bg-primary/10 p-3 rounded-full">
+                        <Clock className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">{stepNum++}. AI Assessment</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Complete {job.assessments.name} ({job.assessments.duration_minutes} minutes)
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+                
+                // Step: Video Introduction (conditional)
+                if (job.video_required) {
+                  steps.push(
+                    <div key="video" className="flex items-start gap-4">
+                      <div className="bg-primary/10 p-3 rounded-full">
+                        <Video className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">{stepNum++}. Video Introduction</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Record a 2-minute video introduction
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+                
+                // Final Step: Interview (always shown)
+                steps.push(
+                  <div key="interview" className="flex items-start gap-4">
+                    <div className="bg-primary/10 p-3 rounded-full">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{stepNum}. Interview</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Final interview with the team
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-              
-              {job.video_required && (
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 p-3 rounded-full">
-                    <Video className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">3. Video Introduction</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Record a 2-minute video introduction
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex items-start gap-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <Users className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold">4. Interview</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Final interview with the team
-                  </p>
-                </div>
-              </div>
+                );
+                
+                return steps;
+              })()}
             </div>
           </CardContent>
         </Card>
