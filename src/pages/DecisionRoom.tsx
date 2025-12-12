@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
@@ -96,6 +96,7 @@ interface RoleDnaFitData {
 }
 
 type SortOption = 'default' | 'dna_high' | 'dna_low';
+type FilterOption = 'all' | 'assessed' | 'unassessed' | 'fit_75' | 'fit_50';
 
 export default function DecisionRoom() {
   const { id: jobId } = useParams();
@@ -114,6 +115,8 @@ export default function DecisionRoom() {
   const [loadingSnapshot, setLoadingSnapshot] = useState(false);
   const [roleDnaFitMap, setRoleDnaFitMap] = useState<Map<string, RoleDnaFitData>>(new Map());
   const [sortBy, setSortBy] = useState<SortOption>('default');
+  const [filterBy, setFilterBy] = useState<FilterOption>('all');
+  const [assessingAll, setAssessingAll] = useState(false);
 
   // Helper to get DNA fit score color (neutral-to-positive, no scary red)
   const getDnaScoreColor = (score: number) => {
@@ -122,11 +125,33 @@ export default function DecisionRoom() {
     return "text-slate-600 bg-slate-100 dark:bg-slate-800/50 dark:text-slate-300";
   };
 
+  // Filter candidates based on selected filter
+  const filterCandidates = (candidateIds: string[]) => {
+    if (filterBy === 'all') return candidateIds;
+    
+    return candidateIds.filter(id => {
+      const fit = roleDnaFitMap.get(id);
+      switch (filterBy) {
+        case 'assessed':
+          return fit !== undefined;
+        case 'unassessed':
+          return fit === undefined;
+        case 'fit_75':
+          return fit !== undefined && fit.fit_score >= 75;
+        case 'fit_50':
+          return fit !== undefined && fit.fit_score >= 50;
+        default:
+          return true;
+      }
+    });
+  };
+
   // Sort candidates by selected option
   const sortCandidates = (candidateIds: string[]) => {
-    if (sortBy === 'default') return candidateIds;
+    const filtered = filterCandidates(candidateIds);
+    if (sortBy === 'default') return filtered;
     
-    return [...candidateIds].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       const fitA = roleDnaFitMap.get(a)?.fit_score;
       const fitB = roleDnaFitMap.get(b)?.fit_score;
       
@@ -136,6 +161,60 @@ export default function DecisionRoom() {
       if (fitB === undefined) return -1;
       
       return sortBy === 'dna_high' ? fitB - fitA : fitA - fitB;
+    });
+  };
+
+  // Get count of unassessed candidates
+  const getUnassessedCount = () => {
+    if (!snapshot) return 0;
+    return snapshot.data.candidates.filter(c => !roleDnaFitMap.has(c.candidate_id)).length;
+  };
+
+  // Bulk assess all unassessed candidates
+  const assessAllCandidates = async () => {
+    if (!jobId || !snapshot) return;
+    
+    const unassessedIds = snapshot.data.candidates
+      .filter(c => !roleDnaFitMap.has(c.candidate_id))
+      .map(c => c.candidate_id);
+    
+    if (unassessedIds.length === 0) {
+      toast({
+        title: "All Assessed",
+        description: "All candidates already have Role DNA Fit scores."
+      });
+      return;
+    }
+    
+    setAssessingAll(true);
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const candidateId of unassessedIds) {
+      try {
+        const { error } = await supabase.functions.invoke('evaluate-role-dna-fit', {
+          body: { jobId, candidateId }
+        });
+        
+        if (!error) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch {
+        failCount++;
+      }
+    }
+    
+    // Reload fit scores
+    const candidateIds = snapshot.data.candidates.map(c => c.candidate_id);
+    await loadRoleDnaFitScores(jobId, candidateIds);
+    
+    setAssessingAll(false);
+    
+    toast({
+      title: "Assessment Complete",
+      description: `${successCount} candidate${successCount !== 1 ? 's' : ''} assessed successfully${failCount > 0 ? `, ${failCount} could not be assessed` : ''}.`
     });
   };
 
@@ -460,6 +539,7 @@ export default function DecisionRoom() {
                   snapshotDate: snapshot.created_at,
                   snapshotData: snapshot.data,
                   candidatesMap: candidates,
+                  roleDnaFitMap: roleDnaFitMap,
                 })}
                 variant="outline"
                 className="gap-2"
@@ -576,23 +656,58 @@ export default function DecisionRoom() {
               </div>
             </div>
 
-            {/* Sorting Controls */}
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {snapshot.data.candidates.length} candidate{snapshot.data.candidates.length !== 1 ? 's' : ''} analyzed
-              </p>
-              <div className="flex items-center gap-2">
-                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                <Select value={sortBy} onValueChange={(v: SortOption) => setSortBy(v)}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Sort by..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Default (AI Clusters)</SelectItem>
-                    <SelectItem value="dna_high">Role DNA Fit (High → Low)</SelectItem>
-                    <SelectItem value="dna_low">Role DNA Fit (Low → High)</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Sorting & Filter Controls */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-muted-foreground">
+                  {snapshot.data.candidates.length} candidate{snapshot.data.candidates.length !== 1 ? 's' : ''} analyzed
+                </p>
+                {getUnassessedCount() > 0 && (
+                  <Button
+                    onClick={assessAllCandidates}
+                    disabled={assessingAll}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    {assessingAll ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Zap className="h-4 w-4" />
+                    )}
+                    Assess All ({getUnassessedCount()})
+                  </Button>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select value={filterBy} onValueChange={(v: FilterOption) => setFilterBy(v)}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Filter..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Candidates</SelectItem>
+                      <SelectItem value="assessed">DNA Assessed</SelectItem>
+                      <SelectItem value="unassessed">Not Assessed</SelectItem>
+                      <SelectItem value="fit_75">DNA Fit ≥ 75</SelectItem>
+                      <SelectItem value="fit_50">DNA Fit ≥ 50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                  <Select value={sortBy} onValueChange={(v: SortOption) => setSortBy(v)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sort by..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default (AI Clusters)</SelectItem>
+                      <SelectItem value="dna_high">DNA Fit (High → Low)</SelectItem>
+                      <SelectItem value="dna_low">DNA Fit (Low → High)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -1025,6 +1140,17 @@ export default function DecisionRoom() {
               <CardContent>
                 <div className="space-y-2">
                   {[...snapshot.data.candidates]
+                    .filter(c => {
+                      if (filterBy === 'all') return true;
+                      const fit = roleDnaFitMap.get(c.candidate_id);
+                      switch (filterBy) {
+                        case 'assessed': return fit !== undefined;
+                        case 'unassessed': return fit === undefined;
+                        case 'fit_75': return fit !== undefined && fit.fit_score >= 75;
+                        case 'fit_50': return fit !== undefined && fit.fit_score >= 50;
+                        default: return true;
+                      }
+                    })
                     .sort((a, b) => {
                       if (sortBy === 'default') {
                         return b.overall_fit_score - a.overall_fit_score;
