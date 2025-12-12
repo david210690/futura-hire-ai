@@ -214,9 +214,10 @@ ${JSON.stringify(candidateProfiles, null, 2)}`
     // Insert applications (use "top" key from schema)
     const matches = result.top || result.matches || result.top_matches || [];
     for (const match of matches.slice(0, 5)) {
-      await supabase.from('applications').insert({
+      const { error: insertError } = await supabaseAdmin.from('applications').insert({
         job_id: jobId,
         candidate_id: match.candidate_id,
+        org_id: job.org_id, // Required field
         skill_fit_score: match.skill_fit_score,
         culture_fit_score: 0,
         overall_score: Math.round(match.skill_fit_score * 0.6),
@@ -226,12 +227,16 @@ ${JSON.stringify(candidateProfiles, null, 2)}`
         explanations: { key_skills: match.key_matching_skills },
         ai_version: 'gemini-2.5-flash'
       });
+      if (insertError) {
+        console.error('Application insert error:', insertError);
+      }
     }
 
     // Insert interview questions
     for (const q of (result.interview_questions || []).slice(0, 5)) {
-      await supabase.from('interview_questions').insert({
+      await supabaseAdmin.from('interview_questions').insert({
         job_id: jobId,
+        org_id: job.org_id, // Required field
         question: typeof q === 'string' ? q : q.question,
         source: 'auto'
       });
