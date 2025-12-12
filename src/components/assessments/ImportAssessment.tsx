@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText, AlertCircle, Download } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,24 @@ export const ImportAssessment = ({ onSuccess }: ImportAssessmentProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [preview, setPreview] = useState<any[]>([]);
+
+  const downloadTemplate = () => {
+    const csvHeader = "type,difficulty,skill_tags,question,options,answer_key,rubric_json,points";
+    const sampleRows = [
+      'mcq,easy,JavaScript|React,What is JSX?,A markup extension||A new language||A CSS framework||A database,0,,10',
+      'mcq,medium,JavaScript,Which hook is used for side effects?,useState||useEffect||useContext||useReducer,1,,10',
+      'free_text,hard,System Design,Explain microservices architecture,,,,20'
+    ];
+    const csvContent = [csvHeader, ...sampleRows].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'assessment_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const parseCSV = (text: string): any[] => {
     const lines = text.trim().split('\n');
@@ -202,9 +220,15 @@ export const ImportAssessment = ({ onSuccess }: ImportAssessmentProps) => {
       <CardContent className="space-y-6">
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>CSV Format:</strong> type, difficulty, skill_tags (pipe-separated), question, 
-            options (||-separated), answer_key (index), rubric_json, points
+          <AlertDescription className="space-y-2">
+            <div>
+              <strong>CSV Format:</strong> type, difficulty, skill_tags (pipe-separated), question, 
+              options (||-separated), answer_key (index), rubric_json, points
+            </div>
+            <Button variant="outline" size="sm" onClick={downloadTemplate} className="mt-2">
+              <Download className="w-4 h-4 mr-2" />
+              Download CSV Template
+            </Button>
           </AlertDescription>
         </Alert>
 
