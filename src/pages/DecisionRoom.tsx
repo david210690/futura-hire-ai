@@ -637,6 +637,7 @@ export default function DecisionRoom() {
           await loadRoleDnaFitScores(snapshotData.job_id, candidateIds);
           await loadFitRequestsAndUserIds(snapshotData.job_id, candidateIds);
           await loadShortlistScores(snapshotData.job_id, candidateIds);
+          await loadOfferLikelihoodScores(snapshotData.job_id, candidateIds);
         }
       }
     } catch (error: any) {
@@ -1171,6 +1172,26 @@ export default function DecisionRoom() {
                                         </Badge>
                                       </div>
                                     )}
+                                    
+                                    {/* Offer Likelihood Compact */}
+                                    {(() => {
+                                      const offerLikelihood = offerLikelihoodMap.get(candidateId);
+                                      if (!offerLikelihood) return null;
+                                      const bandColor = offerLikelihood.likelihood_band === 'high' 
+                                        ? 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                        : offerLikelihood.likelihood_band === 'medium'
+                                        ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400'
+                                        : 'text-slate-600 bg-slate-100 dark:bg-slate-800/50 dark:text-slate-300';
+                                      return (
+                                        <div className="flex items-center gap-2 pt-1 border-t border-border/50">
+                                          <Target className="h-3 w-3 text-orange-500 flex-shrink-0" />
+                                          <span className="text-xs text-muted-foreground">Offer:</span>
+                                          <Badge variant="outline" className={`text-xs capitalize ${bandColor}`}>
+                                            {offerLikelihood.likelihood_band}
+                                          </Badge>
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 </button>
                               </SheetTrigger>
@@ -1452,6 +1473,133 @@ export default function DecisionRoom() {
                                       )}
                                     </div>
                                   )}
+                                </div>
+
+                                {/* Offer Likelihood Section */}
+                                <div className="pt-4 border-t">
+                                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                                    <Target className="h-4 w-4 text-orange-500" />
+                                    Offer Likelihood
+                                  </h4>
+                                  {(() => {
+                                    const offerLikelihood = offerLikelihoodMap.get(candidateId);
+                                    if (offerLikelihood) {
+                                      const bandColor = offerLikelihood.likelihood_band === 'high' 
+                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                                        : offerLikelihood.likelihood_band === 'medium'
+                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                        : 'bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300';
+                                      return (
+                                        <div className="space-y-3">
+                                          <div className="flex items-center gap-3">
+                                            <div className={`text-2xl font-bold px-3 py-1 rounded-lg ${bandColor}`}>
+                                              {offerLikelihood.likelihood_score}
+                                            </div>
+                                            <div>
+                                              <p className="font-medium text-sm flex items-center gap-2">
+                                                Likelihood Score
+                                                <Badge variant="outline" className={`capitalize ${bandColor}`}>
+                                                  {offerLikelihood.likelihood_band}
+                                                </Badge>
+                                              </p>
+                                              <p className="text-xs text-muted-foreground">Directional estimate for offer success</p>
+                                            </div>
+                                          </div>
+
+                                          {/* Key Drivers */}
+                                          {offerLikelihood.key_drivers?.length > 0 && (
+                                            <Collapsible>
+                                              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                                                <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+                                                Key Drivers
+                                              </CollapsibleTrigger>
+                                              <CollapsibleContent className="pt-2">
+                                                <ul className="space-y-1">
+                                                  {offerLikelihood.key_drivers.map((driver, i) => (
+                                                    <li key={i} className="text-sm flex items-start gap-2">
+                                                      <span className="text-emerald-500 mt-0.5">✓</span>
+                                                      <span className="text-muted-foreground">{driver}</span>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </CollapsibleContent>
+                                            </Collapsible>
+                                          )}
+
+                                          {/* Key Risks */}
+                                          {offerLikelihood.key_risks?.length > 0 && (
+                                            <Collapsible>
+                                              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                                                <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+                                                Risks to Address
+                                              </CollapsibleTrigger>
+                                              <CollapsibleContent className="pt-2">
+                                                <ul className="space-y-1">
+                                                  {offerLikelihood.key_risks.map((risk, i) => (
+                                                    <li key={i} className="text-sm flex items-start gap-2">
+                                                      <span className="text-amber-500 mt-0.5">○</span>
+                                                      <span className="text-muted-foreground">{risk}</span>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </CollapsibleContent>
+                                            </Collapsible>
+                                          )}
+
+                                          {/* Recommended Actions */}
+                                          {offerLikelihood.recommended_next_actions?.length > 0 && (
+                                            <Collapsible>
+                                              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                                                <ChevronRight className="h-4 w-4 transition-transform data-[state=open]:rotate-90" />
+                                                Recommended Actions
+                                              </CollapsibleTrigger>
+                                              <CollapsibleContent className="pt-2">
+                                                <ul className="space-y-1">
+                                                  {offerLikelihood.recommended_next_actions.map((action, i) => (
+                                                    <li key={i} className="text-sm flex items-start gap-2">
+                                                      <span className="text-blue-500 mt-0.5">→</span>
+                                                      <span className="text-muted-foreground">{action}</span>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              </CollapsibleContent>
+                                            </Collapsible>
+                                          )}
+
+                                          {offerLikelihood.disclaimer && (
+                                            <p className="text-xs text-muted-foreground/70 italic bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
+                                              {offerLikelihood.disclaimer}
+                                            </p>
+                                          )}
+                                        </div>
+                                      );
+                                    }
+                                    // No offer likelihood yet - show generate button
+                                    return (
+                                      <div className="space-y-2">
+                                        {!shortlistScore ? (
+                                          <p className="text-sm text-muted-foreground">
+                                            Generate Shortlist Score first to enable offer likelihood estimation.
+                                          </p>
+                                        ) : (
+                                          <Button
+                                            onClick={() => generateOfferLikelihood(candidateId)}
+                                            disabled={generatingOfferLikelihood.has(candidateId)}
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2"
+                                          >
+                                            {generatingOfferLikelihood.has(candidateId) ? (
+                                              <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                              <Target className="h-4 w-4" />
+                                            )}
+                                            Generate Offer Likelihood
+                                          </Button>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
 
                                 {/* Candidate Details */}
