@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap, Send, Clock, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Brain, Loader2, RefreshCw, Users, AlertTriangle, CheckCircle, XCircle, ChevronRight, Sparkles, MessageSquare, ShieldCheck, GitCompare, Download, Dna, Info, ArrowUpDown, Filter, Zap, Send, Clock, TrendingUp, ChevronDown, ChevronUp, Target } from "lucide-react";
+import { PipelineHealthPanel } from "@/components/pipeline/PipelineHealthPanel";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
@@ -110,6 +112,17 @@ interface ShortlistScoreData {
   createdAt: string;
 }
 
+interface OfferLikelihoodData {
+  likelihood_score: number;
+  likelihood_band: 'high' | 'medium' | 'low';
+  key_drivers: string[];
+  key_risks: string[];
+  recommended_next_actions: string[];
+  candidate_friendly_coaching?: string[];
+  disclaimer: string;
+  createdAt: string;
+}
+
 export default function DecisionRoom() {
   const { id: jobId } = useParams();
   const navigate = useNavigate();
@@ -133,6 +146,8 @@ export default function DecisionRoom() {
   const [candidateUserIds, setCandidateUserIds] = useState<Map<string, string>>(new Map());
   const [shortlistScoreMap, setShortlistScoreMap] = useState<Map<string, ShortlistScoreData>>(new Map());
   const [generatingShortlistScore, setGeneratingShortlistScore] = useState<Set<string>>(new Set());
+  const [offerLikelihoodMap, setOfferLikelihoodMap] = useState<Map<string, OfferLikelihoodData>>(new Map());
+  const [generatingOfferLikelihood, setGeneratingOfferLikelihood] = useState<Set<string>>(new Set());
 
   // Helper to get DNA fit score color (neutral-to-positive, no scary red)
   const getDnaScoreColor = (score: number) => {
@@ -336,6 +351,7 @@ export default function DecisionRoom() {
             await loadRoleDnaFitScores(jobId, candidateIds);
             await loadFitRequestsAndUserIds(jobId, candidateIds);
             await loadShortlistScores(jobId, candidateIds);
+            await loadOfferLikelihoodScores(jobId, candidateIds);
           }
         }
       }
@@ -507,6 +523,49 @@ export default function DecisionRoom() {
         newSet.delete(candidateId);
         return newSet;
       });
+    }
+  };
+
+  // Load offer likelihood scores for candidates
+  const loadOfferLikelihoodScores = async (jobId: string, candidateIds: string[]) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const likelihoodMap = new Map<string, OfferLikelihoodData>();
+      for (const candidateId of candidateIds) {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-offer-likelihood?jobId=${jobId}&candidateId=${candidateId}`,
+          { headers: { Authorization: `Bearer ${session.access_token}` } }
+        );
+        const result = await response.json();
+        if (result.success && result.exists) {
+          likelihoodMap.set(candidateId, { ...result.result, createdAt: result.createdAt });
+        }
+      }
+      setOfferLikelihoodMap(likelihoodMap);
+    } catch (error) {
+      console.error('Error loading offer likelihood:', error);
+    }
+  };
+
+  // Generate offer likelihood for a candidate
+  const generateOfferLikelihood = async (candidateId: string) => {
+    if (!jobId) return;
+    setGeneratingOfferLikelihood(prev => new Set(prev).add(candidateId));
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-offer-likelihood', {
+        body: { candidateId, jobId }
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setOfferLikelihoodMap(prev => new Map(prev).set(candidateId, { ...data.result, createdAt: new Date().toISOString() }));
+        toast({ title: "Offer Likelihood Generated", description: `Score: ${data.result.likelihood_score}/100` });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to generate offer likelihood" });
+    } finally {
+      setGeneratingOfferLikelihood(prev => { const s = new Set(prev); s.delete(candidateId); return s; });
     }
   };
 
@@ -794,6 +853,9 @@ export default function DecisionRoom() {
         {/* Snapshot content */}
         {snapshot && (
           <div className="space-y-6">
+            {/* Pipeline Health Panel */}
+            {jobId && <PipelineHealthPanel jobTwinJobId={jobId} />}
+
             {/* Metadata */}
             <p className="text-sm text-muted-foreground">
               Generated on {format(new Date(snapshot.created_at), "PPp")}

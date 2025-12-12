@@ -176,3 +176,15 @@ verify_jwt = true
 
 [functions.get-interview-prep]
 verify_jwt = true
+
+[functions.generate-offer-likelihood]
+verify_jwt = true
+
+[functions.get-offer-likelihood]
+verify_jwt = true
+
+[functions.generate-pipeline-health]
+verify_jwt = true
+
+[functions.get-pipeline-health]
+verify_jwt = true
