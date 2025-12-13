@@ -1,25 +1,18 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Navbar } from "@/components/layout/Navbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, FileText, Upload, Database } from "lucide-react";
 import { CreateAssessmentFromAI } from "@/components/assessments/CreateAssessmentFromAI";
 import { CreateAssessmentFromBank } from "@/components/assessments/CreateAssessmentFromBank";
 import { ImportAssessment } from "@/components/assessments/ImportAssessment";
 import { AssessmentsList } from "@/components/assessments/AssessmentsList";
-import { useUserRole } from "@/hooks/useUserRole";
 
 const Assessments = () => {
   const [activeTab, setActiveTab] = useState("list");
-  const navigate = useNavigate();
-  const { role } = useUserRole();
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar userRole={role || 'recruiter'} />
-      <main className="container mx-auto px-4 py-8">
+    <SidebarLayout userRole="recruiter">
+      <main className="container mx-auto px-4 py-8 bg-background">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Assessments</h1>
           <p className="text-muted-foreground">
@@ -64,7 +57,7 @@ const Assessments = () => {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+    </SidebarLayout>
   );
 };
 
