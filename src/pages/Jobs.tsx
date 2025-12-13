@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
-import { Navbar } from "@/components/layout/Navbar";
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -101,9 +101,7 @@ export default function Jobs() {
 
   return (
     <SidebarLayout userRole="recruiter">
-      <div className="flex flex-col min-h-screen bg-background">
-        <Navbar />
-        <main className="flex-1 p-6">
+      <main className="flex-1 p-6 bg-background">
           <div className="max-w-6xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -200,7 +198,6 @@ export default function Jobs() {
             )}
           </div>
         </main>
-      </div>
     </SidebarLayout>
   );
 }
