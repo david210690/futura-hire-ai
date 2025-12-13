@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/layout/Navbar";
+import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -66,23 +66,21 @@ const AssessmentDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <SidebarLayout userRole="recruiter">
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">Loading assessment...</div>
         </main>
-      </div>
+      </SidebarLayout>
     );
   }
 
   if (!assessment) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <SidebarLayout userRole="recruiter">
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">Assessment not found</div>
         </main>
-      </div>
+      </SidebarLayout>
     );
   }
 
@@ -94,9 +92,8 @@ const AssessmentDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto px-4 py-8">
+    <SidebarLayout userRole="recruiter">
+      <main className="container mx-auto px-4 py-8 bg-background">
         <Button
           variant="ghost"
           onClick={() => navigate("/assessments")}
@@ -403,7 +400,7 @@ const AssessmentDetail = () => {
           </DialogContent>
         </Dialog>
       </main>
-    </div>
+    </SidebarLayout>
   );
 };
 
