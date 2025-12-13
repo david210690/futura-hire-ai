@@ -16,6 +16,7 @@ import CandidateVideo from "./pages/CandidateVideo";
 import CreateJob from "./pages/CreateJob";
 import JobDetail from "./pages/JobDetail";
 import DecisionRoom from "./pages/DecisionRoom";
+import Jobs from "./pages/Jobs";
 import AdminMonitor from "./pages/AdminMonitor";
 import OrgSettingsPage from "./pages/OrgSettingsPage";
 import RoleDesigner from "./pages/RoleDesigner";
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/candidate/profile" element={<CandidateProfile />} />
           <Route path="/candidate/video" element={<CandidateVideo />} />
           <Route path="/create-job" element={<CreateJob />} />
+          <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/jobs/:id/decision-room" element={<DecisionRoom />} />
           <Route path="/admin/monitor" element={<AdminMonitor />} />
