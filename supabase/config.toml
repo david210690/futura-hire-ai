@@ -218,3 +218,15 @@ verify_jwt = true
 
 [functions.generate-career-blueprint]
 verify_jwt = true
+
+[functions.extract-scenario-signals]
+verify_jwt = true
+
+[functions.generate-interview-recommendations]
+verify_jwt = true
+
+[functions.get-question-bank]
+verify_jwt = true
+
+[functions.get-scenario-warmup]
+verify_jwt = true
