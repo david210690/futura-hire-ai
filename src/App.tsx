@@ -35,6 +35,7 @@ import CareerTrajectory from "./pages/CareerTrajectory";
 import CareerBlueprint from "./pages/CareerBlueprint";
 import QuestionBankLibrary from "./pages/QuestionBankLibrary";
 import AdminQuestionBank from "./pages/AdminQuestionBank";
+import InterviewKitPage from "./pages/InterviewKitPage";
 import CareersPage from "./pages/careers/CareersPage";
 import JobDetailPage from "./pages/careers/JobDetailPage";
 import ApplyPage from "./pages/careers/ApplyPage";
@@ -83,6 +84,7 @@ const App = () => (
           <Route path="/career-blueprint" element={<CareerBlueprint />} />
           <Route path="/question-bank" element={<QuestionBankLibrary />} />
           <Route path="/admin/question-bank" element={<AdminQuestionBank />} />
+          <Route path="/recruiter/jobs/:jobId/candidates/:candidateId/interview-kit" element={<InterviewKitPage />} />
           <Route path="/s/:token" element={<ShareableShortlist />} />
           
           {/* Candidate-facing career pages */}

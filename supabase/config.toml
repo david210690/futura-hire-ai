@@ -233,3 +233,9 @@ verify_jwt = true
 
 [functions.admin-question-bank]
 verify_jwt = true
+
+[functions.generate-interview-kit]
+verify_jwt = true
+
+[functions.get-interview-kit]
+verify_jwt = true
