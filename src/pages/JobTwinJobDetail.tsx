@@ -25,6 +25,7 @@ import { RoleFitInsightPanel } from "@/components/role-dna/RoleFitInsightPanel";
 import { InterviewPrepPanel } from "@/components/interview-prep/InterviewPrepPanel";
 import { HiringPlanAutopilotPanel } from "@/components/hiring-autopilot/HiringPlanAutopilotPanel";
 import { PipelineHealthPanel } from "@/components/pipeline/PipelineHealthPanel";
+import { RoleLaunchAgentPanel } from "@/components/role-launch/RoleLaunchAgentPanel";
 import { useUserRole } from "@/hooks/useUserRole";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -553,9 +554,16 @@ export default function JobTwinJobDetail() {
               <InterviewPrepPanel jobTwinJobId={jobData.id} roleTitle={jobData.job?.title} />
             </div>
 
-            {/* Recruiter-only: Pipeline Health & Hiring Plan Autopilot */}
+            {/* Recruiter-only: Role Launch Agent, Pipeline Health & Hiring Plan Autopilot */}
             {role === 'recruiter' && (
               <>
+                <div className="mt-6">
+                  <RoleLaunchAgentPanel 
+                    jobTwinJobId={jobData.id} 
+                    jobTitle={jobData.job?.title || "This Role"}
+                    hasRoleDna={true}
+                  />
+                </div>
                 <div className="mt-6">
                   <PipelineHealthPanel jobTwinJobId={jobData.id} />
                 </div>

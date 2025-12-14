@@ -209,3 +209,6 @@ verify_jwt = false
 
 [functions.get-ai-explanation]
 verify_jwt = true
+
+[functions.generate-role-launch]
+verify_jwt = false
