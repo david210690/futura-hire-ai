@@ -3109,6 +3109,7 @@ export type Database = {
       scenario_runs: {
         Row: {
           created_at: string
+          dismissed_by_user: boolean
           explainability: Json | null
           extracted_signals: Json | null
           free_text_reason: string | null
@@ -3120,6 +3121,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dismissed_by_user?: boolean
           explainability?: Json | null
           extracted_signals?: Json | null
           free_text_reason?: string | null
@@ -3131,6 +3133,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dismissed_by_user?: boolean
           explainability?: Json | null
           extracted_signals?: Json | null
           free_text_reason?: string | null

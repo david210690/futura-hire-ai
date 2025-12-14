@@ -11,6 +11,7 @@ import AssessmentDetail from "./pages/AssessmentDetail";
 import { AuthPage } from "./components/auth/AuthPage";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
+import CandidateWarmups from "./pages/CandidateWarmups";
 import CandidateProfile from "./pages/CandidateProfile";
 import CandidateVideo from "./pages/CandidateVideo";
 import CreateJob from "./pages/CreateJob";
@@ -62,6 +63,7 @@ const App = () => (
           <Route path="/dashboard" element={<RecruiterDashboard />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+          <Route path="/candidate/warmups" element={<CandidateWarmups />} />
           <Route path="/candidate/profile" element={<CandidateProfile />} />
           <Route path="/candidate/video" element={<CandidateVideo />} />
           <Route path="/create-job" element={<CreateJob />} />

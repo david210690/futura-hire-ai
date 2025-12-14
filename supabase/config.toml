@@ -239,3 +239,6 @@ verify_jwt = true
 
 [functions.get-interview-kit]
 verify_jwt = true
+
+[functions.hide-scenario-warmup]
+verify_jwt = true

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CareerCoachCard } from "@/components/career/CareerCoachCard";
 import { FitRequestsPanel } from "@/components/candidate/FitRequestsPanel";
+import { WarmupDashboardCard } from "@/components/warmup/WarmupDashboardCard";
 import { FileUp, Video, BriefcaseIcon, Radar, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -60,6 +61,11 @@ export default function CandidateDashboard() {
         {/* Fit Requests Panel - shows pending recruiter requests */}
         <div className="mb-6">
           <FitRequestsPanel />
+        </div>
+
+        {/* Warmup Dashboard Card */}
+        <div className="mb-6">
+          <WarmupDashboardCard />
         </div>
 
         <div className="grid gap-6 md:grid-cols-3 mb-8">
