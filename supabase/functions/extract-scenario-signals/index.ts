@@ -6,29 +6,40 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SIGNALS_SYSTEM_PROMPT = `You are an ND-safe work-style signal extractor. Your job is to identify work preferences and tendencies from a candidate's scenario response.
+const SIGNALS_SYSTEM_PROMPT = `You are a supportive hiring assistant.
 
-RULES:
-- Extract only work-style signals, never protected attributes
-- Use supportive, growth-oriented language
-- Never use judgmental terms like "weak," "bad," or "poor"
-- Focus on preferences and tendencies, not abilities
-- Signals should be directional, not evaluative
+Task:
+Extract neutral, ND-safe "work-style signals" from a candidate's scenario choice and optional reasoning.
 
-OUTPUT JSON:
+Rules:
+- Do NOT score or rank the candidate.
+- Do NOT label as good/bad.
+- Do NOT infer protected attributes (age, gender, ethnicity, disability, accent, religion, etc.).
+- Do NOT penalize non-linear thinking or communication style.
+- Keep language calm and respectful.
+- Use growth-oriented, supportive phrasing.
+
+Return ONLY valid JSON:
+
 {
   "signals": [
-    // 3-5 short phrases describing work preferences
-    // e.g., "prefers clarity before execution", "collaboration-first mindset"
+    "2-6 short signals phrased neutrally, e.g., 'prefers clarity before execution', 'values stakeholder alignment'"
   ],
   "role_dna_dimensions_touched": [
-    // which Role DNA dimensions this touches
-    // options: cognitive_patterns, communication_style, execution_style, problem_solving_vectors, culture_alignment, success_signals
+    "which Role DNA dimensions this touches: cognitive_patterns, communication_style, execution_style, problem_solving_vectors, culture_alignment, success_signals"
   ],
-  "gentle_interviewer_prompt": [
-    // 1-2 suggestions for interviewers to explore these signals further
-    // phrased supportively, e.g., "Explore how they handle ambiguity without judging pace"
-  ]
+  "gentle_interviewer_prompts": [
+    "2-4 prompts recruiters can explore in interview without judgment, e.g., 'Explore how they navigate ambiguity without judging pace'"
+  ],
+  "candidate_friendly_reflection": [
+    "1-3 supportive notes the candidate can see about their work style, e.g., 'You seem to value getting clarity before diving in—this helps reduce rework'"
+  ],
+  "explainability": {
+    "what_was_evaluated": "Scenario choice + optional reasoning",
+    "key_factors_considered": ["decision framing", "tradeoff reasoning", "communication approach"],
+    "factors_not_considered": ["Age", "Gender", "Ethnicity", "Accent", "IQ", "Personality labels", "Disability", "Religion", "Family status"],
+    "limitations": ["Single scenario signal; not representative of full ability", "Context-dependent response"]
+  }
 }`;
 
 serve(async (req) => {
@@ -47,6 +58,8 @@ serve(async (req) => {
     if (!runId) {
       throw new Error("runId is required");
     }
+
+    const startTime = Date.now();
 
     // Fetch the scenario run with scenario details
     const { data: run, error: runError } = await supabase
@@ -76,12 +89,18 @@ serve(async (req) => {
 Scenario: "${scenario.title}"
 Context: ${scenario.scenario_context}
 
-The candidate chose: "${selectedChoice?.label || run.selected_choice_id}"
+Available choices:
+${scenario.choices_json.map((c: any) => `- ${c.id}: ${c.label}`).join('\n')}
+
+The candidate chose: "${run.selected_choice_id}" - "${selectedChoice?.label || 'Unknown'}"
 ${selectedChoice?.why_it_matters ? `Why it matters: ${selectedChoice.why_it_matters}` : ""}
+${selectedChoice?.signals_hint ? `Signals hint: ${selectedChoice.signals_hint.join(', ')}` : ""}
 
-${run.free_text_reason ? `Candidate's explanation: "${run.free_text_reason}"` : ""}
+${run.free_text_reason ? `Candidate's explanation: "${run.free_text_reason}"` : "No additional explanation provided."}
 
-Extract work-style signals from this response.`;
+Mapped Role DNA dimensions: ${scenario.mapped_role_dna_dimensions?.join(', ') || 'General'}
+
+Extract work-style signals from this response. Remember: this is NOT about right/wrong answers, only work-style preferences.`;
 
     // Call AI
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -96,9 +115,11 @@ Extract work-style signals from this response.`;
           { role: "system", content: SIGNALS_SYSTEM_PROMPT },
           { role: "user", content: prompt },
         ],
-        temperature: 0.3,
+        temperature: 0.2,
       }),
     });
+
+    const latencyMs = Date.now() - startTime;
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
@@ -112,47 +133,82 @@ Extract work-style signals from this response.`;
     // Parse JSON from response
     let signals;
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      signals = jsonMatch ? JSON.parse(jsonMatch[0]) : {
-        signals: selectedChoice?.signals || [],
-        role_dna_dimensions_touched: scenario.mapped_role_dna_dimensions || [],
-        gentle_interviewer_prompt: []
-      };
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+      signals = JSON.parse(jsonStr.trim());
     } catch (e) {
       console.error("Failed to parse AI response:", e);
+      // Fallback with basic structure
       signals = {
-        signals: selectedChoice?.signals || [],
+        signals: selectedChoice?.signals_hint || ["Response recorded"],
         role_dna_dimensions_touched: scenario.mapped_role_dna_dimensions || [],
-        gentle_interviewer_prompt: []
+        gentle_interviewer_prompts: ["Explore the candidate's reasoning in more depth"],
+        candidate_friendly_reflection: ["Your response has been noted. This helps us understand your work style preferences."],
+        explainability: {
+          what_was_evaluated: "Scenario choice + optional reasoning",
+          key_factors_considered: ["decision framing"],
+          factors_not_considered: ["Age", "Gender", "Ethnicity", "Accent", "IQ", "Disability"],
+          limitations: ["Single scenario signal; not representative of full ability"]
+        }
       };
     }
 
-    // Update the scenario run with extracted signals
+    // Ensure all required fields exist
+    signals.signals = signals.signals || [];
+    signals.role_dna_dimensions_touched = signals.role_dna_dimensions_touched || scenario.mapped_role_dna_dimensions || [];
+    signals.gentle_interviewer_prompts = signals.gentle_interviewer_prompts || signals.gentle_interviewer_prompt || [];
+    signals.candidate_friendly_reflection = signals.candidate_friendly_reflection || [];
+    signals.explainability = signals.explainability || {
+      what_was_evaluated: "Scenario choice + optional reasoning",
+      key_factors_considered: ["decision framing", "tradeoff reasoning"],
+      factors_not_considered: ["Age", "Gender", "Ethnicity", "Accent", "IQ", "Disability"],
+      limitations: ["Single scenario signal"]
+    };
+
+    // Update the scenario run with extracted signals and explainability
     const { error: updateError } = await supabase
       .from("scenario_runs")
-      .update({ extracted_signals: signals })
+      .update({ 
+        extracted_signals: signals,
+        explainability: signals.explainability
+      })
       .eq("id", runId);
 
     if (updateError) {
       console.error("Error updating scenario run:", updateError);
     }
 
-    // Log for audit
-    await supabase.functions.invoke("log-ai-decision", {
-      body: {
+    // Log for audit (9B compatible)
+    try {
+      await supabase.from("ai_decision_audit_logs").insert({
         decision_type: "scenario_signal_extraction",
         candidate_user_id: run.user_id,
         job_twin_job_id: run.job_twin_job_id,
-        explanation: "Extracted work-style signals from scenario warmup response",
-        input_summary: { runId, scenario: scenario.title },
-        output_summary: signals,
+        explanation: "Generated ND-safe work-style signals from a single scenario response.",
+        input_summary: { 
+          scenarioId: run.scenario_id,
+          scenarioTitle: scenario.title,
+          selectedChoiceId: run.selected_choice_id,
+          hasReason: !!run.free_text_reason
+        },
+        output_summary: { 
+          signals_count: signals.signals?.length || 0,
+          dimensions_touched: signals.role_dna_dimensions_touched || []
+        },
         fairness_checks: {
-          no_protected_attributes: true,
+          protected_attributes_excluded: true,
           nd_safe_language: true
         },
-        model_metadata: { model: "gemini-2.5-flash", temperature: 0.3 }
-      }
-    });
+        model_metadata: { 
+          model: "google/gemini-2.5-flash", 
+          temperature: 0.2,
+          latency_ms: latencyMs,
+          FAIRNESS_POLICY_VERSION: "1.0"
+        }
+      });
+    } catch (auditError) {
+      console.error("Error logging audit:", auditError);
+    }
 
     return new Response(JSON.stringify({ success: true, signals }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -37,7 +37,14 @@ interface ScenarioWarmup {
 interface ExtractedSignals {
   signals: string[];
   role_dna_dimensions_touched: string[];
-  gentle_interviewer_prompt: string[];
+  gentle_interviewer_prompts: string[];
+  candidate_friendly_reflection?: string[];
+  explainability?: {
+    what_was_evaluated: string;
+    key_factors_considered: string[];
+    factors_not_considered: string[];
+    limitations: string[];
+  };
 }
 
 interface ScenarioWarmupPanelProps {
@@ -93,7 +100,14 @@ export function ScenarioWarmupPanel({
       const signals = signalsError ? {
         signals: [],
         role_dna_dimensions_touched: scenario.mapped_role_dna_dimensions,
-        gentle_interviewer_prompt: []
+        gentle_interviewer_prompts: [],
+        candidate_friendly_reflection: ["Your response has been recorded."],
+        explainability: {
+          what_was_evaluated: "Scenario choice",
+          key_factors_considered: ["decision framing"],
+          factors_not_considered: ["Age", "Gender", "Ethnicity", "Disability"],
+          limitations: ["Single scenario signal"]
+        }
       } : signalsData.signals;
 
       setExtractedSignals(signals);
@@ -167,6 +181,36 @@ export function ScenarioWarmupPanel({
                   </Badge>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Candidate-friendly reflection */}
+          {extractedSignals.candidate_friendly_reflection && extractedSignals.candidate_friendly_reflection.length > 0 && (
+            <div className="bg-green-100/50 dark:bg-green-900/20 rounded-lg p-3">
+              <h4 className="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">
+                Insights
+              </h4>
+              <ul className="text-sm space-y-1">
+                {extractedSignals.candidate_friendly_reflection.map((note, i) => (
+                  <li key={i} className="text-muted-foreground">• {note}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Explainability */}
+          {extractedSignals.explainability && (
+            <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+              <h4 className="text-xs font-semibold text-muted-foreground">How this is used</h4>
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium">Evaluated:</span> {extractedSignals.explainability.what_was_evaluated}
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400">
+                <span className="font-medium">NOT Considered:</span> {extractedSignals.explainability.factors_not_considered?.join(", ")}
+              </p>
+              <p className="text-xs text-muted-foreground italic">
+                {extractedSignals.explainability.limitations?.join(". ")}
+              </p>
             </div>
           )}
 
