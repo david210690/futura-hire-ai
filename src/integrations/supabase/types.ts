@@ -2757,6 +2757,72 @@ export type Database = {
           },
         ]
       }
+      role_launch_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          job_descriptions: Json
+          job_twin_job_id: string
+          launched_at: string | null
+          outreach_templates: Json
+          outreach_tone: string
+          posting_budget: string
+          recruiter_user_id: string
+          role_dna_snapshot_id: string | null
+          scenario_warmup_config: Json | null
+          status: string
+          timezone_priority: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_descriptions?: Json
+          job_twin_job_id: string
+          launched_at?: string | null
+          outreach_templates?: Json
+          outreach_tone?: string
+          posting_budget?: string
+          recruiter_user_id: string
+          role_dna_snapshot_id?: string | null
+          scenario_warmup_config?: Json | null
+          status?: string
+          timezone_priority?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_descriptions?: Json
+          job_twin_job_id?: string
+          launched_at?: string | null
+          outreach_templates?: Json
+          outreach_tone?: string
+          posting_budget?: string
+          recruiter_user_id?: string
+          role_dna_snapshot_id?: string | null
+          scenario_warmup_config?: Json | null
+          status?: string
+          timezone_priority?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_launch_snapshots_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_launch_snapshots_role_dna_snapshot_id_fkey"
+            columns: ["role_dna_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "role_dna_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shortlist_predictive_scores: {
         Row: {
           created_at: string
