@@ -215,3 +215,6 @@ verify_jwt = false
 
 [functions.calibrate-judgment]
 verify_jwt = true
+
+[functions.generate-career-blueprint]
+verify_jwt = true
