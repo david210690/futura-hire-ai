@@ -2590,6 +2590,7 @@ export type Database = {
           followup_probes: Json
           id: string
           question_id: string
+          updated_at: string
           what_good_looks_like: Json
         }
         Insert: {
@@ -2598,6 +2599,7 @@ export type Database = {
           followup_probes?: Json
           id?: string
           question_id: string
+          updated_at?: string
           what_good_looks_like?: Json
         }
         Update: {
@@ -2606,6 +2608,7 @@ export type Database = {
           followup_probes?: Json
           id?: string
           question_id?: string
+          updated_at?: string
           what_good_looks_like?: Json
         }
         Relationships: [
@@ -2620,6 +2623,7 @@ export type Database = {
       }
       question_bank_questions: {
         Row: {
+          archived_at: string | null
           category: string
           created_at: string
           created_by_user_id: string | null
@@ -2627,12 +2631,15 @@ export type Database = {
           difficulty: string
           id: string
           intent: string
+          is_archived: boolean
           nd_safe: boolean
           question_text: string
           role_dna_dimension: string
           seniority: string
+          updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           category: string
           created_at?: string
           created_by_user_id?: string | null
@@ -2640,12 +2647,15 @@ export type Database = {
           difficulty?: string
           id?: string
           intent: string
+          is_archived?: boolean
           nd_safe?: boolean
           question_text: string
           role_dna_dimension: string
           seniority: string
+          updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           category?: string
           created_at?: string
           created_by_user_id?: string | null
@@ -2653,10 +2663,12 @@ export type Database = {
           difficulty?: string
           id?: string
           intent?: string
+          is_archived?: boolean
           nd_safe?: boolean
           question_text?: string
           role_dna_dimension?: string
           seniority?: string
+          updated_at?: string
         }
         Relationships: []
       }
