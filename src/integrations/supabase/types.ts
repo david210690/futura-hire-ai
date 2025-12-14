@@ -3109,6 +3109,7 @@ export type Database = {
       scenario_runs: {
         Row: {
           created_at: string
+          explainability: Json | null
           extracted_signals: Json | null
           free_text_reason: string | null
           id: string
@@ -3119,6 +3120,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          explainability?: Json | null
           extracted_signals?: Json | null
           free_text_reason?: string | null
           id?: string
@@ -3129,6 +3131,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          explainability?: Json | null
           extracted_signals?: Json | null
           free_text_reason?: string | null
           id?: string
@@ -3160,33 +3163,39 @@ export type Database = {
           created_at: string
           department: string
           id: string
+          is_active: boolean | null
           mapped_role_dna_dimensions: Json
           nd_safe_notes: string | null
           scenario_context: string
           seniority: string
           title: string
+          updated_at: string | null
         }
         Insert: {
           choices_json?: Json
           created_at?: string
           department: string
           id?: string
+          is_active?: boolean | null
           mapped_role_dna_dimensions?: Json
           nd_safe_notes?: string | null
           scenario_context: string
           seniority: string
           title: string
+          updated_at?: string | null
         }
         Update: {
           choices_json?: Json
           created_at?: string
           department?: string
           id?: string
+          is_active?: boolean | null
           mapped_role_dna_dimensions?: Json
           nd_safe_notes?: string | null
           scenario_context?: string
           seniority?: string
           title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

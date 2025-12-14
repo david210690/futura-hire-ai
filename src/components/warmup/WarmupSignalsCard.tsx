@@ -5,7 +5,15 @@ import { Brain, Sparkles, AlertCircle } from "lucide-react";
 interface ExtractedSignals {
   signals: string[];
   role_dna_dimensions_touched: string[];
-  gentle_interviewer_prompt: string[];
+  gentle_interviewer_prompts?: string[];
+  gentle_interviewer_prompt?: string[]; // Legacy support
+  candidate_friendly_reflection?: string[];
+  explainability?: {
+    what_was_evaluated: string;
+    key_factors_considered: string[];
+    factors_not_considered: string[];
+    limitations: string[];
+  };
 }
 
 interface WarmupSignalsCardProps {
@@ -75,17 +83,33 @@ export function WarmupSignalsCard({ signals, compact = false }: WarmupSignalsCar
           </div>
         )}
 
-        {signals.gentle_interviewer_prompt.length > 0 && (
+        {(signals.gentle_interviewer_prompts || signals.gentle_interviewer_prompt || []).length > 0 && (
           <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3">
             <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
               Interview Guidance
             </h4>
             <ul className="text-xs space-y-1">
-              {signals.gentle_interviewer_prompt.map((prompt, i) => (
+              {(signals.gentle_interviewer_prompts || signals.gentle_interviewer_prompt || []).map((prompt, i) => (
                 <li key={i}>• {prompt}</li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Explainability for fairness */}
+        {signals.explainability && (
+          <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3">
+            <h4 className="text-xs font-semibold text-green-700 dark:text-green-300 mb-1 flex items-center gap-1">
+              <Brain className="h-3 w-3" />
+              Fairness Note
+            </h4>
+            <p className="text-xs text-muted-foreground mb-1">
+              <span className="font-medium">Evaluated:</span> {signals.explainability.what_was_evaluated}
+            </p>
+            <p className="text-xs text-green-600 dark:text-green-400">
+              <span className="font-medium">NOT Considered:</span> {signals.explainability.factors_not_considered?.join(", ")}
+            </p>
           </div>
         )}
 
