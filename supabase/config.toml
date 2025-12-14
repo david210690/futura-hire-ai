@@ -212,3 +212,6 @@ verify_jwt = true
 
 [functions.generate-role-launch]
 verify_jwt = false
+
+[functions.calibrate-judgment]
+verify_jwt = true
