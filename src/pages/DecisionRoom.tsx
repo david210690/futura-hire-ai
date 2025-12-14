@@ -21,6 +21,8 @@ import { SnapshotHistorySelector } from "@/components/decision-room/SnapshotHist
 import { ConfidenceIndicator, ConfidenceBar } from "@/components/decision-room/ConfidenceIndicator";
 import { AutopilotQuickActions } from "@/components/autopilot/AutopilotQuickActions";
 import { AutopilotActivityLog } from "@/components/autopilot/AutopilotActivityLog";
+import { InterviewRecommendationsPanel } from "@/components/question-bank/InterviewRecommendationsPanel";
+import { WarmupSignalsCard } from "@/components/warmup/WarmupSignalsCard";
 import { WhyThisModal } from "@/components/explainability/WhyThisModal";
 import { FairnessDisclaimer } from "@/components/explainability/FairnessDisclaimer";
 import { FACTORS_NOT_CONSIDERED } from "@/lib/explainability";
@@ -1643,6 +1645,26 @@ export default function DecisionRoom() {
                                         <p><span className="text-muted-foreground">Experience:</span> {candidates.get(candidateId)?.years_experience} years</p>
                                       )}
                                     </div>
+                                  </div>
+                                )}
+
+                                {/* Warmup Signals Section */}
+                                <div className="pt-4 border-t">
+                                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4 text-purple-500" />
+                                    Warmup Signals
+                                  </h4>
+                                  <WarmupSignalsCard signals={null} compact />
+                                </div>
+
+                                {/* Interview Recommendations Section */}
+                                {jobId && (
+                                  <div className="pt-4 border-t">
+                                    <InterviewRecommendationsPanel 
+                                      jobId={jobId} 
+                                      candidateId={candidateUserIds.get(candidateId) || candidateId}
+                                      candidateName={getCandidateName(candidateId)}
+                                    />
                                   </div>
                                 )}
 
