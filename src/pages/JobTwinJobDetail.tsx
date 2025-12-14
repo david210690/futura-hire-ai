@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { StartVoiceInterviewDialog } from "@/components/voice-interview/StartVoiceInterviewDialog";
 import { RoleDnaPanel } from "@/components/role-dna/RoleDnaPanel";
+import { JobWarmupSection } from "@/components/warmup/JobWarmupSection";
 import { RoleFitInsightPanel } from "@/components/role-dna/RoleFitInsightPanel";
 import { InterviewPrepPanel } from "@/components/interview-prep/InterviewPrepPanel";
 import { HiringPlanAutopilotPanel } from "@/components/hiring-autopilot/HiringPlanAutopilotPanel";
@@ -505,6 +506,13 @@ export default function JobTwinJobDetail() {
                 </p>
               </CardContent>
             </Card>
+
+            {/* Scenario Warmup Section */}
+            <JobWarmupSection 
+              jobTwinJobId={jobData.id}
+              department={jobData.job?.title?.includes('Engineer') ? 'Engineering' : 'Product'}
+              seniority={jobData.job?.seniority || 'mid'}
+            />
 
             {/* Cross-feature CTAs - Career Insights */}
             <Card className="mt-6">
