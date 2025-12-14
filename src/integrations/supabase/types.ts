@@ -1368,6 +1368,47 @@ export type Database = {
           },
         ]
       }
+      interview_kits: {
+        Row: {
+          candidate_user_id: string
+          created_at: string
+          focus_mode: string | null
+          id: string
+          job_twin_job_id: string
+          kit_json: Json
+          recruiter_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_user_id: string
+          created_at?: string
+          focus_mode?: string | null
+          id?: string
+          job_twin_job_id: string
+          kit_json: Json
+          recruiter_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_user_id?: string
+          created_at?: string
+          focus_mode?: string | null
+          id?: string
+          job_twin_job_id?: string
+          kit_json?: Json
+          recruiter_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_kits_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_prep_plans: {
         Row: {
           created_at: string
