@@ -67,6 +67,7 @@ const recruiterNavGroups = [
     label: "AI Tools",
     items: [
       { label: "Question Bank", path: "/question-bank", icon: BookOpen, description: "Interview questions" },
+      { label: "Manage Questions", path: "/admin/question-bank", icon: Settings, description: "Admin CRUD" },
       { label: "Decision Room", path: "/jobs", icon: Target, description: "Via Job Detail" },
       { label: "Pipeline Health", path: "/dashboard", icon: Zap, description: "Via Job Detail" },
     ],
