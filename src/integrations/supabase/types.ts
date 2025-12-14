@@ -1413,6 +1413,41 @@ export type Database = {
           },
         ]
       }
+      interview_question_recommendations: {
+        Row: {
+          candidate_user_id: string
+          created_at: string
+          generated_by_user_id: string
+          id: string
+          job_twin_job_id: string
+          recommendations_json: Json
+        }
+        Insert: {
+          candidate_user_id: string
+          created_at?: string
+          generated_by_user_id: string
+          id?: string
+          job_twin_job_id: string
+          recommendations_json?: Json
+        }
+        Update: {
+          candidate_user_id?: string
+          created_at?: string
+          generated_by_user_id?: string
+          id?: string
+          job_twin_job_id?: string
+          recommendations_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_question_recommendations_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_questions: {
         Row: {
           created_at: string | null
@@ -2548,6 +2583,83 @@ export type Database = {
           },
         ]
       }
+      question_bank_answer_rubrics: {
+        Row: {
+          bias_traps_to_avoid: Json
+          created_at: string
+          followup_probes: Json
+          id: string
+          question_id: string
+          what_good_looks_like: Json
+        }
+        Insert: {
+          bias_traps_to_avoid?: Json
+          created_at?: string
+          followup_probes?: Json
+          id?: string
+          question_id: string
+          what_good_looks_like?: Json
+        }
+        Update: {
+          bias_traps_to_avoid?: Json
+          created_at?: string
+          followup_probes?: Json
+          id?: string
+          question_id?: string
+          what_good_looks_like?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bank_answer_rubrics_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_bank_questions: {
+        Row: {
+          category: string
+          created_at: string
+          created_by_user_id: string | null
+          department: string
+          difficulty: string
+          id: string
+          intent: string
+          nd_safe: boolean
+          question_text: string
+          role_dna_dimension: string
+          seniority: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by_user_id?: string | null
+          department: string
+          difficulty?: string
+          id?: string
+          intent: string
+          nd_safe?: boolean
+          question_text: string
+          role_dna_dimension: string
+          seniority: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          department?: string
+          difficulty?: string
+          id?: string
+          intent?: string
+          nd_safe?: boolean
+          question_text?: string
+          role_dna_dimension?: string
+          seniority?: string
+        }
+        Relationships: []
+      }
       recruiter_metrics: {
         Row: {
           avg_time_to_shortlist: number | null
@@ -2940,6 +3052,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scenario_runs: {
+        Row: {
+          created_at: string
+          extracted_signals: Json | null
+          free_text_reason: string | null
+          id: string
+          job_twin_job_id: string | null
+          scenario_id: string
+          selected_choice_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extracted_signals?: Json | null
+          free_text_reason?: string | null
+          id?: string
+          job_twin_job_id?: string | null
+          scenario_id: string
+          selected_choice_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          extracted_signals?: Json | null
+          free_text_reason?: string | null
+          id?: string
+          job_twin_job_id?: string | null
+          scenario_id?: string
+          selected_choice_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenario_runs_job_twin_job_id_fkey"
+            columns: ["job_twin_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_twin_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scenario_runs_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "scenario_warmups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scenario_warmups: {
+        Row: {
+          choices_json: Json
+          created_at: string
+          department: string
+          id: string
+          mapped_role_dna_dimensions: Json
+          nd_safe_notes: string | null
+          scenario_context: string
+          seniority: string
+          title: string
+        }
+        Insert: {
+          choices_json?: Json
+          created_at?: string
+          department: string
+          id?: string
+          mapped_role_dna_dimensions?: Json
+          nd_safe_notes?: string | null
+          scenario_context: string
+          seniority: string
+          title: string
+        }
+        Update: {
+          choices_json?: Json
+          created_at?: string
+          department?: string
+          id?: string
+          mapped_role_dna_dimensions?: Json
+          nd_safe_notes?: string | null
+          scenario_context?: string
+          seniority?: string
+          title?: string
+        }
+        Relationships: []
       }
       shortlist_predictive_scores: {
         Row: {
