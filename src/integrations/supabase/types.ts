@@ -649,6 +649,73 @@ export type Database = {
           },
         ]
       }
+      calibration_checks: {
+        Row: {
+          bias_flags: Json
+          candidate_id: string
+          created_at: string
+          discrepancies: Json
+          evidence_gaps: Json
+          id: string
+          interview_id: string
+          interviewer_action: string | null
+          interviewer_id: string
+          job_id: string
+          justification_note: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          bias_flags?: Json
+          candidate_id: string
+          created_at?: string
+          discrepancies?: Json
+          evidence_gaps?: Json
+          id?: string
+          interview_id: string
+          interviewer_action?: string | null
+          interviewer_id: string
+          job_id: string
+          justification_note?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          bias_flags?: Json
+          candidate_id?: string
+          created_at?: string
+          discrepancies?: Json
+          evidence_gaps?: Json
+          id?: string
+          interview_id?: string
+          interviewer_action?: string | null
+          interviewer_id?: string
+          job_id?: string
+          justification_note?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calibration_checks_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calibration_checks_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calibration_checks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_progress: {
         Row: {
           candidate_id: string

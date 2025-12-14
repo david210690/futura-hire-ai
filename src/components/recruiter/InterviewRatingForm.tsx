@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Scale } from "lucide-react";
+import { CalibrationCheckpointModal } from "./CalibrationCheckpointModal";
 
 interface InterviewRatingFormProps {
   open: boolean;
@@ -15,6 +16,17 @@ interface InterviewRatingFormProps {
   jobId: string;
   candidateId: string;
   applicationId: string;
+  candidateName?: string;
+  roleTitle?: string;
+}
+
+interface CalibrationResult {
+  has_discrepancies: boolean;
+  discrepancies: any[];
+  bias_flags: any[];
+  evidence_gaps: any[];
+  positive_confirmation?: string;
+  overall_coaching_summary: string;
 }
 
 export function InterviewRatingForm({ 
@@ -22,11 +34,14 @@ export function InterviewRatingForm({
   onOpenChange, 
   jobId, 
   candidateId,
-  applicationId 
+  applicationId,
+  candidateName = "Candidate",
+  roleTitle = "Role"
 }: InterviewRatingFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [generatingFeedback, setGeneratingFeedback] = useState(false);
+  const [calibrating, setCalibrating] = useState(false);
   const [techDepth, setTechDepth] = useState([50]);
   const [problemSolving, setProblemSolving] = useState([50]);
   const [communication, setCommunication] = useState([50]);
@@ -34,9 +49,28 @@ export function InterviewRatingForm({
   const [hireRecommend, setHireRecommend] = useState<"yes" | "no" | "maybe">("maybe");
   const [notes, setNotes] = useState("");
   const [generatedFeedback, setGeneratedFeedback] = useState<any>(null);
+  
+  // Calibration state
+  const [showCalibration, setShowCalibration] = useState(false);
+  const [calibrationResult, setCalibrationResult] = useState<CalibrationResult | null>(null);
+  const [calibrationCheckId, setCalibrationCheckId] = useState<string | null>(null);
+  const [pendingInterviewId, setPendingInterviewId] = useState<string | null>(null);
 
-  const handleSave = async () => {
-    setLoading(true);
+  const resetForm = () => {
+    setTechDepth([50]);
+    setProblemSolving([50]);
+    setCommunication([50]);
+    setCultureAdd([50]);
+    setHireRecommend("maybe");
+    setNotes("");
+    setGeneratedFeedback(null);
+    setCalibrationResult(null);
+    setCalibrationCheckId(null);
+    setPendingInterviewId(null);
+  };
+
+  const handleSaveWithCalibration = async () => {
+    setCalibrating(true);
     try {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -55,6 +89,7 @@ export function InterviewRatingForm({
         .single();
 
       if (interviewError) throw interviewError;
+      setPendingInterviewId(interview.id);
 
       // Create interview rating
       const { error: ratingError } = await supabase
@@ -71,20 +106,41 @@ export function InterviewRatingForm({
 
       if (ratingError) throw ratingError;
 
-      toast({
-        title: "Interview rating saved",
-        description: "The predictive score will be updated automatically.",
+      // Run calibration check
+      const { data: calibrationData, error: calibrationError } = await supabase.functions.invoke('calibrate-judgment', {
+        body: {
+          interviewId: interview.id,
+          jobId,
+          candidateId,
+          ratings: {
+            tech_depth: techDepth[0],
+            problem_solving: problemSolving[0],
+            communication: communication[0],
+            culture_add: cultureAdd[0]
+          },
+          notes: notes || '',
+          candidateName,
+          roleTitle
+        }
       });
 
-      // Reset form
-      setTechDepth([50]);
-      setProblemSolving([50]);
-      setCommunication([50]);
-      setCultureAdd([50]);
-      setHireRecommend("maybe");
-      setNotes("");
-      setGeneratedFeedback(null);
-      onOpenChange(false);
+      if (calibrationError) {
+        console.error('Calibration error:', calibrationError);
+        // If calibration fails, still allow proceeding
+        toast({
+          title: "Interview rating saved",
+          description: "The predictive score will be updated automatically.",
+        });
+        resetForm();
+        onOpenChange(false);
+        return;
+      }
+
+      // Show calibration modal
+      setCalibrationResult(calibrationData.calibration);
+      setCalibrationCheckId(calibrationData.calibration_check_id);
+      setShowCalibration(true);
+
     } catch (error) {
       console.error('Error saving interview rating:', error);
       toast({
@@ -93,8 +149,29 @@ export function InterviewRatingForm({
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setCalibrating(false);
     }
+  };
+
+  const handleReviseFeedback = () => {
+    // Close calibration modal, keep form open for revision
+    setShowCalibration(false);
+    // Delete the interview we just created so they can resubmit
+    if (pendingInterviewId) {
+      supabase.from('interviews').delete().eq('id', pendingInterviewId).then(() => {
+        setPendingInterviewId(null);
+      });
+    }
+  };
+
+  const handleConfirmAndProceed = () => {
+    setShowCalibration(false);
+    toast({
+      title: "Interview rating saved",
+      description: "Your feedback has been recorded and calibration noted.",
+    });
+    resetForm();
+    onOpenChange(false);
   };
 
   const handleGenerateFeedback = async () => {
@@ -255,18 +332,31 @@ export function InterviewRatingForm({
           <Button
             variant="outline"
             onClick={handleGenerateFeedback}
-            disabled={generatingFeedback}
+            disabled={generatingFeedback || calibrating}
           >
             {generatingFeedback && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <Sparkles className="mr-2 h-4 w-4" />
             Generate AI Brief
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Rating
+          <Button onClick={handleSaveWithCalibration} disabled={calibrating}>
+            {calibrating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Scale className="mr-2 h-4 w-4" />
+            Save & Calibrate
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Calibration Checkpoint Modal */}
+      <CalibrationCheckpointModal
+        open={showCalibration}
+        onOpenChange={setShowCalibration}
+        calibration={calibrationResult}
+        calibrationCheckId={calibrationCheckId}
+        candidateName={candidateName}
+        roleTitle={roleTitle}
+        onReviseFeedback={handleReviseFeedback}
+        onConfirmAndProceed={handleConfirmAndProceed}
+      />
     </Dialog>
   );
 }
