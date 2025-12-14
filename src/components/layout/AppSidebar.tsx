@@ -18,7 +18,8 @@ import {
   FileText,
   Target,
   Zap,
-  ChevronDown
+  ChevronDown,
+  Compass
 } from "lucide-react";
 import {
   Sidebar,
@@ -97,6 +98,7 @@ const candidateNavGroups = [
     label: "Career Growth",
     items: [
       { label: "Career Trajectory", path: "/career-trajectory", icon: TrendingUp, description: "Your career path" },
+      { label: "Growth Blueprint", path: "/career-blueprint", icon: Compass, description: "Personal development plan" },
     ],
   },
   {

@@ -798,6 +798,57 @@ export type Database = {
           },
         ]
       }
+      career_blueprint_snapshots: {
+        Row: {
+          blueprint_json: Json
+          created_at: string
+          id: string
+          target_role_1: string
+          target_role_1_job_id: string | null
+          target_role_2: string | null
+          target_role_2_job_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blueprint_json: Json
+          created_at?: string
+          id?: string
+          target_role_1: string
+          target_role_1_job_id?: string | null
+          target_role_2?: string | null
+          target_role_2_job_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blueprint_json?: Json
+          created_at?: string
+          id?: string
+          target_role_1?: string
+          target_role_1_job_id?: string | null
+          target_role_2?: string | null
+          target_role_2_job_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_blueprint_snapshots_target_role_1_job_id_fkey"
+            columns: ["target_role_1_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_blueprint_snapshots_target_role_2_job_id_fkey"
+            columns: ["target_role_2_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       career_coach_feedback: {
         Row: {
           candidate_id: string
