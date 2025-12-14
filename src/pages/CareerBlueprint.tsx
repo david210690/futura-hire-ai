@@ -10,6 +10,9 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { BlueprintHistorySelector } from "@/components/career-blueprint/BlueprintHistorySelector";
+import { ExportBlueprintPDF } from "@/components/career-blueprint/ExportBlueprintPDF";
+import { ProgressTracker } from "@/components/career-blueprint/ProgressTracker";
 import { 
   Compass, 
   Target, 
@@ -78,7 +81,8 @@ export default function CareerBlueprint() {
   const [targetRole2, setTargetRole2] = useState("");
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [previousBlueprints, setPreviousBlueprints] = useState<any[]>([]);
-
+  const [currentSnapshotId, setCurrentSnapshotId] = useState<string | undefined>();
+  const [completedActions, setCompletedActions] = useState<string[]>([]);
   useEffect(() => {
     const init = async () => {
       setLoading(true);
@@ -104,6 +108,13 @@ export default function CareerBlueprint() {
         setBlueprint(latest.blueprint_json as unknown as Blueprint);
         setTargetRole1(latest.target_role_1);
         setTargetRole2(latest.target_role_2 || "");
+        setCurrentSnapshotId(latest.id);
+        
+        // Load completed actions from localStorage
+        const savedActions = localStorage.getItem(`blueprint_actions_${latest.id}`);
+        if (savedActions) {
+          setCompletedActions(JSON.parse(savedActions));
+        }
       }
 
       setLoading(false);
@@ -145,8 +156,43 @@ export default function CareerBlueprint() {
         description: "Could not generate blueprint. Please try again.",
         variant: "destructive"
       });
+      // Refresh blueprints list
+      const { data: updatedBlueprints } = await supabase
+        .from('career_blueprint_snapshots')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (updatedBlueprints && updatedBlueprints.length > 0) {
+        setPreviousBlueprints(updatedBlueprints);
+        setCurrentSnapshotId(updatedBlueprints[0].id);
+        setCompletedActions([]);
+      }
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleSelectSnapshot = (snapshot: any) => {
+    setBlueprint(snapshot.blueprint_json as unknown as Blueprint);
+    setTargetRole1(snapshot.target_role_1);
+    setTargetRole2(snapshot.target_role_2 || "");
+    setCurrentSnapshotId(snapshot.id);
+    
+    // Load completed actions for this snapshot
+    const savedActions = localStorage.getItem(`blueprint_actions_${snapshot.id}`);
+    setCompletedActions(savedActions ? JSON.parse(savedActions) : []);
+  };
+
+  const handleToggleAction = (actionId: string) => {
+    const newCompleted = completedActions.includes(actionId)
+      ? completedActions.filter(id => id !== actionId)
+      : [...completedActions, actionId];
+    
+    setCompletedActions(newCompleted);
+    if (currentSnapshotId) {
+      localStorage.setItem(`blueprint_actions_${currentSnapshotId}`, JSON.stringify(newCompleted));
     }
   };
 
@@ -308,15 +354,37 @@ export default function CareerBlueprint() {
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <Compass className="h-8 w-8 text-primary" />
-            Your Growth Compass
-          </h1>
-          <p className="text-muted-foreground">
-            This is your personalized, confidential career map. Growth should be clear, not guesswork.
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+                <Compass className="h-8 w-8 text-primary" />
+                Your Growth Compass
+              </h1>
+              <p className="text-muted-foreground">
+                This is your personalized, confidential career map. Growth should be clear, not guesswork.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {blueprint && (
+                <ExportBlueprintPDF 
+                  blueprint={blueprint} 
+                  userName={user?.user_metadata?.name} 
+                />
+              )}
+            </div>
+          </div>
+          
+          {/* History selector */}
+          {previousBlueprints.length > 1 && (
+            <div className="mt-4">
+              <BlueprintHistorySelector
+                snapshots={previousBlueprints}
+                currentSnapshotId={currentSnapshotId}
+                onSelectSnapshot={handleSelectSnapshot}
+              />
+            </div>
+          )}
         </div>
-
         {/* Disclaimer Card */}
         <Card className="mb-8 border-primary/20 bg-primary/5">
           <CardContent className="pt-4">
@@ -397,6 +465,18 @@ export default function CareerBlueprint() {
                   <p className="text-sm text-primary font-medium">{blueprint.employee_summary.growth_potential}</p>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Progress Tracker */}
+            {blueprint.role_1_blueprint?.growth_focus_areas && (
+              <ProgressTracker
+                growthAreas={[
+                  ...blueprint.role_1_blueprint.growth_focus_areas,
+                  ...(blueprint.role_2_blueprint?.growth_focus_areas || [])
+                ]}
+                completedActions={completedActions}
+                onToggleAction={handleToggleAction}
+              />
             )}
 
             {/* Role 1 Blueprint */}

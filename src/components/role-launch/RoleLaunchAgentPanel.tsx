@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { EditableContent } from "./EditableContent";
+import { LaunchPreviewMode } from "./LaunchPreviewMode";
 import { 
   Rocket, Loader2, Sparkles, FileText, Mail, Users, 
   Globe, Clock, CheckCircle2, Copy, Linkedin, Building,
-  MessageSquare, Zap, Target
+  MessageSquare, Zap, Target, Save, Eye
 } from "lucide-react";
 
 interface JobDescription {
@@ -65,11 +67,60 @@ export function RoleLaunchAgentPanel({
   const [generating, setGenerating] = useState(false);
   const [launchPackage, setLaunchPackage] = useState<LaunchPackage | null>(null);
   const [activeTab, setActiveTab] = useState("descriptions");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [previewingJdIndex, setPreviewingJdIndex] = useState<number | null>(null);
   
   // Launch settings
   const [postingBudget, setPostingBudget] = useState("medium");
   const [outreachTone, setOutreachTone] = useState("professional");
   const [timezonePriority, setTimezonePriority] = useState("global");
+
+  const handleUpdateJobDescription = (index: number, content: string) => {
+    if (!launchPackage) return;
+    const updated = { ...launchPackage };
+    updated.job_descriptions[index] = {
+      ...updated.job_descriptions[index],
+      content
+    };
+    setLaunchPackage(updated);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleUpdateTemplate = (index: number, body: string, subject?: string) => {
+    if (!launchPackage) return;
+    const updated = { ...launchPackage };
+    updated.outreach_templates[index] = {
+      ...updated.outreach_templates[index],
+      body,
+      subject: subject ?? updated.outreach_templates[index].subject
+    };
+    setLaunchPackage(updated);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSaveDraft = () => {
+    // Save to localStorage as draft
+    if (launchPackage) {
+      localStorage.setItem(`launch_draft_${jobTwinJobId}`, JSON.stringify(launchPackage));
+      setHasUnsavedChanges(false);
+      toast({
+        title: "Draft saved",
+        description: "Your changes have been saved locally."
+      });
+    }
+  };
+
+  // Load draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(`launch_draft_${jobTwinJobId}`);
+    if (savedDraft) {
+      try {
+        setLaunchPackage(JSON.parse(savedDraft));
+      } catch (e) {
+        console.error("Failed to load draft:", e);
+      }
+    }
+  }, [jobTwinJobId]);
 
   const generateLaunch = async () => {
     setGenerating(true);
@@ -352,14 +403,17 @@ export function RoleLaunchAgentPanel({
                         {jd.platform.replace('_', ' ')}
                       </CardTitle>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => copyToClipboard(jd.content, `${jd.platform} JD`)}
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Copy
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <LaunchPreviewMode jobDescription={jd} />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => copyToClipboard(jd.content, `${jd.platform} JD`)}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
+                      </Button>
+                    </div>
                   </div>
                   <CardDescription>{jd.title}</CardDescription>
                 </CardHeader>
@@ -371,9 +425,11 @@ export function RoleLaunchAgentPanel({
                       </Badge>
                     ))}
                   </div>
-                  <div className="p-3 bg-muted/50 rounded-lg max-h-48 overflow-y-auto">
-                    <pre className="text-xs whitespace-pre-wrap font-sans">{jd.content}</pre>
-                  </div>
+                  <EditableContent
+                    content={jd.content}
+                    label={`${jd.platform} Job Description`}
+                    onSave={(content) => handleUpdateJobDescription(i, content)}
+                  />
                 </CardContent>
               </Card>
             ))}
@@ -394,28 +450,15 @@ export function RoleLaunchAgentPanel({
                         {template.tone}
                       </Badge>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        template.subject ? `Subject: ${template.subject}\n\n${template.body}` : template.body,
-                        `${template.type} template`
-                      )}
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Copy
-                    </Button>
                   </div>
-                  {template.subject && (
-                    <CardDescription className="font-medium">
-                      Subject: {template.subject}
-                    </CardDescription>
-                  )}
                 </CardHeader>
                 <CardContent>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <pre className="text-sm whitespace-pre-wrap font-sans">{template.body}</pre>
-                  </div>
+                  <EditableContent
+                    content={template.body}
+                    subject={template.subject}
+                    label={`${template.type} template`}
+                    onSave={(content, subject) => handleUpdateTemplate(i, content, subject)}
+                  />
                 </CardContent>
               </Card>
             ))}
@@ -453,26 +496,38 @@ export function RoleLaunchAgentPanel({
           </TabsContent>
         </Tabs>
 
-        {/* Regenerate button */}
+        {/* Action buttons */}
         <Separator />
-        <Button 
-          variant="outline" 
-          className="w-full gap-2"
-          onClick={generateLaunch}
-          disabled={generating}
-        >
-          {generating ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Regenerating...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Regenerate Launch Package
-            </>
+        <div className="flex items-center gap-2">
+          {hasUnsavedChanges && (
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={handleSaveDraft}
+            >
+              <Save className="h-4 w-4" />
+              Save Draft
+            </Button>
           )}
-        </Button>
+          <Button 
+            variant="outline" 
+            className="flex-1 gap-2"
+            onClick={generateLaunch}
+            disabled={generating}
+          >
+            {generating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Regenerating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Regenerate Launch Package
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

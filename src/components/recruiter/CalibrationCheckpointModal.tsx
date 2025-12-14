@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalibrationScoreChart } from "./CalibrationScoreChart";
 import { 
   AlertTriangle, 
   CheckCircle2, 
@@ -12,7 +14,9 @@ import {
   FileWarning,
   Loader2,
   ChevronRight,
-  Shield
+  Shield,
+  BarChart3,
+  MessageSquare
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -74,6 +78,7 @@ export function CalibrationCheckpointModal({
   const { toast } = useToast();
   const [justificationNote, setJustificationNote] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const [activeTab, setActiveTab] = useState("insights");
 
   const handleConfirm = async () => {
     setConfirming(true);
@@ -169,107 +174,113 @@ export function CalibrationCheckpointModal({
             </Card>
           )}
 
-          {/* Discrepancies */}
-          {calibration.discrepancies?.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <Target className="h-4 w-4 text-amber-500" />
-                Calibration Insights
-              </h3>
-              {calibration.discrepancies.map((disc, i) => (
-                <Card key={i} className={disc.is_high_priority ? "border-amber-300" : ""}>
-                  <CardContent className="pt-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium capitalize">
-                          {disc.dimension.replace(/_/g, ' ')}
-                        </span>
-                        {disc.is_high_priority && (
-                          <Badge variant="outline" className="text-amber-600 border-amber-300">
-                            High Priority
-                          </Badge>
-                        )}
-                      </div>
-                      <span className="text-lg font-bold">{disc.interviewer_score}</span>
-                    </div>
-                    
-                    <div className="flex gap-4 text-xs text-muted-foreground mb-3">
-                      {disc.team_average !== null && (
-                        <span>
-                          Team avg: <span className="font-medium">{disc.team_average}</span>
-                          {disc.deviation_from_team && (
-                            <span className={disc.deviation_from_team > 0 ? "text-green-600" : "text-amber-600"}>
-                              {" "}({disc.deviation_from_team > 0 ? "+" : ""}{disc.deviation_from_team})
-                            </span>
+          {/* Tabbed view for issues */}
+          {hasIssues && (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="insights" className="gap-1">
+                  <Target className="h-3 w-3" />
+                  Insights
+                  {calibration.discrepancies?.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 text-xs h-4 px-1">
+                      {calibration.discrepancies.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="chart" className="gap-1">
+                  <BarChart3 className="h-3 w-3" />
+                  Comparison
+                </TabsTrigger>
+                <TabsTrigger value="details" className="gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  Details
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="insights" className="space-y-3 mt-4">
+                {/* Discrepancies */}
+                {calibration.discrepancies?.map((disc, i) => (
+                  <Card key={i} className={disc.is_high_priority ? "border-amber-300" : ""}>
+                    <CardContent className="pt-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium capitalize">
+                            {disc.dimension.replace(/_/g, ' ')}
+                          </span>
+                          {disc.is_high_priority && (
+                            <Badge variant="outline" className="text-amber-600 border-amber-300">
+                              High Priority
+                            </Badge>
                           )}
-                        </span>
-                      )}
-                      {disc.role_dna_benchmark !== null && (
-                        <span>
-                          Role DNA: <span className="font-medium">{disc.role_dna_benchmark}</span>
-                        </span>
-                      )}
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground italic">
-                      {disc.coaching_question}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                        </div>
+                        <span className="text-lg font-bold">{disc.interviewer_score}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground italic">
+                        {disc.coaching_question}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </TabsContent>
 
-          {/* Bias Flags */}
-          {calibration.bias_flags?.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <Brain className="h-4 w-4 text-purple-500" />
-                Bias Considerations
-              </h3>
-              {calibration.bias_flags.map((bias, i) => (
-                <Card key={i} className="border-purple-200 dark:border-purple-900">
-                  <CardContent className="pt-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary" className="text-purple-600">
-                        {bias.bias_type}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        affects {bias.dimension_affected.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground italic">
-                      {bias.coaching_question}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+              <TabsContent value="chart" className="mt-4">
+                <CalibrationScoreChart discrepancies={calibration.discrepancies || []} />
+              </TabsContent>
 
-          {/* Evidence Gaps */}
-          {calibration.evidence_gaps?.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <FileWarning className="h-4 w-4 text-blue-500" />
-                Evidence Review
-              </h3>
-              {calibration.evidence_gaps.map((gap, i) => (
-                <Card key={i}>
-                  <CardContent className="pt-4">
-                    <p className="font-medium text-sm mb-1 capitalize">
-                      {gap.dimension.replace(/_/g, ' ')}
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      <span className="font-medium">Required:</span> {gap.required_evidence}
-                    </p>
-                    <p className="text-sm text-muted-foreground italic">
-                      {gap.gap_description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+              <TabsContent value="details" className="space-y-4 mt-4">
+                {/* Bias Flags */}
+                {calibration.bias_flags?.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <Brain className="h-4 w-4 text-purple-500" />
+                      Bias Considerations
+                    </h3>
+                    {calibration.bias_flags.map((bias, i) => (
+                      <Card key={i} className="border-purple-200 dark:border-purple-900">
+                        <CardContent className="pt-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="secondary" className="text-purple-600">
+                              {bias.bias_type}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              affects {bias.dimension_affected.replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground italic">
+                            {bias.coaching_question}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {/* Evidence Gaps */}
+                {calibration.evidence_gaps?.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <FileWarning className="h-4 w-4 text-blue-500" />
+                      Evidence Review
+                    </h3>
+                    {calibration.evidence_gaps.map((gap, i) => (
+                      <Card key={i}>
+                        <CardContent className="pt-4">
+                          <p className="font-medium text-sm mb-1 capitalize">
+                            {gap.dimension.replace(/_/g, ' ')}
+                          </p>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            <span className="font-medium">Required:</span> {gap.required_evidence}
+                          </p>
+                          <p className="text-sm text-muted-foreground italic">
+                            {gap.gap_description}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
 
           {/* Coaching Summary */}
