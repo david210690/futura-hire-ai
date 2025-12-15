@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { LandingHero } from "@/components/landing/LandingHero";
-import { FoundingPartnerBanner } from "@/components/landing/FoundingPartnerBanner";
+import { BetaAccessBanner } from "@/components/landing/FoundingPartnerBanner";
 import { WhatYouGet } from "@/components/landing/WhatYouGet";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { ForRecruitersAndCandidates } from "@/components/landing/ForRecruitersAndCandidates";
@@ -30,7 +30,7 @@ const LandingPage = () => {
         
         <div className="pt-16">
           <LandingHero onApplyPilot={scrollToForm} />
-          <FoundingPartnerBanner onApplyPilot={scrollToForm} />
+          <BetaAccessBanner onApplyPilot={scrollToForm} />
           <div id="features">
             <WhatYouGet />
           </div>
