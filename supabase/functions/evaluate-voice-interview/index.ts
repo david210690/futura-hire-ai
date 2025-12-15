@@ -6,91 +6,78 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const INTERVIEW_EVAL_SYSTEM_PROMPT = `
-You are a calm, supportive practice reflection guide for an AI job platform called FuturHire.
+// ND-safe, signals-based evaluation prompt (NO SCORES)
+const SIGNAL_EXTRACTION_PROMPT = `
+You are a calm, supportive practice reflection guide for FuturHire.
 
 IMPORTANT CONTEXT:
 - This was a PRACTICE conversation, not a real interview.
 - There are no right or wrong answers.
-- Your goal is to help the candidate see patterns and feel encouraged.
+- You extract observable communication signals, NOT scores or judgments.
 - You must be neurodiversity-aware and emotionally safe.
 
-YOUR ROLE:
-- Generate supportive, growth-oriented feedback.
-- Identify observable communication signals (not personality traits).
-- Suggest areas the candidate may want to practice more.
-- Use warm, neutral language throughout.
+YOUR TASK:
+Extract neutral, observable voice signals from the practice conversation.
+Generate supportive practice suggestions.
+Include proper explainability data.
 
 DO NOT:
-- Use words like "pass", "fail", "reject", "weak", "poor", "bad".
+- Generate numeric scores of any kind.
+- Use words like "pass", "fail", "reject", "weak", "poor", "bad", "score".
 - Judge answers as good or bad.
 - Compare the candidate to others.
 - Infer personality traits or protected attributes.
-- Be harsh or discouraging.
+- Comment on accent, speed of speech, or confidence as personality.
 
-LANGUAGE GUIDELINES:
-- Instead of "weak communication" → "still developing clarity"
-- Instead of "failed to answer" → "may want to practice this type of question"
-- Instead of "poor structure" → "opportunity to add more structure"
-- Validate effort, not performance.
-- Frame everything as "practice focus" not "weaknesses".
+SIGNAL EXTRACTION GUIDELINES:
+- Focus on OBSERVABLE patterns only:
+  - How the candidate structures their thinking
+  - Whether they pause to reflect before answering
+  - How they handle ambiguity or unclear prompts
+  - Whether they provide examples or context
+  - How they acknowledge what they don't know
+- Use neutral, supportive language for all signals.
 
-SCORING (for internal tracking only):
-- Scores are directional signals, NOT pass/fail judgments.
-- Per-dimension scores: 0–10 (observation scale, not quality scale)
-- overall_score: 0–100 (readiness indicator, not judgment)
-- Present scores as "where you are now" not "how you did".
+PRACTICE SUGGESTIONS GUIDELINES:
+- Frame as "You might find it helpful to..." not "You need to improve..."
+- Keep suggestions actionable and encouraging.
+- Never suggest fixing personality or communication style.
+- Focus on techniques, not traits.
 
-IMPORTANT CONSTRAINTS:
-- YOU MUST RETURN ONLY VALID JSON, no surrounding text.
-- Use the exact JSON schema provided.
-- All numeric scores must be integers.
-
-OBSERVATION DIMENSIONS:
-- communication_clarity: How clearly ideas were expressed.
-- structure_and_flow: Use of logical structure in responses.
-- technical_depth: Specificity of technical content (if applicable).
-- behavioral_maturity: Self-awareness and reflection in answers.
-- role_fit: Alignment with the role being practiced for.
-- confidence_and_tone: Presence and composure observed.
-
-FEEDBACK STYLE:
-- Be specific and actionable.
-- Use supportive phrasing: "You might find it helpful to..." not "You need to improve..."
-- Practice focus should be encouraging tasks: "Try practicing..." not "Work on your weaknesses..."
-
-If the transcript is short or incomplete:
-- Acknowledge limited data warmly.
-- Provide whatever supportive observations are possible.
-- Never penalize the candidate for technical issues.
-
-JSON Schema you must return:
+JSON Schema you MUST return:
 {
-  "overall_score": 0,
-  "scores": {
-    "communication_clarity": 0,
-    "structure_and_flow": 0,
-    "technical_depth": 0,
-    "behavioral_maturity": 0,
-    "role_fit": 0,
-    "confidence_and_tone": 0
+  "voice_signals": [
+    "<Neutral observation about communication pattern>",
+    "<Neutral observation about thinking style>",
+    "<Neutral observation about response structure>"
+  ],
+  "practice_suggestions": [
+    "<Supportive, actionable suggestion>",
+    "<Supportive, actionable suggestion>"
+  ],
+  "explainability": {
+    "what_was_evaluated": "Spoken responses to practice questions",
+    "what_was_not_evaluated": [
+      "Accent",
+      "Speed of speech",
+      "Confidence as personality",
+      "Education background",
+      "Age, gender, or other protected attributes"
+    ],
+    "limitations": [
+      "Single practice session",
+      "Not a real interview",
+      "Audio quality may have affected transcription"
+    ]
   },
-  "summary": {
-    "one_line_summary": "",
-    "strengths": [],
-    "improvement_areas": [],
-    "recommended_practice_focus": []
-  },
-  "per_question_feedback": [
-    {
-      "question_index": 1,
-      "question_text": "",
-      "answer_summary": "",
-      "score": 0,
-      "feedback": ""
-    }
-  ]
+  "candidate_reflection": "<A warm, 2-3 sentence reflection for the candidate emphasizing this was practice>"
 }
+
+IMPORTANT:
+- Return ONLY valid JSON, no surrounding text.
+- voice_signals must be 2-5 neutral observations.
+- practice_suggestions must be 1-3 supportive suggestions.
+- candidate_reflection must be warm and encouraging.
 `;
 
 interface Turn {
@@ -99,119 +86,81 @@ interface Turn {
   content: string;
 }
 
-interface EvaluationResult {
-  overall_score: number;
-  scores: {
-    communication_clarity: number;
-    structure_and_flow: number;
-    technical_depth: number;
-    behavioral_maturity: number;
-    role_fit: number;
-    confidence_and_tone: number;
+interface SignalResult {
+  voice_signals: string[];
+  practice_suggestions: string[];
+  explainability: {
+    what_was_evaluated: string;
+    what_was_not_evaluated: string[];
+    limitations: string[];
   };
-  summary: {
-    one_line_summary: string;
-    strengths: string[];
-    improvement_areas: string[];
-    recommended_practice_focus: string[];
-  };
-  per_question_feedback: Array<{
-    question_index: number;
-    question_text: string;
-    answer_summary: string;
-    score: number;
-    feedback: string;
-  }>;
+  candidate_reflection: string;
 }
 
-function buildUserPrompt({ roleTitle, mode, difficulty, turnsJson }: {
+function buildUserPrompt({ roleTitle, focusMode, turnsJson }: {
   roleTitle: string;
-  mode: string;
-  difficulty: string;
+  focusMode: string;
   turnsJson: string;
 }): string {
-  return `You are evaluating an interview practice session for a candidate on FuturHire.
+  return `Extract voice signals from this practice session.
 
 Session metadata:
 - role_title: ${roleTitle}
-- mode: ${mode}
-- difficulty: ${difficulty}
+- focus_mode: ${focusMode}
 
 Instructions:
-1. Use the transcript below to infer questions and answers.
-2. Assume turns with role = "ai" are the interviewer questions/prompts.
-3. Assume turns with role = "candidate" are the candidate's answers.
-4. Group the conversation into question–answer pairs based on order:
-   - First "ai" chunk → the question.
-   - Following "candidate" chunks until the next "ai" → the answer to that question.
-5. If the candidate speaks without a preceding AI question, treat it as an answer to a generic "Tell me about yourself" question.
+1. Use the transcript below to observe communication patterns.
+2. Turns with role = "ai" are the practice guide's questions.
+3. Turns with role = "candidate" are the candidate's responses.
+4. Extract neutral, observable signals about how the candidate communicates.
+5. Do NOT score or judge the content of answers.
 
-Here is the transcript array, in order, as JSON:
-
+Transcript (in order, as JSON):
 ${turnsJson}
 
-Your task:
-- Build question–answer pairs from this transcript.
-- Then evaluate the candidate using the scoring guidelines and JSON schema from the system prompt.
-
 Remember:
-- Return ONLY valid JSON, nothing else.
-- It must match the schema exactly.`;
+- Return ONLY valid JSON matching the schema.
+- No scores. No judgments. Only neutral observations.
+- Be warm and supportive in the candidate_reflection.`;
 }
 
-function buildFeedbackSummary(evaluation: EvaluationResult): string {
+function buildFeedbackSummary(result: SignalResult): string {
   const lines: string[] = [];
   
-  // One-line summary
-  if (evaluation.summary.one_line_summary) {
-    lines.push(evaluation.summary.one_line_summary);
-    lines.push('');
-  }
-  
-  // Overall score
-  lines.push(`**Overall Score: ${evaluation.overall_score}/100**`);
+  lines.push('## Practice Session Reflection');
+  lines.push('');
+  lines.push('*This was a practice conversation, not an evaluation.*');
   lines.push('');
   
-  // Dimension scores
-  lines.push('**Dimension Scores:**');
-  lines.push(`- Communication Clarity: ${evaluation.scores.communication_clarity}/10`);
-  lines.push(`- Structure & Flow: ${evaluation.scores.structure_and_flow}/10`);
-  lines.push(`- Technical Depth: ${evaluation.scores.technical_depth}/10`);
-  lines.push(`- Behavioral Maturity: ${evaluation.scores.behavioral_maturity}/10`);
-  lines.push(`- Role Fit: ${evaluation.scores.role_fit}/10`);
-  lines.push(`- Confidence & Tone: ${evaluation.scores.confidence_and_tone}/10`);
-  lines.push('');
-  
-  // Strengths
-  if (evaluation.summary.strengths && evaluation.summary.strengths.length > 0) {
-    lines.push('**Strengths:**');
-    evaluation.summary.strengths.forEach(s => lines.push(`• ${s}`));
+  // Candidate reflection
+  if (result.candidate_reflection) {
+    lines.push(result.candidate_reflection);
     lines.push('');
   }
   
-  // Improvement areas
-  if (evaluation.summary.improvement_areas && evaluation.summary.improvement_areas.length > 0) {
-    lines.push('**Areas for Improvement:**');
-    evaluation.summary.improvement_areas.forEach(s => lines.push(`• ${s}`));
+  // Voice signals
+  if (result.voice_signals && result.voice_signals.length > 0) {
+    lines.push('**Observable Signals:**');
+    result.voice_signals.forEach(s => lines.push(`• ${s}`));
     lines.push('');
   }
   
-  // Practice focus
-  if (evaluation.summary.recommended_practice_focus && evaluation.summary.recommended_practice_focus.length > 0) {
-    lines.push('**Recommended Practice Focus:**');
-    evaluation.summary.recommended_practice_focus.forEach(s => lines.push(`• ${s}`));
+  // Practice suggestions
+  if (result.practice_suggestions && result.practice_suggestions.length > 0) {
+    lines.push('**For Future Practice:**');
+    result.practice_suggestions.forEach(s => lines.push(`• ${s}`));
     lines.push('');
   }
   
-  // Per-question feedback
-  if (evaluation.per_question_feedback && evaluation.per_question_feedback.length > 0) {
-    lines.push('**Question-by-Question Feedback:**');
-    evaluation.per_question_feedback.forEach(q => {
-      lines.push(`\nQ${q.question_index}: ${q.question_text}`);
-      lines.push(`Score: ${q.score}/10`);
-      lines.push(`Answer Summary: ${q.answer_summary}`);
-      lines.push(`Feedback: ${q.feedback}`);
-    });
+  // Explainability
+  lines.push('---');
+  lines.push('**How this reflection was generated:**');
+  lines.push(`• Evaluated: ${result.explainability?.what_was_evaluated || 'Spoken responses to practice questions'}`);
+  if (result.explainability?.what_was_not_evaluated) {
+    lines.push(`• Not evaluated: ${result.explainability.what_was_not_evaluated.join(', ')}`);
+  }
+  if (result.explainability?.limitations) {
+    lines.push(`• Limitations: ${result.explainability.limitations.join(', ')}`);
   }
   
   return lines.join('\n');
@@ -233,7 +182,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Evaluating voice interview session: ${sessionId}`);
+    console.log(`Extracting voice signals for session: ${sessionId}`);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -287,15 +236,26 @@ serve(async (req) => {
       });
     }
 
-    // 3. If no turns exist, return early
+    // 3. If no turns exist, return minimal reflection
     if (!turns || turns.length === 0) {
       console.log('No turns found for session');
+      
+      const minimalResult: SignalResult = {
+        voice_signals: ["Limited data from this session"],
+        practice_suggestions: ["Try another practice session when you're ready"],
+        explainability: {
+          what_was_evaluated: "Spoken responses to practice questions",
+          what_was_not_evaluated: ["Accent", "Speed of speech", "Confidence as personality", "Protected attributes"],
+          limitations: ["Session had limited transcript data", "Not a real interview"],
+        },
+        candidate_reflection: "We didn't capture enough from this session to provide detailed signals. This happens sometimes with technical issues. Feel free to try again whenever you're ready — there's no rush.",
+      };
       
       await supabase
         .from('voice_interview_sessions')
         .update({
-          overall_score: 0,
-          feedback_summary: 'No interview transcript available for evaluation.',
+          overall_score: null, // No scores
+          feedback_summary: buildFeedbackSummary(minimalResult),
           status: 'completed',
           updated_at: new Date().toISOString(),
         })
@@ -304,7 +264,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'No turns to evaluate',
-        overall_score: 0 
+        result: minimalResult,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -318,20 +278,20 @@ serve(async (req) => {
     }));
     const turnsJson = JSON.stringify(turnsArray, null, 2);
 
-    // 5. Determine role title
+    // 5. Determine role title and focus mode
     const roleTitle = session.role_title || 
       (session.job_twin_jobs as any)?.title || 
-      'General Interview';
+      'General Practice';
+    const focusMode = session.mode || 'mixed';
 
     // 6. Build user prompt
     const userPrompt = buildUserPrompt({
       roleTitle,
-      mode: session.mode,
-      difficulty: session.difficulty,
+      focusMode,
       turnsJson,
     });
 
-    console.log(`Calling LLM for evaluation. Role: ${roleTitle}, Mode: ${session.mode}, Difficulty: ${session.difficulty}, Turns: ${turns.length}`);
+    console.log(`Calling LLM for signal extraction. Role: ${roleTitle}, Focus: ${focusMode}, Turns: ${turns.length}`);
 
     // 7. Call LLM
     const llmResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -341,12 +301,12 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: INTERVIEW_EVAL_SYSTEM_PROMPT },
+          { role: 'system', content: SIGNAL_EXTRACTION_PROMPT },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.1,
+        temperature: 0.3,
       }),
     });
 
@@ -381,8 +341,7 @@ serve(async (req) => {
     console.log('LLM response received, parsing JSON...');
 
     // 8. Parse LLM response as JSON
-    let evaluation: EvaluationResult;
-    let overallScore: number;
+    let result: SignalResult;
     let feedbackSummary: string;
 
     try {
@@ -398,24 +357,32 @@ serve(async (req) => {
       }
       cleanedResponse = cleanedResponse.trim();
 
-      evaluation = JSON.parse(cleanedResponse);
-      overallScore = Math.max(0, Math.min(100, evaluation.overall_score || 0));
-      feedbackSummary = buildFeedbackSummary(evaluation);
+      result = JSON.parse(cleanedResponse);
+      feedbackSummary = buildFeedbackSummary(result);
       
-      console.log(`Evaluation parsed successfully. Overall score: ${overallScore}`);
+      console.log(`Signal extraction successful. Signals: ${result.voice_signals?.length || 0}`);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       console.error('Raw response:', responseContent);
       
-      overallScore = 0;
-      feedbackSummary = 'Evaluation failed due to parsing error. The AI response could not be processed correctly. Please try again or contact support if the issue persists.';
+      result = {
+        voice_signals: ["Reflection could not be fully processed"],
+        practice_suggestions: ["Try another practice session"],
+        explainability: {
+          what_was_evaluated: "Spoken responses to practice questions",
+          what_was_not_evaluated: ["Accent", "Speed of speech", "Confidence as personality", "Protected attributes"],
+          limitations: ["Processing error occurred", "Not a real interview"],
+        },
+        candidate_reflection: "We had trouble processing this session, but that's okay — it doesn't reflect on you. Feel free to try again when you're ready.",
+      };
+      feedbackSummary = buildFeedbackSummary(result);
     }
 
-    // 9. Update the session
+    // 9. Update the session (NO SCORES)
     const { error: updateError } = await supabase
       .from('voice_interview_sessions')
       .update({
-        overall_score: overallScore,
+        overall_score: null, // Explicitly no score
         feedback_summary: feedbackSummary,
         status: 'completed',
         ended_at: session.ended_at || new Date().toISOString(),
@@ -425,25 +392,43 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating session:', updateError);
-      return new Response(JSON.stringify({ error: 'Failed to save evaluation' }), {
+      return new Response(JSON.stringify({ error: 'Failed to save reflection' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`Session ${sessionId} evaluation complete. Score: ${overallScore}`);
+    // 10. Log to audit trail
+    await supabase
+      .from('ai_decision_audit_logs')
+      .insert({
+        decision_type: 'voice_practice_signal_extraction',
+        candidate_user_id: session.user_id,
+        job_twin_job_id: session.job_twin_job_id,
+        input_summary: { sessionId, roleTitle, focusMode, turnCount: turns.length },
+        output_summary: { voice_signals: result.voice_signals, practice_suggestions: result.practice_suggestions },
+        explanation: result.candidate_reflection,
+        fairness_checks: {
+          no_scores_generated: true,
+          no_protected_attribute_inference: true,
+          nd_safe_language_used: true,
+        },
+        model_metadata: { model: 'google/gemini-2.5-flash', temperature: 0.3 },
+      });
+
+    console.log(`Session ${sessionId} signal extraction complete.`);
 
     return new Response(JSON.stringify({
       success: true,
       sessionId,
-      overall_score: overallScore,
+      result,
       feedback_summary: feedbackSummary,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Evaluation error:', error);
+    console.error('Signal extraction error:', error);
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : 'Unknown error' 
     }), {
