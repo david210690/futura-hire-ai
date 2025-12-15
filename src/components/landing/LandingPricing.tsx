@@ -54,6 +54,7 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
   return (
     <section className="px-4 py-20">
       <div className="max-w-6xl mx-auto">
+        {/* Value Proposition Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -61,9 +62,27 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Simple, Transparent Pricing
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+            Pay for outcomes, not pipeline noise.
           </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+            Most hiring tools charge you for resumes, seats, and activity — even when hiring doesn't happen.
+            <br />
+            <span className="text-foreground font-medium">FuturaHire is different.</span>
+            <br />
+            We count value only when an offer is accepted.
+          </p>
+          
+          {/* Highlight Box */}
+          <div className="inline-block bg-primary/10 border border-primary/20 rounded-xl px-8 py-6 mb-8">
+            <p className="text-lg font-semibold text-foreground mb-2">
+              No offer accepted = no hire counted.
+            </p>
+            <p className="text-muted-foreground">
+              Interview freely. Prepare candidates. Decide calmly.
+            </p>
+          </div>
+
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" />
             <span>Checkout coming soon</span>
