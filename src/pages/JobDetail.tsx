@@ -194,11 +194,12 @@ export default function JobDetail() {
             </Card>
 
             {/* Candidate Pipeline View */}
-            {applications.length > 0 && (
+            {applications.length > 0 && currentOrg && (
               <CandidatePipelineView 
                 applications={applications} 
                 jobId={id!} 
                 jobTitle={job.title}
+                orgId={currentOrg.id}
                 onRefresh={loadData} 
               />
             )}
