@@ -13,7 +13,7 @@ const plans = [
     name: "Starter",
     description: "For small teams getting started",
     standardPrice: "₹18,000",
-    founderPrice: "₹15,000",
+    betaPrice: "₹15,000",
     features: [
       "Up to 10 hires/year",
       "Role DNA generation",
@@ -25,7 +25,7 @@ const plans = [
     name: "Growth",
     description: "For growing hiring needs",
     standardPrice: "₹36,000",
-    founderPrice: "₹30,000",
+    betaPrice: "₹30,000",
     popular: true,
     features: [
       "Up to 25 hires/year",
@@ -39,7 +39,7 @@ const plans = [
     name: "Scale",
     description: "For high-volume hiring",
     standardPrice: "₹60,000",
-    founderPrice: "₹50,000",
+    betaPrice: "₹50,000",
     features: [
       "Up to 50 hires/year",
       "Everything in Growth",
@@ -98,8 +98,8 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
                       <div className="text-2xl font-bold text-foreground">{plan.standardPrice}<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-sm text-primary font-medium">Founding Partner</div>
-                      <div className="text-2xl font-bold text-primary">{plan.founderPrice}<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
+                      <div className="text-sm text-primary font-medium">Beta Access</div>
+                      <div className="text-2xl font-bold text-primary">{plan.betaPrice}<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
                     </div>
                   </div>
 
