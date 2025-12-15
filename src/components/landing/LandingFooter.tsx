@@ -9,15 +9,24 @@ export const LandingFooter = () => {
             <span className="text-xl font-bold text-foreground">FuturaHire</span>
           </div>
 
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="mailto:sales@feelivacation.com" className="hover:text-foreground transition-colors">
-              sales@feelivacation.com
+          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground">
+            <a href="mailto:hello@futurahire.app" className="hover:text-foreground transition-colors">
+              hello@futurahire.app
             </a>
             <Link to="/privacy" className="hover:text-foreground transition-colors">
               Privacy
             </Link>
             <Link to="/terms" className="hover:text-foreground transition-colors">
               Terms
+            </Link>
+            <Link to="/refund" className="hover:text-foreground transition-colors">
+              Refunds
+            </Link>
+            <Link to="/shipping" className="hover:text-foreground transition-colors">
+              Shipping
+            </Link>
+            <Link to="/contact" className="hover:text-foreground transition-colors">
+              Contact
             </Link>
           </div>
 
