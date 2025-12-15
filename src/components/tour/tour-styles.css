@@ -1,0 +1,74 @@
+/* Custom styles for FuturHire product tour */
+.futurhire-tour-popover {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px -10px hsl(var(--primary) / 0.2) !important;
+}
+
+.futurhire-tour-popover .driver-popover-title {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: hsl(var(--foreground)) !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.futurhire-tour-popover .driver-popover-description {
+  font-size: 0.875rem !important;
+  color: hsl(var(--muted-foreground)) !important;
+  line-height: 1.5 !important;
+}
+
+.futurhire-tour-popover .driver-popover-progress-text {
+  font-size: 0.75rem !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.futurhire-tour-popover .driver-popover-navigation-btns {
+  gap: 0.5rem !important;
+}
+
+.futurhire-tour-popover .driver-popover-prev-btn,
+.futurhire-tour-popover .driver-popover-next-btn {
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.futurhire-tour-popover .driver-popover-prev-btn {
+  background: hsl(var(--secondary)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
+  border: none !important;
+}
+
+.futurhire-tour-popover .driver-popover-prev-btn:hover {
+  background: hsl(var(--secondary) / 0.8) !important;
+}
+
+.futurhire-tour-popover .driver-popover-next-btn {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: none !important;
+}
+
+.futurhire-tour-popover .driver-popover-next-btn:hover {
+  background: hsl(var(--primary) / 0.9) !important;
+}
+
+.futurhire-tour-popover .driver-popover-close-btn {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.futurhire-tour-popover .driver-popover-close-btn:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+.futurhire-tour-popover .driver-popover-arrow-side-left,
+.futurhire-tour-popover .driver-popover-arrow-side-right,
+.futurhire-tour-popover .driver-popover-arrow-side-top,
+.futurhire-tour-popover .driver-popover-arrow-side-bottom {
+  border-color: hsl(var(--card)) !important;
+}
