@@ -172,7 +172,7 @@ serve(async (req) => {
 });
 
 async function evaluateSession(supabase: any, sessionId: string) {
-  console.log(`Evaluating session ${sessionId}`);
+  console.log(`Extracting voice signals for session ${sessionId}`);
 
   // Fetch session
   const { data: session } = await supabase
@@ -198,45 +198,52 @@ async function evaluateSession(supabase: any, sessionId: string) {
     return;
   }
 
-  // Build conversation for evaluation
-  const conversation = turns.map((t: any) => `${t.role === 'ai' ? 'Interviewer' : 'Candidate'}: ${t.content}`).join('\n\n');
+  // Build conversation for signal extraction
+  const conversation = turns.map((t: any) => `${t.role === 'ai' ? 'Practice Guide' : 'Candidate'}: ${t.content}`).join('\n\n');
 
-  // Use Lovable AI for evaluation
+  // Use Lovable AI for signal extraction (NO SCORES)
   const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!lovableApiKey) {
     console.error('LOVABLE_API_KEY not configured');
     return;
   }
 
-  const evaluationPrompt = `You are a calm, supportive practice reflection guide for FuturHire.
+  const signalPrompt = `You are a calm, supportive practice reflection guide for FuturHire.
 
-IMPORTANT: This was a PRACTICE conversation, not a real interview. There are no right or wrong answers.
-Be neurodiversity-aware and emotionally safe. DO NOT use words like "weak", "poor", "fail", or "bad".
+IMPORTANT: This was a PRACTICE conversation, not a real interview.
+Extract observable communication signals only. DO NOT generate scores.
+Be neurodiversity-aware and emotionally safe.
 
-Interview Details:
-- Mode: ${session.mode} (technical/behavioral/mixed)
-- Difficulty: ${session.difficulty} (junior/mid/senior)
-- Target Role: ${session.role_title || 'General'}
+Practice Session Details:
+- Focus Mode: ${session.mode}
+- Target Role: ${session.role_title || 'General Practice'}
 
 Conversation Transcript:
 ${conversation}
 
-Please provide a supportive reflection as a JSON object:
+Extract voice signals as a JSON object:
 {
-  "overall_score": <number 0-100 as a readiness indicator, not judgment>,
-  "strengths": [<list of 2-4 observable strengths using supportive language>],
-  "improvements": [<list of 2-4 areas to practice more, framed encouragingly>],
-  "summary": "<2-3 sentence supportive reflection emphasizing this was practice>"
+  "voice_signals": [
+    "<Neutral observation about communication pattern>",
+    "<Neutral observation about thinking style>",
+    "<Neutral observation about response structure>"
+  ],
+  "practice_suggestions": [
+    "<Supportive, actionable suggestion>",
+    "<Supportive, actionable suggestion>"
+  ],
+  "candidate_reflection": "<Warm, 2-3 sentence reflection for the candidate>"
 }
 
-LANGUAGE RULES:
-- Instead of "weak at X" → "still developing X"
-- Instead of "failed to" → "may want to practice"
-- Instead of "needs improvement" → "opportunity to explore"
-- Validate effort, not performance. Be warm and encouraging.`;
+RULES:
+- NO numeric scores
+- NO words like "weak", "poor", "fail", "bad"
+- NO personality judgments
+- DO NOT evaluate accent, speed, or confidence as traits
+- Use supportive, growth-oriented language`;
 
   try {
-    const evalResponse = await fetch('https://api.lovable.dev/v1/chat/completions', {
+    const evalResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
@@ -245,14 +252,14 @@ LANGUAGE RULES:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'user', content: evaluationPrompt }
+          { role: 'user', content: signalPrompt }
         ],
-        response_format: { type: 'json_object' },
+        temperature: 0.3,
       }),
     });
 
     if (!evalResponse.ok) {
-      console.error('Evaluation API error:', await evalResponse.text());
+      console.error('Signal extraction API error:', await evalResponse.text());
       return;
     }
 
@@ -260,40 +267,76 @@ LANGUAGE RULES:
     const evalContent = evalData.choices?.[0]?.message?.content;
     
     if (!evalContent) {
-      console.error('No evaluation content');
+      console.error('No signal extraction content');
       return;
     }
 
     // Parse the JSON response
-    let evaluation;
+    let signals;
     try {
-      evaluation = JSON.parse(evalContent);
+      // Clean markdown if present
+      let cleaned = evalContent.trim();
+      if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
+      if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);
+      if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
+      signals = JSON.parse(cleaned.trim());
     } catch (e) {
       // Try to extract JSON from the response
       const jsonMatch = evalContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        evaluation = JSON.parse(jsonMatch[0]);
+        signals = JSON.parse(jsonMatch[0]);
       } else {
-        console.error('Could not parse evaluation:', evalContent);
+        console.error('Could not parse signals:', evalContent);
         return;
       }
     }
 
-    // Format feedback summary
-    const feedbackSummary = `**Overall Assessment**\n${evaluation.summary}\n\n**Strengths:**\n${(evaluation.strengths || []).map((s: string) => `• ${s}`).join('\n')}\n\n**Areas for Improvement:**\n${(evaluation.improvements || []).map((i: string) => `• ${i}`).join('\n')}`;
+    // Format feedback summary (NO SCORES)
+    const feedbackLines = [
+      '## Practice Session Reflection',
+      '',
+      '*This was a practice conversation, not an evaluation.*',
+      '',
+      signals.candidate_reflection || 'Thank you for practicing with us.',
+      '',
+      '**Observable Signals:**',
+      ...(signals.voice_signals || []).map((s: string) => `• ${s}`),
+      '',
+      '**For Future Practice:**',
+      ...(signals.practice_suggestions || []).map((s: string) => `• ${s}`),
+    ];
+    const feedbackSummary = feedbackLines.join('\n');
 
-    // Update session with evaluation
+    // Update session WITHOUT score
     await supabase
       .from('voice_interview_sessions')
       .update({
-        overall_score: evaluation.overall_score || 0,
+        overall_score: null, // Explicitly no score
         feedback_summary: feedbackSummary,
       })
       .eq('id', sessionId);
 
-    console.log(`Session ${sessionId} evaluated with score: ${evaluation.overall_score}`);
+    // Log to audit trail
+    await supabase
+      .from('ai_decision_audit_logs')
+      .insert({
+        decision_type: 'voice_practice_signal_extraction',
+        candidate_user_id: session.user_id,
+        job_twin_job_id: session.job_twin_job_id,
+        input_summary: { sessionId, roleTitle: session.role_title, turnCount: turns.length },
+        output_summary: { voice_signals: signals.voice_signals, practice_suggestions: signals.practice_suggestions },
+        explanation: signals.candidate_reflection,
+        fairness_checks: {
+          no_scores_generated: true,
+          no_protected_attribute_inference: true,
+          nd_safe_language_used: true,
+        },
+        model_metadata: { model: 'google/gemini-2.5-flash', temperature: 0.3 },
+      });
+
+    console.log(`Session ${sessionId} signals extracted. Signals: ${signals.voice_signals?.length || 0}`);
 
   } catch (error) {
-    console.error('Evaluation error:', error);
+    console.error('Signal extraction error:', error);
   }
 }
