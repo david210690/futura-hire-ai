@@ -2431,6 +2431,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pilot_leads: {
+        Row: {
+          company_name: string
+          created_at: string
+          email: string
+          hiring_volume: string
+          id: string
+          name: string
+          note: string | null
+          phone: string | null
+          status: string | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          email: string
+          hiring_volume: string
+          id?: string
+          name: string
+          note?: string | null
+          phone?: string | null
+          status?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          email?: string
+          hiring_volume?: string
+          id?: string
+          name?: string
+          note?: string | null
+          phone?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       pipeline_health_snapshots: {
         Row: {
           created_at: string
