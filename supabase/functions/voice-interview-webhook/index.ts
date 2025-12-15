@@ -208,7 +208,10 @@ async function evaluateSession(supabase: any, sessionId: string) {
     return;
   }
 
-  const evaluationPrompt = `You are an expert interview coach evaluating a mock interview session.
+  const evaluationPrompt = `You are a calm, supportive practice reflection guide for FuturHire.
+
+IMPORTANT: This was a PRACTICE conversation, not a real interview. There are no right or wrong answers.
+Be neurodiversity-aware and emotionally safe. DO NOT use words like "weak", "poor", "fail", or "bad".
 
 Interview Details:
 - Mode: ${session.mode} (technical/behavioral/mixed)
@@ -218,15 +221,19 @@ Interview Details:
 Conversation Transcript:
 ${conversation}
 
-Please evaluate this interview and respond with a JSON object containing:
+Please provide a supportive reflection as a JSON object:
 {
-  "overall_score": <number 0-100>,
-  "strengths": [<list of 2-4 specific strengths>],
-  "improvements": [<list of 2-4 areas for improvement>],
-  "summary": "<2-3 sentence overall assessment>"
+  "overall_score": <number 0-100 as a readiness indicator, not judgment>,
+  "strengths": [<list of 2-4 observable strengths using supportive language>],
+  "improvements": [<list of 2-4 areas to practice more, framed encouragingly>],
+  "summary": "<2-3 sentence supportive reflection emphasizing this was practice>"
 }
 
-Be constructive, specific, and encouraging. Consider communication skills, answer structure, technical accuracy (if applicable), and confidence.`;
+LANGUAGE RULES:
+- Instead of "weak at X" → "still developing X"
+- Instead of "failed to" → "may want to practice"
+- Instead of "needs improvement" → "opportunity to explore"
+- Validate effort, not performance. Be warm and encouraging.`;
 
   try {
     const evalResponse = await fetch('https://api.lovable.dev/v1/chat/completions', {
