@@ -29,6 +29,9 @@ import { TrialBanner } from "@/components/trial/TrialBanner";
 import { UpgradeFAB } from "@/components/trial/UpgradeFAB";
 import { GlobalCopilotFAB } from "@/components/copilot/GlobalCopilotFAB";
 import { expireTrialIfNeeded, getTrialStatus } from "@/lib/trial";
+import { ProductTour } from "@/components/tour/ProductTour";
+import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
+import '@/components/tour/tour-styles.css';
 
 export default function RecruiterDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -340,6 +343,7 @@ export default function RecruiterDashboard() {
 
   return (
     <SidebarLayout userRole="recruiter" userName={user?.name} orgName={currentOrg?.name}>
+      <ProductTour role="recruiter" autoStart />
       {currentOrg?.id && <TrialBanner orgId={currentOrg.id} />}
       
       <div className="container mx-auto px-4 py-8">
@@ -349,6 +353,7 @@ export default function RecruiterDashboard() {
             <p className="text-muted-foreground">{company?.name}</p>
           </div>
           <div className="flex gap-2">
+            <TourTriggerButton role="recruiter" />
             <Button
               variant="outline"
               onClick={() => navigate('/org/settings')}
@@ -379,7 +384,7 @@ export default function RecruiterDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" data-tour="dashboard-stats">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
@@ -427,7 +432,7 @@ export default function RecruiterDashboard() {
         </div>
 
         {/* Hiring Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" data-tour="hiring-metrics">
           <Card className="border-l-4 border-l-primary">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -476,7 +481,7 @@ export default function RecruiterDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" data-tour="quick-actions">
           <Card 
             className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
             onClick={() => navigate('/role-designer')}

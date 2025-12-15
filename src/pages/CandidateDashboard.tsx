@@ -8,6 +8,9 @@ import { FitRequestsPanel } from "@/components/candidate/FitRequestsPanel";
 import { WarmupDashboardCard } from "@/components/warmup/WarmupDashboardCard";
 import { FileUp, Video, BriefcaseIcon, Radar, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ProductTour } from "@/components/tour/ProductTour";
+import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
+import '@/components/tour/tour-styles.css';
 
 export default function CandidateDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -52,10 +55,14 @@ export default function CandidateDashboard() {
 
   return (
     <SidebarLayout userRole="candidate" userName={user?.user_metadata?.name}>
+      <ProductTour role="candidate" autoStart />
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome, {user?.user_metadata?.name || 'Candidate'}</h1>
-          <p className="text-muted-foreground">Manage your profile, applications, and AI assessments</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Welcome, {user?.user_metadata?.name || 'Candidate'}</h1>
+            <p className="text-muted-foreground">Manage your profile, applications, and AI assessments</p>
+          </div>
+          <TourTriggerButton role="candidate" />
         </div>
 
         {/* Fit Requests Panel - shows pending recruiter requests */}
@@ -68,7 +75,7 @@ export default function CandidateDashboard() {
           <WarmupDashboardCard />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-3 mb-8" data-tour="profile-card">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Profile Completeness</CardTitle>
@@ -137,7 +144,7 @@ export default function CandidateDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-2 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+          <Card className="md:col-span-2 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-tour="opportunity-radar">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Radar className="h-5 w-5 text-primary" />
@@ -153,7 +160,7 @@ export default function CandidateDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-2 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
+          <Card className="md:col-span-2 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20" data-tour="career-trajectory">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-amber-600" />

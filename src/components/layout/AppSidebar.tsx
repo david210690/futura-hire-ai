@@ -50,6 +50,7 @@ interface AppSidebarProps {
 const recruiterNavGroups = [
   {
     label: "Overview",
+    tourId: "sidebar-overview",
     items: [
       { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
       { label: "Analytics", path: "/analytics", icon: BarChart3, description: "Hiring metrics" },
@@ -57,6 +58,7 @@ const recruiterNavGroups = [
   },
   {
     label: "Hiring",
+    tourId: "sidebar-hiring",
     items: [
       { label: "Create Job", path: "/create-job", icon: PlusCircle },
       { label: "Role Designer", path: "/role-designer", icon: Briefcase },
@@ -65,6 +67,7 @@ const recruiterNavGroups = [
   },
   {
     label: "AI Tools",
+    tourId: "sidebar-ai-tools",
     items: [
       { label: "Question Bank", path: "/question-bank", icon: BookOpen, description: "Interview questions" },
       { label: "Manage Questions", path: "/admin/question-bank", icon: Settings, description: "Admin CRUD" },
@@ -74,6 +77,7 @@ const recruiterNavGroups = [
   },
   {
     label: "Settings",
+    tourId: "sidebar-settings",
     items: [
       { label: "Organization", path: "/org/settings", icon: Settings },
       { label: "Billing", path: "/billing", icon: DollarSign },
@@ -85,6 +89,7 @@ const recruiterNavGroups = [
 const candidateNavGroups = [
   {
     label: "Overview",
+    tourId: "sidebar-candidate-overview",
     items: [
       { label: "Dashboard", path: "/candidate/dashboard", icon: LayoutDashboard },
       { label: "My Profile", path: "/candidate/profile", icon: User },
@@ -92,6 +97,7 @@ const candidateNavGroups = [
   },
   {
     label: "Job Search",
+    tourId: "sidebar-job-search",
     items: [
       { label: "AI Job Twin", path: "/job-twin", icon: Bot, description: "Smart job matching" },
       { label: "Opportunity Radar", path: "/opportunity-radar", icon: Radar, description: "Role family insights" },
@@ -99,6 +105,7 @@ const candidateNavGroups = [
   },
   {
     label: "Career Growth",
+    tourId: "sidebar-career-growth",
     items: [
       { label: "Career Trajectory", path: "/career-trajectory", icon: TrendingUp, description: "Your career path" },
       { label: "Growth Blueprint", path: "/career-blueprint", icon: Compass, description: "Personal development plan" },
@@ -106,6 +113,7 @@ const candidateNavGroups = [
   },
   {
     label: "Interview Prep",
+    tourId: "sidebar-interview-prep",
     items: [
       { label: "Practice Sessions", path: "/interview-practice", icon: Mic, description: "Text-based practice" },
       { label: "Voice Interviews", path: "/voice-interview", icon: Video, description: "AI voice practice" },
@@ -167,7 +175,7 @@ export function AppSidebar({ userRole, userName, orgName }: AppSidebarProps) {
             open={openGroups[group.label]}
             onOpenChange={() => toggleGroup(group.label)}
           >
-            <SidebarGroup>
+            <SidebarGroup data-tour={group.tourId}>
               <CollapsibleTrigger asChild>
                 <SidebarGroupLabel className="cursor-pointer hover:bg-sidebar-accent rounded-md transition-colors">
                   {!isCollapsed && (
