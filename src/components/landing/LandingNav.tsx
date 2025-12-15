@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 interface LandingNavProps {
-  onApplyPilot: () => void;
+  onApplyPilot?: () => void;
 }
 
-export const LandingNav = ({ onApplyPilot }: LandingNavProps) => {
+export const LandingNav = ({ onApplyPilot }: LandingNavProps = {}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -33,9 +33,11 @@ export const LandingNav = ({ onApplyPilot }: LandingNavProps) => {
             <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Sign In
             </Link>
-            <Button onClick={onApplyPilot} size="sm">
-              Join Pilot
-            </Button>
+            {onApplyPilot && (
+              <Button onClick={onApplyPilot} size="sm">
+                Join Pilot
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -79,9 +81,11 @@ export const LandingNav = ({ onApplyPilot }: LandingNavProps) => {
               >
                 Sign In
               </Link>
-              <Button onClick={() => { onApplyPilot(); setIsMenuOpen(false); }} size="sm">
-                Join Pilot
-              </Button>
+              {onApplyPilot && (
+                <Button onClick={() => { onApplyPilot(); setIsMenuOpen(false); }} size="sm">
+                  Join Pilot
+                </Button>
+              )}
             </div>
           </div>
         )}

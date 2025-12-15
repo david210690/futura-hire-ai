@@ -44,6 +44,11 @@ import ApplicationStatusPage from "./pages/careers/ApplicationStatusPage";
 import TakeAssessmentPage from "./pages/careers/TakeAssessmentPage";
 import RecordVideoPage from "./pages/careers/RecordVideoPage";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import RefundPolicy from "./pages/RefundPolicy";
+import ShippingPolicy from "./pages/ShippingPolicy";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +101,13 @@ const App = () => (
           <Route path="/c/:orgSlug/apply/status/:token" element={<ApplicationStatusPage />} />
           <Route path="/c/:orgSlug/apply/assessment/:token" element={<TakeAssessmentPage />} />
           <Route path="/c/:orgSlug/apply/video/:token" element={<RecordVideoPage />} />
+          
+          {/* Legal pages */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
+          <Route path="/refund" element={<RefundPolicy />} />
+          <Route path="/shipping" element={<ShippingPolicy />} />
+          <Route path="/contact" element={<Contact />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
