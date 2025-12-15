@@ -22,8 +22,8 @@ const LandingPage = () => {
   return (
     <>
       <SEOHead
-        title="FuturHire — Hiring clarity without the ATS chaos"
-        description="FuturHire helps teams run consistent, fair interviews using Role DNA, structured question kits, and explainable decision rooms. Free for candidates."
+        title="FuturaHire — Hiring clarity without the ATS chaos"
+        description="FuturaHire helps teams run consistent, fair interviews using Role DNA, structured question kits, and explainable decision rooms. Free for candidates."
       />
       <main className="min-h-screen bg-background">
         <LandingNav onApplyPilot={scrollToForm} />
