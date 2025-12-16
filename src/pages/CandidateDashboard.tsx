@@ -4,10 +4,10 @@ import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CareerCoachCard } from "@/components/career/CareerCoachCard";
-import { FitRequestsPanel } from "@/components/candidate/FitRequestsPanel";
+import { ConnectedRolesPanel } from "@/components/candidate/ConnectedRolesPanel";
 import { WarmupDashboardCard } from "@/components/warmup/WarmupDashboardCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileUp, Video, BriefcaseIcon, Radar, TrendingUp, Heart, X } from "lucide-react";
+import { FileUp, Video, Briefcase, Radar, TrendingUp, Heart, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProductTour } from "@/components/tour/ProductTour";
 import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
@@ -98,9 +98,9 @@ export default function CandidateDashboard() {
           </Alert>
         )}
 
-        {/* Fit Requests Panel - shows pending recruiter requests */}
+        {/* Connected Roles Panel - shows roles candidate is explicitly linked to */}
         <div className="mb-6">
-          <FitRequestsPanel />
+          <ConnectedRolesPanel />
         </div>
 
         {/* Warmup Dashboard Card */}
@@ -136,7 +136,7 @@ export default function CandidateDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Applications</CardTitle>
-              <BriefcaseIcon className="h-4 w-4 text-muted-foreground" />
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">0</div>
