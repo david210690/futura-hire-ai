@@ -47,17 +47,39 @@ serve(async (req) => {
 
     const userId = user.id;
 
-    // Fetch latest interview prep plan for this user + job
-    const { data: prepPlan, error: fetchError } = await supabaseClient
-      .from("interview_prep_plans")
-      .select("*")
+    // First get the user's job_twin_profile
+    const { data: profile } = await supabaseClient
+      .from("job_twin_profiles")
+      .select("id")
       .eq("user_id", userId)
-      .eq("job_twin_job_id", jobId)
+      .maybeSingle();
+
+    if (!profile) {
+      return new Response(
+        JSON.stringify({ success: true, exists: false }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Fetch interview prep from job_twin_interview_prep table
+    const { data: prepData, error: fetchError } = await supabaseClient
+      .from("job_twin_interview_prep")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .eq("job_id", jobId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (fetchError || !prepPlan) {
+    if (fetchError) {
+      console.error("Error fetching interview prep:", fetchError);
+      return new Response(
+        JSON.stringify({ success: false, message: fetchError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!prepData) {
       return new Response(
         JSON.stringify({ success: true, exists: false }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -68,8 +90,9 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         exists: true,
-        plan: prepPlan.plan_json,
-        createdAt: prepPlan.created_at
+        questions: prepData.questions || [],
+        tips: prepData.tips || [],
+        createdAt: prepData.created_at
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
