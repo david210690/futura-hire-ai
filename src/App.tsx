@@ -9,6 +9,13 @@ import Pricing from "./pages/Pricing";
 import Assessments from "./pages/Assessments";
 import AssessmentDetail from "./pages/AssessmentDetail";
 import { AuthPage } from "./components/auth/AuthPage";
+import Signup from "./pages/Signup";
+import AccountType from "./pages/onboarding/AccountType";
+import Company from "./pages/onboarding/Company";
+import PricingClarity from "./pages/onboarding/PricingClarity";
+import CreateRole from "./pages/onboarding/CreateRole";
+import InterviewKitPreview from "./pages/onboarding/InterviewKitPreview";
+import InviteCandidate from "./pages/onboarding/InviteCandidate";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import CandidateWarmups from "./pages/CandidateWarmups";
@@ -62,6 +69,13 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/app" element={<Index />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/onboarding/account-type" element={<AccountType />} />
+          <Route path="/onboarding/company" element={<Company />} />
+          <Route path="/onboarding/pricing-clarity" element={<PricingClarity />} />
+          <Route path="/onboarding/create-role" element={<CreateRole />} />
+          <Route path="/onboarding/interview-kit-preview" element={<InterviewKitPreview />} />
+          <Route path="/onboarding/invite-candidate" element={<InviteCandidate />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/assessments" element={<Assessments />} />
           <Route path="/assessments/:id" element={<AssessmentDetail />} />
