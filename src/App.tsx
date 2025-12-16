@@ -49,6 +49,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import RefundPolicy from "./pages/RefundPolicy";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import Contact from "./pages/Contact";
+import SalesPitch from "./pages/SalesPitch";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,7 @@ const App = () => (
           <Route path="/refund" element={<RefundPolicy />} />
           <Route path="/shipping" element={<ShippingPolicy />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/salespitch" element={<SalesPitch />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
