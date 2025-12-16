@@ -37,7 +37,7 @@ export default function AccountType() {
       if (error) throw error;
 
       if (selected === "candidate") {
-        navigate('/candidate/dashboard');
+        navigate('/candidate/welcome');
       } else {
         navigate('/onboarding/company');
       }

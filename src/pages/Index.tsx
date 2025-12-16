@@ -88,7 +88,8 @@ const Index = () => {
   const handleRoleSelected = (role: 'recruiter' | 'candidate') => {
     setShowRoleSelection(false);
     if (role === 'candidate') {
-      navigate('/candidate/dashboard');
+      // New candidates go through onboarding flow
+      navigate('/candidate/welcome');
     } else {
       // Recruiter needs to create org
       setShowCreateOrg(true);
