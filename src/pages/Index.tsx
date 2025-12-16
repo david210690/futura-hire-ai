@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateOrgModal } from "@/components/org/CreateOrgModal";
+import { RoleSelectionModal } from "@/components/auth/RoleSelectionModal";
 
 const Index = () => {
   const navigate = useNavigate();
   const [showCreateOrg, setShowCreateOrg] = useState(false);
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -18,12 +21,31 @@ const Index = () => {
           return;
         }
 
+        setUserId(session.user.id);
+
         // Get user role first
         const { data: userRole } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', session.user.id)
           .maybeSingle();
+
+        // If no role or default candidate from OAuth, check if they need role selection
+        // We detect OAuth users by checking if they have Google provider
+        const provider = session.user.app_metadata?.provider;
+        const isOAuthUser = provider === 'google';
+        
+        // Check if user was just created (within last 5 minutes) via OAuth
+        const createdAt = new Date(session.user.created_at);
+        const now = new Date();
+        const isNewUser = (now.getTime() - createdAt.getTime()) < 5 * 60 * 1000; // 5 minutes
+        
+        // Show role selection for new OAuth users who got default 'candidate' role
+        if (isOAuthUser && isNewUser && userRole?.role === 'candidate') {
+          setChecking(false);
+          setShowRoleSelection(true);
+          return;
+        }
 
         // If candidate, go directly to candidate dashboard
         if (userRole?.role === 'candidate') {
@@ -63,6 +85,16 @@ const Index = () => {
     checkAuth();
   }, [navigate]);
 
+  const handleRoleSelected = (role: 'recruiter' | 'candidate') => {
+    setShowRoleSelection(false);
+    if (role === 'candidate') {
+      navigate('/candidate/dashboard');
+    } else {
+      // Recruiter needs to create org
+      setShowCreateOrg(true);
+    }
+  };
+
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -76,9 +108,17 @@ const Index = () => {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">Welcome to FuturaHire</h1>
-          <p className="text-muted-foreground">Setting up your organization...</p>
+          <p className="text-muted-foreground">Setting up your account...</p>
         </div>
       </div>
+      
+      {showRoleSelection && userId && (
+        <RoleSelectionModal 
+          userId={userId}
+          onRoleSelected={handleRoleSelected}
+        />
+      )}
+      
       <CreateOrgModal 
         open={showCreateOrg} 
         onOpenChange={setShowCreateOrg}
