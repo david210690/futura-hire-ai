@@ -31,6 +31,7 @@ import { GlobalCopilotFAB } from "@/components/copilot/GlobalCopilotFAB";
 import { expireTrialIfNeeded, getTrialStatus } from "@/lib/trial";
 import { ProductTour } from "@/components/tour/ProductTour";
 import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
+import { OnboardingTooltip } from "@/components/onboarding/OnboardingTooltip";
 import '@/components/tour/tour-styles.css';
 
 export default function RecruiterDashboard() {
@@ -347,6 +348,11 @@ export default function RecruiterDashboard() {
       {currentOrg?.id && <TrialBanner orgId={currentOrg.id} />}
       
       <div className="container mx-auto px-4 py-8">
+        <OnboardingTooltip 
+          storageKey="dashboard_tip_dismissed"
+          message="Tip: You can interview freely. Only accepted offers count as hires."
+          className="mb-6"
+        />
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
