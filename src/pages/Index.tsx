@@ -30,24 +30,35 @@ const Index = () => {
           .eq('user_id', session.user.id)
           .maybeSingle();
 
-        // If no role or default candidate from OAuth, check if they need role selection
-        // We detect OAuth users by checking if they have Google provider
+        // Check if OAuth user
         const provider = session.user.app_metadata?.provider;
         const isOAuthUser = provider === 'google';
         
-        // Check if user was just created (within last 5 minutes) via OAuth
-        const createdAt = new Date(session.user.created_at);
-        const now = new Date();
-        const isNewUser = (now.getTime() - createdAt.getTime()) < 5 * 60 * 1000; // 5 minutes
-        
-        // Show role selection for new OAuth users who got default 'candidate' role
-        if (isOAuthUser && isNewUser && userRole?.role === 'candidate') {
-          setChecking(false);
-          setShowRoleSelection(true);
-          return;
+        // For OAuth users with default 'candidate' role, check if they've completed onboarding
+        if (isOAuthUser && userRole?.role === 'candidate') {
+          // Check if user has a candidate profile (means they completed candidate onboarding)
+          const { data: candidateProfile } = await supabase
+            .from('candidates')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          
+          // Check if user has org memberships (means they completed recruiter onboarding)
+          const { data: orgMembership } = await supabase
+            .from('org_members')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          
+          // If no profile and no org membership, they haven't selected a role yet
+          if (!candidateProfile && !orgMembership) {
+            setChecking(false);
+            setShowRoleSelection(true);
+            return;
+          }
         }
 
-        // If candidate, go directly to candidate dashboard
+        // If candidate with profile, go to candidate dashboard
         if (userRole?.role === 'candidate') {
           navigate('/candidate/dashboard');
           return;
