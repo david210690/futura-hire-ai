@@ -54,26 +54,29 @@ export function FitRequestsPanel() {
         body: { jobId: request.jobTwinJobId }
       });
 
+      // Check for error response - Supabase puts non-2xx response body in data
+      const responseData = response.data;
+      
       if (response.error) {
-        // Check for specific error codes
-        const errorData = response.error;
-        if (typeof errorData === 'object' && 'code' in errorData && errorData.code === "NO_ROLE_DNA") {
-          toast.error("Role DNA not yet available for this role. The recruiter needs to generate it first.");
+        console.error("Function error:", response.error);
+        toast.error("Could not complete fit check. Please try again later.");
+        return;
+      }
+
+      // Check response data for specific error codes
+      if (!responseData?.success) {
+        if (responseData?.code === "NO_ROLE_DNA") {
+          toast.error("The recruiter hasn't prepared the role analysis yet. Please check back later or contact them.");
         } else {
-          toast.error("Could not complete fit check. Please try again later.");
+          toast.error(responseData?.message || "Could not complete fit check. Please try again later.");
         }
         return;
       }
 
-      if (response.data?.success) {
-        toast.success("Your alignment has been evaluated. Check the job page for details.");
-        // Remove from list
-        setRequests(prev => prev.filter(r => r.id !== request.id));
-      } else if (response.data?.code === "NO_ROLE_DNA") {
-        toast.error("Role DNA not yet available for this role. The recruiter needs to generate it first.");
-      } else {
-        toast.error(response.data?.message || "Could not complete fit check.");
-      }
+      // Success case
+      toast.success("Your alignment has been evaluated. Check the job page for details.");
+      // Remove from list
+      setRequests(prev => prev.filter(r => r.id !== request.id));
     } catch (error) {
       console.error("Error completing fit check:", error);
       toast.error("Something went wrong. Please try again.");
