@@ -16,6 +16,11 @@ import PricingClarity from "./pages/onboarding/PricingClarity";
 import CreateRole from "./pages/onboarding/CreateRole";
 import InterviewKitPreview from "./pages/onboarding/InterviewKitPreview";
 import InviteCandidate from "./pages/onboarding/InviteCandidate";
+import CandidateWelcome from "./pages/candidate/Welcome";
+import CandidateContext from "./pages/candidate/Context";
+import CandidatePrepOptions from "./pages/candidate/PrepOptions";
+import CandidateWarmup from "./pages/candidate/Warmup";
+import CandidateDone from "./pages/candidate/Done";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import CandidateWarmups from "./pages/CandidateWarmups";
@@ -82,6 +87,11 @@ const App = () => (
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/dashboard" element={<RecruiterDashboard />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/candidate/welcome" element={<CandidateWelcome />} />
+          <Route path="/candidate/context" element={<CandidateContext />} />
+          <Route path="/candidate/prep-options" element={<CandidatePrepOptions />} />
+          <Route path="/candidate/warmup" element={<CandidateWarmup />} />
+          <Route path="/candidate/done" element={<CandidateDone />} />
           <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
           <Route path="/candidate/warmups" element={<CandidateWarmups />} />
           <Route path="/candidate/profile" element={<CandidateProfile />} />

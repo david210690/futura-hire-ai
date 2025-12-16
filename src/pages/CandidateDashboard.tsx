@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { CareerCoachCard } from "@/components/career/CareerCoachCard";
 import { FitRequestsPanel } from "@/components/candidate/FitRequestsPanel";
 import { WarmupDashboardCard } from "@/components/warmup/WarmupDashboardCard";
-import { FileUp, Video, BriefcaseIcon, Radar, TrendingUp } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FileUp, Video, BriefcaseIcon, Radar, TrendingUp, Heart, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProductTour } from "@/components/tour/ProductTour";
 import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
@@ -16,6 +17,7 @@ export default function CandidateDashboard() {
   const [user, setUser] = useState<any>(null);
   const [candidate, setCandidate] = useState<any>(null);
   const [resumeText, setResumeText] = useState<string>('');
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +28,12 @@ export default function CandidateDashboard() {
         return;
       }
       setUser(user);
+
+      // Check if welcome banner should be shown
+      const bannerDismissed = localStorage.getItem('candidate_welcome_banner_dismissed');
+      if (!bannerDismissed) {
+        setShowWelcomeBanner(true);
+      }
 
       const { data: candidateData } = await supabase
         .from('candidates')
@@ -53,6 +61,11 @@ export default function CandidateDashboard() {
     fetchData();
   }, [navigate]);
 
+  const dismissWelcomeBanner = () => {
+    setShowWelcomeBanner(false);
+    localStorage.setItem('candidate_welcome_banner_dismissed', 'true');
+  };
+
   return (
     <SidebarLayout userRole="candidate" userName={user?.user_metadata?.name}>
       <ProductTour role="candidate" autoStart />
@@ -64,6 +77,26 @@ export default function CandidateDashboard() {
           </div>
           <TourTriggerButton role="candidate" />
         </div>
+
+        {/* Welcome Banner - shown once */}
+        {showWelcomeBanner && (
+          <Alert className="mb-6 bg-primary/5 border-primary/20">
+            <Heart className="h-4 w-4 text-primary" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                <strong>Tip:</strong> FuturaHire is here to help you prepare — not to judge. Use it in whatever way feels helpful to you.
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="ml-4 h-6 w-6 p-0"
+                onClick={dismissWelcomeBanner}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Fit Requests Panel - shows pending recruiter requests */}
         <div className="mb-6">
