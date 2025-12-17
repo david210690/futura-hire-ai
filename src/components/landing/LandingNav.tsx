@@ -15,8 +15,8 @@ export const LandingNav = ({ onApplyPilot }: LandingNavProps) => {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="text-xl font-bold text-foreground">
-            FuturHire
+          <Link to="/" className="text-2xl font-bold text-primary">
+            FuturaHire
           </Link>
 
           {/* Desktop Nav */}

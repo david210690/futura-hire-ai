@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Clock } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface LandingPricingProps {
   onApplyPilot: () => void;
@@ -64,10 +64,9 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Simple, Transparent Pricing
           </h2>
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>Checkout coming soon</span>
-          </div>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Pay only for successful hires. No hidden fees.
+          </p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">

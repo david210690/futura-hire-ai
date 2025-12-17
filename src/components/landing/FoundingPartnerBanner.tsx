@@ -37,9 +37,6 @@ export const FoundingPartnerBanner = ({ onApplyPilot }: FoundingPartnerBannerPro
               of pilot completion to unlock Founding Partner pricing for 12 months.
             </p>
             
-            <p className="text-sm text-muted-foreground mb-6 italic">
-              Payments via Razorpay coming soon — for now we onboard via manual invoice.
-            </p>
             
             <Button onClick={onApplyPilot} size="lg" className="px-8">
               Apply for Pilot
