@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Clock, Target, FileText, Share2, Eye, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 const AssessmentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -68,7 +68,7 @@ const AssessmentDetail = () => {
     return (
       <SidebarLayout userRole="recruiter">
         <main className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading assessment...</div>
+          <LoadingSpinner message="Loading assessment" size="sm" />
         </main>
       </SidebarLayout>
     );

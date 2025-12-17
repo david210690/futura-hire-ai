@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Video, StopCircle, Upload, AlertCircle, CheckCircle2, Camera } from "lucide-react";
-
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 export default function CandidateVideo() {
   const [user, setUser] = useState<any>(null);
   const [candidate, setCandidate] = useState<any>(null);
@@ -327,7 +327,7 @@ export default function CandidateVideo() {
       <div className="min-h-screen bg-background">
         <Navbar userName={user?.user_metadata?.name} userRole="candidate" />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
+          <LoadingSpinner message="Preparing video recorder" size="sm" />
         </div>
       </div>
     );

@@ -26,6 +26,7 @@ import { WarmupSignalsCard } from "@/components/warmup/WarmupSignalsCard";
 import { WhyThisModal } from "@/components/explainability/WhyThisModal";
 import { FairnessDisclaimer } from "@/components/explainability/FairnessDisclaimer";
 import { FACTORS_NOT_CONSIDERED } from "@/lib/explainability";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 interface SnapshotHistoryItem {
   id: string;
@@ -717,9 +718,7 @@ export default function DecisionRoom() {
       <div className="min-h-screen bg-background">
         <Navbar userRole="recruiter" />
         <main className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <LoadingSpinner message="Loading decision room" size="sm" />
         </main>
       </div>
     );

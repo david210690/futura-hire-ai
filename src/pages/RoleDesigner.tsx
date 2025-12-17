@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Copy, Briefcase, CheckCircle2, Lock, ArrowLeft } from "lucide-react";
-
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 export default function RoleDesigner() {
   const navigate = useNavigate();
   const { currentOrg } = useCurrentOrg();
@@ -93,7 +93,7 @@ export default function RoleDesigner() {
   if (checkingAccess) {
     return (
       <div className="container mx-auto py-8 px-4 max-w-5xl">
-        <div className="text-center">Loading...</div>
+        <LoadingSpinner message="Checking access" size="sm" />
       </div>
     );
   }

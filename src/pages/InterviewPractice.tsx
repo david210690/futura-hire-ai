@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 interface Session {
   id: string;
@@ -177,9 +178,7 @@ export default function InterviewPractice() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+        <LoadingSpinner message="Loading interview practice" />
       </div>
     );
   }

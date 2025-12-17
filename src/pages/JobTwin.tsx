@@ -16,6 +16,7 @@ import { Sparkles, Target, Briefcase, MessageSquare, Loader2, RefreshCw, Copy, C
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AssistantView } from "@/components/job-twin/AssistantView";
 import { TemplatesLibrary } from "@/components/job-twin/TemplatesLibrary";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const STATUS_OPTIONS = [
   { value: 'new', label: 'New', icon: Sparkles, color: 'bg-blue-500' },
@@ -388,9 +389,7 @@ export default function JobTwin() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <LoadingSpinner message="Loading your job twin" />
       </div>
     );
   }

@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, Upload, Eye, Edit, ArrowLeft } from "lucide-react";
 import { CandidateProfilePreview } from "@/components/candidate/CandidateProfilePreview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 export default function CandidateProfile() {
   const [user, setUser] = useState<any>(null);
   const [candidate, setCandidate] = useState<any>(null);
@@ -181,7 +181,7 @@ export default function CandidateProfile() {
       <div className="min-h-screen bg-background">
         <Navbar userName={user?.user_metadata?.name} userRole="candidate" />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
+          <LoadingSpinner message="Loading your profile" size="sm" />
         </div>
       </div>
     );

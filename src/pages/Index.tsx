@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateOrgModal } from "@/components/org/CreateOrgModal";
-
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 const Index = () => {
   const navigate = useNavigate();
   const [showCreateOrg, setShowCreateOrg] = useState(false);
@@ -64,30 +64,7 @@ const Index = () => {
   }, [navigate]);
 
   if (checking) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-6">
-          {/* Animated spinner */}
-          <div className="relative">
-            <div className="h-16 w-16 rounded-full border-4 border-muted"></div>
-            <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-          </div>
-          
-          {/* Brand and message */}
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">FuturaHire</h2>
-            <p className="text-muted-foreground">Preparing your workspace</p>
-          </div>
-          
-          {/* Animated dots */}
-          <div className="flex gap-1.5">
-            <div className="h-2 w-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="h-2 w-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="h-2 w-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Preparing your workspace" fullScreen />;
   }
 
   return (
