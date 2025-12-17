@@ -31,6 +31,7 @@ import { GlobalCopilotFAB } from "@/components/copilot/GlobalCopilotFAB";
 import { activateGrowthPilot, getOrgPilotStatus } from "@/lib/pilot";
 import { ProductTour } from "@/components/tour/ProductTour";
 import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import '@/components/tour/tour-styles.css';
 
 export default function RecruiterDashboard() {
@@ -319,25 +320,7 @@ export default function RecruiterDashboard() {
   };
 
   if (!user || hasCompany === null || orgLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative">
-            <div className="h-16 w-16 rounded-full border-4 border-muted"></div>
-            <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-          </div>
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">FuturaHire</h2>
-            <p className="text-muted-foreground">Preparing your dashboard</p>
-          </div>
-          <div className="flex gap-1.5">
-            <div className="h-2 w-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="h-2 w-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="h-2 w-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Preparing your dashboard" fullScreen />;
   }
 
   if (!hasCompany) {

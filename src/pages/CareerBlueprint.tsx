@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { BlueprintHistorySelector } from "@/components/career-blueprint/BlueprintHistorySelector";
 import { ExportBlueprintPDF } from "@/components/career-blueprint/ExportBlueprintPDF";
 import { ProgressTracker } from "@/components/career-blueprint/ProgressTracker";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { 
   Compass, 
   Target, 

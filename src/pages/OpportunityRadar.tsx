@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Radar, RefreshCw, TrendingUp, Target, Lightbulb, AlertCircle, Mic, Briefcase, Sparkles, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 interface RoleFamily {
   id: string;
@@ -136,9 +137,7 @@ export default function OpportunityRadar() {
       <div className="min-h-screen bg-background">
         <Navbar userName={user?.user_metadata?.name} userRole="candidate" />
         <main className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          <LoadingSpinner message="Scanning your opportunities" size="sm" />
         </main>
       </div>
     );
