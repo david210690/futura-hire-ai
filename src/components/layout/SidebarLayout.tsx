@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { OrgSwitcher } from "@/components/org/OrgSwitcher";
+import { CommandPalette } from "@/components/navigation/CommandPalette";
 
 interface SidebarLayoutProps {
   children: ReactNode;
@@ -34,15 +35,26 @@ export function SidebarLayout({ children, userRole, userName, orgName }: Sidebar
 
   return (
     <SidebarProvider defaultOpen={true}>
+      <CommandPalette userRole={userRole} />
       <AppSidebar userRole={userRole} userName={userName} orgName={orgName} />
       <SidebarInset>
         {/* Top header bar */}
         <header className="flex h-14 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sticky top-0 z-40">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <SidebarTrigger className="-ml-1" />
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              Press <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded">⌘B</kbd> to toggle
-            </span>
+            <button
+              onClick={() => {
+                const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
+                document.dispatchEvent(event);
+              }}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground bg-muted/50 hover:bg-muted rounded-md border transition-colors"
+            >
+              <Search className="h-4 w-4" />
+              <span>Search...</span>
+              <kbd className="h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs flex">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </button>
           </div>
           
           <div className="flex items-center gap-2 sm:gap-4">

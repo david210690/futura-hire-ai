@@ -72,7 +72,6 @@ const recruiterNavGroups = [
       { label: "Question Bank", path: "/question-bank", icon: BookOpen, description: "Interview questions" },
       { label: "Manage Questions", path: "/admin/question-bank", icon: Settings, description: "Admin CRUD" },
       { label: "Decision Room", path: "/jobs", icon: Target, description: "Via Job Detail" },
-      { label: "Pipeline Health", path: "/dashboard", icon: Zap, description: "Via Job Detail" },
     ],
   },
   {
@@ -82,6 +81,7 @@ const recruiterNavGroups = [
       { label: "Organization", path: "/org/settings", icon: Settings },
       { label: "Billing", path: "/billing", icon: DollarSign },
       { label: "Pricing Plans", path: "/pricing", icon: FileText },
+      { label: "Email Logs", path: "/admin/email-logs", icon: Zap, description: "Monitor delivery" },
     ],
   },
 ];
