@@ -17,11 +17,13 @@ import {
   BarChart3,
   ArrowRight,
   ChevronDown,
-  Radio
+  Radio,
+  Dna
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { format, subDays, eachWeekOfInterval, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
+import { CultureDNAChart } from "@/components/org/CultureDNAChart";
 
 interface MetricCardProps {
   title: string;
@@ -396,6 +398,10 @@ export default function Analytics() {
               <TrendingUp className="w-4 h-4" />
               Weekly Trends
             </TabsTrigger>
+            <TabsTrigger value="culture" className="gap-2">
+              <Dna className="w-4 h-4" />
+              Culture DNA
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pipeline" className="space-y-4">
@@ -556,6 +562,10 @@ export default function Analytics() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="culture" className="space-y-4">
+            {currentOrg && <CultureDNAChart orgId={currentOrg.id} />}
           </TabsContent>
         </Tabs>
       </div>

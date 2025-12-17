@@ -23,7 +23,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, Trash2, Mail } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-import { CultureDNAChart } from "./CultureDNAChart";
 
 interface Member {
   id: string;
@@ -220,18 +219,11 @@ export const OrgSettings = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Team Management</CardTitle>
-        <CardDescription>
-          Manage members and invitations for {currentOrg?.name}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Tabs defaultValue="members">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="invites">Invitations</TabsTrigger>
-            <TabsTrigger value="culture">Culture DNA</TabsTrigger>
           </TabsList>
 
           <TabsContent value="members" className="space-y-4">
@@ -369,9 +361,6 @@ export const OrgSettings = () => {
             </Table>
           </TabsContent>
 
-          <TabsContent value="culture" className="space-y-4">
-            {currentOrg && <CultureDNAChart orgId={currentOrg.id} />}
-          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
