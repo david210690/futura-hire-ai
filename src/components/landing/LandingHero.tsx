@@ -28,15 +28,15 @@ export const LandingHero = ({ onApplyPilot }: LandingHeroProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Trust chips */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            <Badge variant="secondary" className="text-xs font-medium px-3 py-1">
+          {/* Trust chips - above headline */}
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
+            <Badge variant="secondary" className="text-xs font-medium px-3 py-1.5 bg-primary/10 text-primary border-primary/20">
               Candidates always free
             </Badge>
-            <Badge variant="secondary" className="text-xs font-medium px-3 py-1">
+            <Badge variant="secondary" className="text-xs font-medium px-3 py-1.5 bg-primary/10 text-primary border-primary/20">
               ND-safe by design
             </Badge>
-            <Badge variant="secondary" className="text-xs font-medium px-3 py-1">
+            <Badge variant="secondary" className="text-xs font-medium px-3 py-1.5 bg-primary/10 text-primary border-primary/20">
               Explainable — not a black box
             </Badge>
           </div>
