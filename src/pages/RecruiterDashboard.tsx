@@ -25,10 +25,10 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { CopilotPanel } from "@/components/recruiter/CopilotPanel";
-import { TrialBanner } from "@/components/trial/TrialBanner";
+import { PilotBanner } from "@/components/pilot/PilotBanner";
 import { UpgradeFAB } from "@/components/trial/UpgradeFAB";
 import { GlobalCopilotFAB } from "@/components/copilot/GlobalCopilotFAB";
-import { expireTrialIfNeeded, getTrialStatus } from "@/lib/trial";
+import { activateGrowthPilot, getOrgPilotStatus } from "@/lib/pilot";
 import { ProductTour } from "@/components/tour/ProductTour";
 import { TourTriggerButton } from "@/components/tour/TourTriggerButton";
 import '@/components/tour/tour-styles.css';
@@ -86,16 +86,25 @@ export default function RecruiterDashboard() {
   useEffect(() => {
     if (!orgLoading && currentOrg) {
       loadData();
-      checkTrialStatus();
+      checkPilotStatus();
     }
   }, [currentOrg, orgLoading]);
 
-  const checkTrialStatus = async () => {
+  const checkPilotStatus = async () => {
     if (!currentOrg?.id) return;
     
-    await expireTrialIfNeeded(currentOrg.id);
-    const status = await getTrialStatus(currentOrg.id);
-    setShowUpgradeFAB(status.state === 'trial' || status.state === 'free');
+    const status = await getOrgPilotStatus(currentOrg.id);
+    
+    // If org has no pilot_start_at, this is a new org - activate pilot
+    if (!status?.pilotStartAt && status?.planStatus === 'pilot') {
+      await activateGrowthPilot(currentOrg.id);
+      toast({
+        title: "Welcome!",
+        description: "Your Growth Pilot is active until 31 Mar 2026.",
+      });
+    }
+    
+    setShowUpgradeFAB(status?.planStatus === 'pilot');
   };
 
   const loadData = async () => {
@@ -344,7 +353,7 @@ export default function RecruiterDashboard() {
   return (
     <SidebarLayout userRole="recruiter" userName={user?.name} orgName={currentOrg?.name}>
       <ProductTour role="recruiter" autoStart />
-      {currentOrg?.id && <TrialBanner orgId={currentOrg.id} />}
+      {currentOrg?.id && <PilotBanner orgId={currentOrg.id} onLocked={() => navigate('/billing')} />}
       
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">

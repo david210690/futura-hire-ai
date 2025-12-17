@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Growth plan ID - the only plan available during pilot
+const GROWTH_PLAN_ID = "plan_RseqcRypIbyLm9";
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -28,10 +31,10 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { org_id, plan } = await req.json();
+    const { org_id, plan, plan_id } = await req.json();
     
-    if (!org_id || !plan) {
-      throw new Error('Missing required fields: org_id, plan');
+    if (!org_id) {
+      throw new Error('Missing required field: org_id');
     }
 
     // Verify user is org member
@@ -53,32 +56,79 @@ serve(async (req) => {
       throw new Error('Razorpay credentials not configured');
     }
 
-    // Get plan ID from env
-    const planIdKey = `RAZORPAY_PLAN_${plan.toUpperCase()}`;
-    const razorpayPlanId = Deno.env.get(planIdKey);
+    // Use provided plan_id or get from env, default to Growth plan
+    let razorpayPlanId = plan_id || GROWTH_PLAN_ID;
     
-    if (!razorpayPlanId) {
-      throw new Error(`Plan ${plan} not configured`);
+    // If plan is specified, try to get from env (for backwards compatibility)
+    if (plan && !plan_id) {
+      const planIdKey = `RAZORPAY_PLAN_${plan.toUpperCase()}`;
+      const envPlanId = Deno.env.get(planIdKey);
+      if (envPlanId) {
+        razorpayPlanId = envPlanId;
+      }
+    }
+
+    // Create Razorpay customer first (optional but recommended)
+    const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
+    
+    // Fetch user email for customer creation
+    const { data: userData } = await supabase
+      .from('users')
+      .select('email, name')
+      .eq('id', user.id)
+      .single();
+
+    let customerId = null;
+    
+    // Try to create customer
+    try {
+      const customerResponse = await fetch('https://api.razorpay.com/v1/customers', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: userData?.name || 'Customer',
+          email: userData?.email || user.email,
+          notes: {
+            org_id,
+            user_id: user.id,
+          }
+        })
+      });
+
+      if (customerResponse.ok) {
+        const customer = await customerResponse.json();
+        customerId = customer.id;
+      }
+    } catch (e) {
+      console.log('Customer creation skipped:', e);
     }
 
     // Create Razorpay subscription
-    const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
+    const subscriptionBody: any = {
+      plan_id: razorpayPlanId,
+      total_count: 12, // 12 billing cycles (annual = 1 year)
+      customer_notify: 1,
+      notes: {
+        org_id,
+        plan: plan || 'growth',
+        user_id: user.id,
+      }
+    };
+
+    if (customerId) {
+      subscriptionBody.customer_id = customerId;
+    }
+
     const razorpayResponse = await fetch('https://api.razorpay.com/v1/subscriptions', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        plan_id: razorpayPlanId,
-        total_count: 12, // 12 months
-        customer_notify: 1,
-        notes: {
-          org_id,
-          plan,
-          user_id: user.id,
-        }
-      })
+      body: JSON.stringify(subscriptionBody)
     });
 
     if (!razorpayResponse.ok) {
@@ -94,8 +144,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         subscription_id: subscription.id,
-        amount: subscription.plan_id,
+        amount: 3000000, // ₹30,000 in paise
         currency: 'INR',
+        customer_id: customerId,
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
