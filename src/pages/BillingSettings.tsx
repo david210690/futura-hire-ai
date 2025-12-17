@@ -445,7 +445,7 @@ export default function BillingSettings() {
         <CardContent className="pt-6 text-center space-y-2">
           <p className="text-sm font-medium">Need an invoice with GST?</p>
           <Button variant="outline" asChild>
-            <a href="mailto:billing@futurahire.app">Contact Support</a>
+            <a href="mailto:support@futurahire.app">Contact Support</a>
           </Button>
         </CardContent>
       </Card>
