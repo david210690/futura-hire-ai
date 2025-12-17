@@ -1,32 +1,19 @@
 export const ProblemSection = () => {
-  const problems = [
-    "You pay for candidates, not outcomes",
-    "Interview quality depends on who shows up",
-    "Decisions rely on gut feeling, not structure",
-    "Candidates walk in unprepared and anxious",
-  ];
-
   return (
     <section className="px-4 py-20 md:py-28 bg-muted/30">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-10 text-center">
-          Why hiring tools feel expensive — even when they fail
+      <div className="max-w-3xl mx-auto text-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight">
+          Most hiring tools measure activity.
+          <br />
+          <span className="text-muted-foreground">Hiring teams need clarity.</span>
         </h2>
         
-        <ul className="space-y-4 mb-10">
-          {problems.map((problem, index) => (
-            <li 
-              key={index}
-              className="flex items-start gap-3 text-lg text-muted-foreground"
-            >
-              <span className="text-destructive mt-1">•</span>
-              <span>{problem}</span>
-            </li>
-          ))}
-        </ul>
+        <p className="text-lg text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
+          Traditional hiring tools charge for resumes, seats, and pipeline activity — even when hiring doesn't happen. Interviews become inconsistent, candidates feel judged, and decisions rely too much on gut feeling.
+        </p>
         
-        <p className="text-xl text-foreground font-medium text-center">
-          Hiring is noisy. But payment shouldn't be.
+        <p className="text-xl font-semibold text-foreground">
+          FuturHire was built to fix the interview — not the pipeline.
         </p>
       </div>
     </section>
