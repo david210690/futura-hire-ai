@@ -15,8 +15,8 @@ const FORCE_LIVE_MODE = true;
 
 export const BILLING_CONFIG = {
   enabled: FORCE_LIVE_MODE || import.meta.env.VITE_BILLING_ENABLED === 'true',
-  razorpayMode: import.meta.env.VITE_RAZORPAY_MODE || 'test',
-  razorpayKeyId: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+  razorpayMode: 'live',
+  razorpayKeyId: 'rzp_live_RsgzehTjp7oAAK',
 };
 
 // Helper to check if we're in demo mode
