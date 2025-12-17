@@ -10,8 +10,8 @@ export const LandingFooter = () => {
           </div>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="mailto:sales@feelivacation.com" className="hover:text-foreground transition-colors">
-              sales@feelivacation.com
+            <a href="mailto:hello@futurahire.app" className="hover:text-foreground transition-colors">
+              hello@futurahire.app
             </a>
             <Link to="/privacy" className="hover:text-foreground transition-colors">
               Privacy
