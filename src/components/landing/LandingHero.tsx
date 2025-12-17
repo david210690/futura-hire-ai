@@ -49,7 +49,7 @@ export const LandingHero = ({ onApplyPilot }: LandingHeroProps) => {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            FuturHire helps teams run consistent, fair interviews using Role DNA, 
+            FuturaHire helps teams run consistent, fair interviews using Role DNA, 
             structured question kits, and explainable decision rooms. Free for candidates.
           </p>
 
