@@ -43,6 +43,7 @@ export default function RecruiterDashboard() {
   const [showCopilot, setShowCopilot] = useState(false);
   const [showUpgradeFAB, setShowUpgradeFAB] = useState(false);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [pilotStatus, setPilotStatus] = useState<Awaited<ReturnType<typeof getOrgPilotStatus>>>(null);
   const [pipelineStats, setPipelineStats] = useState({
     newApplications: 0,
     inReview: 0,
@@ -95,10 +96,13 @@ export default function RecruiterDashboard() {
     if (!currentOrg?.id) return;
     
     const status = await getOrgPilotStatus(currentOrg.id);
+    setPilotStatus(status);
     
     // If org has no pilot_start_at, this is a new org - activate pilot
     if (!status?.pilotStartAt && status?.planStatus === 'pilot') {
       await activateGrowthPilot(currentOrg.id);
+      const updatedStatus = await getOrgPilotStatus(currentOrg.id);
+      setPilotStatus(updatedStatus);
       toast({
         title: "Welcome!",
         description: "Your Growth Pilot is active until 31 Mar 2026.",
@@ -397,11 +401,14 @@ export default function RecruiterDashboard() {
               <Building2 className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold capitalize">{company?.pricing_tier || 'Free'}</div>
+              <div className="text-2xl font-bold capitalize">
+                {pilotStatus?.planTier || 'Growth'}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {company?.pricing_tier === 'free' && 'Basic features'}
-                {company?.pricing_tier === 'pro' && '$49/month'}
-                {company?.pricing_tier === 'enterprise' && 'Custom pricing'}
+                {pilotStatus?.planStatus === 'pilot' && `Pilot • ${pilotStatus.daysRemaining}d remaining`}
+                {pilotStatus?.planStatus === 'active' && '₹30,000/year'}
+                {pilotStatus?.planStatus === 'locked' && 'Subscription required'}
+                {!pilotStatus && 'Loading...'}
               </p>
             </CardContent>
           </Card>
