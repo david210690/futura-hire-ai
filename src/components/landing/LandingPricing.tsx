@@ -27,7 +27,7 @@ const plans = [
       "Basic Decision Room",
     ],
     disabled: true,
-    disabledReason: "Not available in Pilot",
+    disabledReason: "Available after pilot",
   },
   {
     name: "Growth",
@@ -45,6 +45,7 @@ const plans = [
       "Priority support",
     ],
     disabled: false,
+    pilotEnabled: true,
   },
   {
     name: "Scale",
@@ -61,7 +62,7 @@ const plans = [
       "Dedicated onboarding",
     ],
     disabled: true,
-    disabledReason: "Not available in Pilot",
+    disabledReason: "Available after pilot",
   },
 ];
 
@@ -152,24 +153,20 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
                 plan.popular 
                   ? 'border-primary shadow-lg' 
                   : plan.disabled 
-                    ? 'border-border/30 opacity-75' 
+                    ? 'border-border/30 opacity-60' 
                     : 'border-border/50'
               }`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-2">
                     <Badge className="bg-primary text-primary-foreground">
                       <Star className="h-3 w-3 mr-1" />
-                      Most Popular
-                    </Badge>
-                    <Badge variant="secondary">
-                      Pilot Exclusive
+                      Pilot Access Enabled
                     </Badge>
                   </div>
                 )}
                 {plan.disabled && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge variant="outline" className="bg-background">
-                      <Lock className="h-3 w-3 mr-1" />
+                    <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/30">
                       {plan.disabledReason}
                     </Badge>
                   </div>
@@ -221,7 +218,7 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
                       size="lg"
                       disabled={loading}
                     >
-                      {loading ? "Loading..." : "Start Growth Pilot"}
+                      {loading ? "Loading..." : "Start Pilot (Growth Plan)"}
                     </Button>
                   )}
                 </CardContent>

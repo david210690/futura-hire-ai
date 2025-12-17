@@ -53,21 +53,30 @@ export function PilotBanner({ orgId, onLocked }: PilotBannerProps) {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-destructive">
-                      Pilot Ended — Subscription Required
+                      Pilot Ended
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Your pilot ended on 31 Mar 2026. Please subscribe to continue using FuturaHire.
+                      Your pilot access ended on 31 Mar 2026. To continue using FuturaHire, please convert to a paid plan.
                     </p>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => navigate('/billing')}
-                  className="whitespace-nowrap"
-                  size="lg"
-                >
-                  <Crown className="mr-2 h-4 w-4" />
-                  Subscribe to Growth (₹30,000/year)
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button 
+                    onClick={() => navigate('/billing')}
+                    className="whitespace-nowrap"
+                    size="lg"
+                  >
+                    <Crown className="mr-2 h-4 w-4" />
+                    Subscribe to Growth (₹30,000/year)
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.location.href = 'mailto:hello@futurahire.app?subject=Pilot Reactivation'}
+                    className="whitespace-nowrap"
+                  >
+                    Contact Sales to Reactivate
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -95,14 +104,14 @@ export function PilotBanner({ orgId, onLocked }: PilotBannerProps) {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-semibold text-foreground">
-                    Growth Pilot Active
+                    🟣 Pilot Mode Active
                   </h3>
                   <Badge variant="secondary" className="text-xs">
-                    Pilot
+                    Growth Plan
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Your pilot access ends on 31 Mar 2026. Convert anytime to keep uninterrupted access.
+                  You are on the Growth Plan (Pilot Access). Pilot ends on 31 Mar 2026.
                 </p>
               </div>
             </div>
@@ -110,29 +119,18 @@ export function PilotBanner({ orgId, onLocked }: PilotBannerProps) {
             <div className="flex items-center gap-4">
               {/* Countdown */}
               <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background border">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <div className="text-center">
-                  <div className="font-bold text-lg leading-none">
-                    {status.daysRemaining}
-                  </div>
-                  <div className="text-xs text-muted-foreground">days</div>
-                </div>
-                <div className="text-muted-foreground">:</div>
-                <div className="text-center">
-                  <div className="font-bold text-lg leading-none">
-                    {status.hoursRemaining}
-                  </div>
-                  <div className="text-xs text-muted-foreground">hrs</div>
-                </div>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">⏳ {status.daysRemaining} days remaining</span>
               </div>
               
               <Button 
                 onClick={() => navigate('/billing')}
                 variant={isUrgent ? "default" : "outline"}
                 className="whitespace-nowrap"
+                disabled
               >
                 <Crown className="mr-2 h-4 w-4" />
-                Convert to Paid
+                Convert to Full Plan
               </Button>
             </div>
           </div>

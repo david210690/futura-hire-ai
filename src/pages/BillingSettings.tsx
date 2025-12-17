@@ -193,44 +193,89 @@ export default function BillingSettings() {
     return <Badge variant="secondary">Free</Badge>;
   };
 
+  // Show lock screen when pilot expired
+  if (pilotStatus?.planStatus === 'locked') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full border-destructive/50">
+          <CardHeader className="text-center pb-2">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl text-destructive">Pilot Ended</CardTitle>
+            <CardDescription className="text-base">
+              Your pilot access ended on 31 March 2026.
+              <br />
+              To continue using FuturaHire, please convert to a paid plan.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Growth Plan Summary */}
+            <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Growth Plan</span>
+                <span className="text-xl font-bold">₹30,000<span className="text-sm font-normal text-muted-foreground">/year</span></span>
+              </div>
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                  Up to 25 successful hires/year
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                  Role DNA, Interview Kits, Decision Room
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                  Hiring Plan Autopilot + Priority Support
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
+              <Button 
+                onClick={handleSubscribe} 
+                disabled={processingPayment}
+                className="w-full"
+                size="lg"
+              >
+                {processingPayment ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Crown className="mr-2 h-4 w-4" />
+                    Subscribe to Growth (₹30,000/year)
+                  </>
+                )}
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.href = 'mailto:hello@futurahire.app?subject=Pilot Reactivation Request'}
+              >
+                Contact Sales to Reactivate
+              </Button>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground">
+              Additional hires beyond 25 are billed at ₹1,500 per hire.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-4xl mx-auto py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Billing & Subscription</h1>
         <p className="text-muted-foreground">Manage your plan and billing information</p>
       </div>
-
-      {/* Locked State Alert */}
-      {pilotStatus?.planStatus === 'locked' && (
-        <Card className="border-destructive bg-destructive/5">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <AlertTriangle className="h-6 w-6 text-destructive flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-destructive mb-2">
-                  Pilot Ended — Subscription Required
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Your pilot access ended on 31 Mar 2026. Subscribe to the Growth plan to continue using FuturaHire.
-                </p>
-                <Button onClick={handleSubscribe} disabled={processingPayment}>
-                  {processingPayment ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Crown className="mr-2 h-4 w-4" />
-                      Subscribe to Growth (₹30,000/year)
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Current Plan */}
       <Card>
