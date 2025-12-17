@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Crown, Calendar, CreditCard, FileText, Check, AlertTriangle, Sparkles } from "lucide-react";
+import { Loader2, Crown, Calendar, CreditCard, FileText, Check, AlertTriangle, Sparkles, ArrowLeft } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -272,9 +272,15 @@ export default function BillingSettings() {
 
   return (
     <div className="container max-w-4xl mx-auto py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Billing & Subscription</h1>
-        <p className="text-muted-foreground">Manage your plan and billing information</p>
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/recruiter/dashboard')} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Billing & Subscription</h1>
+          <p className="text-muted-foreground">Manage your plan and billing information</p>
+        </div>
       </div>
 
       {/* Current Plan */}
