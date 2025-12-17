@@ -62,15 +62,16 @@ export default function EmailLogs() {
     setLoading(true);
     
     try {
+      // Use raw query since table may not be in types yet
       const { data, error } = await supabase
-        .from("email_logs")
+        .from("email_logs" as any)
         .select("*")
         .eq("org_id", currentOrg.id)
         .order("created_at", { ascending: false })
         .limit(100);
 
       if (error) throw error;
-      setLogs((data as EmailLog[]) || []);
+      setLogs((data as unknown as EmailLog[]) || []);
     } catch (error) {
       console.error("Error loading email logs:", error);
       // If table doesn't exist, show empty state

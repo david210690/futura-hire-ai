@@ -44,6 +44,9 @@ import ApplicationStatusPage from "./pages/careers/ApplicationStatusPage";
 import TakeAssessmentPage from "./pages/careers/TakeAssessmentPage";
 import RecordVideoPage from "./pages/careers/RecordVideoPage";
 import NotFound from "./pages/NotFound";
+import PricingClarity from "./pages/onboarding/PricingClarity";
+import CandidateWelcome from "./pages/onboarding/CandidateWelcome";
+import EmailLogs from "./pages/admin/EmailLogs";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +74,7 @@ const App = () => (
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/jobs/:id/decision-room" element={<DecisionRoom />} />
           <Route path="/admin/monitor" element={<AdminMonitor />} />
+          <Route path="/admin/email-logs" element={<EmailLogs />} />
           <Route path="/org/settings" element={<OrgSettingsPage />} />
           <Route path="/billing" element={<BillingSettings />} />
           <Route path="/role-designer" element={<RoleDesigner />} />
@@ -88,6 +92,10 @@ const App = () => (
           <Route path="/admin/question-bank" element={<AdminQuestionBank />} />
           <Route path="/recruiter/jobs/:jobId/candidates/:candidateId/interview-kit" element={<InterviewKitPage />} />
           <Route path="/s/:token" element={<ShareableShortlist />} />
+          
+          {/* Onboarding flows */}
+          <Route path="/onboarding/pricing-clarity" element={<PricingClarity />} />
+          <Route path="/onboarding/candidate-welcome" element={<CandidateWelcome />} />
           
           {/* Candidate-facing career pages */}
           <Route path="/c/:orgSlug" element={<CareersPage />} />
