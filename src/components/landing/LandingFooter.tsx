@@ -19,6 +19,9 @@ export const LandingFooter = () => {
             <Link to="/terms" className="hover:text-foreground transition-colors">
               Terms
             </Link>
+            <Link to="/refund" className="hover:text-foreground transition-colors">
+              Refund Policy
+            </Link>
           </div>
 
           <div className="text-sm text-muted-foreground">
