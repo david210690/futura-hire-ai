@@ -18,18 +18,17 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
-    // Create client with user's auth token for permission checks
-    const supabaseClient = createClient(
+    // Extract token from Authorization header
+    const token = authHeader.replace('Bearer ', '');
+
+    // Create admin client for database operations
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    // Verify the user's token
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError) {
       console.error('Auth error:', authError);
       throw new Error('Unauthorized');
@@ -40,12 +39,6 @@ serve(async (req) => {
     }
     
     console.log('User authenticated:', user.id);
-
-    // Create admin client for database operations
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     const { orgId, email, role } = await req.json();
 
@@ -62,7 +55,7 @@ serve(async (req) => {
     }
 
     // Generate invite token
-    const token = crypto.randomUUID();
+    const inviteToken = crypto.randomUUID();
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 72); // 72 hours
 
@@ -73,7 +66,7 @@ serve(async (req) => {
         org_id: orgId,
         email,
         role,
-        token,
+        token: inviteToken,
         expires_at: expiresAt.toISOString(),
         created_by: user.id,
       });
@@ -82,11 +75,11 @@ serve(async (req) => {
 
     // TODO: Send email with magic link containing token
     // For now, just log it
-    console.log(`Invite created for ${email} with token: ${token}`);
-    console.log(`Invite link: ${Deno.env.get('SUPABASE_URL')}/auth/accept-invite?token=${token}`);
+    console.log(`Invite created for ${email} with token: ${inviteToken}`);
+    console.log(`Invite link: ${Deno.env.get('SUPABASE_URL')}/auth/accept-invite?token=${inviteToken}`);
 
     return new Response(
-      JSON.stringify({ success: true, token }),
+      JSON.stringify({ success: true, token: inviteToken }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
