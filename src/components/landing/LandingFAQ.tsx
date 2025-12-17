@@ -9,23 +9,23 @@ import {
 const faqs = [
   {
     question: "Is this an ATS?",
-    answer: "No. FuturHire is interview intelligence and preparation — not applicant tracking. We help you run structured interviews, not manage resumes.",
+    answer: "No. FuturaHire is interview intelligence and preparation — not applicant tracking. We help you run structured interviews, not manage resumes.",
   },
   {
     question: "Do candidates pay?",
-    answer: "Never. Candidates always access FuturHire for free. Hiring teams sponsor the system.",
+    answer: "Never. Candidates always access FuturaHire for free. Hiring teams sponsor the system.",
   },
   {
     question: "Is the voice practice mandatory?",
     answer: "No. Voice practice is completely optional and supportive. Candidates can skip it entirely.",
   },
   {
-    question: "Does FuturHire auto-reject candidates?",
-    answer: "Never. FuturHire provides structured signals and decision support — all hiring decisions are made by humans.",
+    question: "Does FuturaHire auto-reject candidates?",
+    answer: "Never. FuturaHire provides structured signals and decision support — all hiring decisions are made by humans.",
   },
   {
-    question: "When will payments be live?",
-    answer: "Razorpay checkout is coming soon. For now, pilot companies are onboarded via manual invoice.",
+    question: "When does billing start?",
+    answer: "Billing starts only after a team moves to a paid annual plan post-pilot.",
   },
 ];
 

@@ -6,7 +6,7 @@ export const LandingFooter = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-foreground">FuturHire</span>
+            <span className="text-xl font-bold text-foreground">FuturaHire</span>
           </div>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -22,7 +22,7 @@ export const LandingFooter = () => {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} FuturHire. All rights reserved.
+            © {new Date().getFullYear()} FuturaHire. All rights reserved.
           </div>
         </div>
       </div>
