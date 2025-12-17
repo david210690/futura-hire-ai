@@ -1922,51 +1922,6 @@ export type Database = {
           },
         ]
       }
-      job_twin_interview_prep: {
-        Row: {
-          created_at: string
-          id: string
-          job_id: string
-          profile_id: string
-          questions: string[] | null
-          tips: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          job_id: string
-          profile_id: string
-          questions?: string[] | null
-          tips?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          job_id?: string
-          profile_id?: string
-          questions?: string[] | null
-          tips?: string[] | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "job_twin_interview_prep_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "job_twin_interview_prep_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "job_twin_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       job_twin_jobs: {
         Row: {
           applied_at: string | null

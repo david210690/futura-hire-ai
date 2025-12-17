@@ -2,11 +2,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight } from "lucide-react";
 
-interface BetaAccessBannerProps {
+interface FoundingPartnerBannerProps {
   onApplyPilot: () => void;
 }
 
-export const BetaAccessBanner = ({ onApplyPilot }: BetaAccessBannerProps) => {
+export const FoundingPartnerBanner = ({ onApplyPilot }: FoundingPartnerBannerProps) => {
   return (
     <section className="px-4 py-12">
       <motion.div
@@ -29,12 +29,12 @@ export const BetaAccessBanner = ({ onApplyPilot }: BetaAccessBannerProps) => {
             </div>
             
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Beta Access Program — Early Adopters Only
+              Founding Partner Program — Pilot Companies Only
             </h2>
             
             <p className="text-muted-foreground text-lg mb-6 max-w-2xl">
-              First 50 teams get up to 3 months of beta access. Convert within 14 days 
-              of beta completion to unlock Beta pricing for 12 months.
+              First 50 teams get up to 3 months of pilot access. Convert within 14 days 
+              of pilot completion to unlock Founding Partner pricing for 12 months.
             </p>
             
             <p className="text-sm text-muted-foreground mb-6 italic">
@@ -42,7 +42,7 @@ export const BetaAccessBanner = ({ onApplyPilot }: BetaAccessBannerProps) => {
             </p>
             
             <Button onClick={onApplyPilot} size="lg" className="px-8">
-              Apply for Beta
+              Apply for Pilot
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

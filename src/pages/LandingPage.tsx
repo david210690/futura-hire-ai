@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { LandingHero } from "@/components/landing/LandingHero";
-import { BetaAccessBanner } from "@/components/landing/FoundingPartnerBanner";
+import { FoundingPartnerBanner } from "@/components/landing/FoundingPartnerBanner";
 import { WhatYouGet } from "@/components/landing/WhatYouGet";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { ForRecruitersAndCandidates } from "@/components/landing/ForRecruitersAndCandidates";
@@ -22,15 +22,15 @@ const LandingPage = () => {
   return (
     <>
       <SEOHead
-        title="FuturaHire — Hiring clarity without the ATS chaos"
-        description="FuturaHire helps teams run consistent, fair interviews using Role DNA, structured question kits, and explainable decision rooms. Free for candidates."
+        title="FuturHire — Hiring clarity without the ATS chaos"
+        description="FuturHire helps teams run consistent, fair interviews using Role DNA, structured question kits, and explainable decision rooms. Free for candidates."
       />
       <main className="min-h-screen bg-background">
         <LandingNav onApplyPilot={scrollToForm} />
         
         <div className="pt-16">
           <LandingHero onApplyPilot={scrollToForm} />
-          <BetaAccessBanner onApplyPilot={scrollToForm} />
+          <FoundingPartnerBanner onApplyPilot={scrollToForm} />
           <div id="features">
             <WhatYouGet />
           </div>

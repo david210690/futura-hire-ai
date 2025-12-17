@@ -31,73 +31,10 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "next";
-    let department = url.searchParams.get("department") || null;
-    let seniority = url.searchParams.get("seniority") || null;
+    const department = url.searchParams.get("department") || "Engineering";
+    const seniority = url.searchParams.get("seniority") || "mid";
     const jobId = url.searchParams.get("jobId");
     const limit = parseInt(url.searchParams.get("limit") || "10");
-
-    // If jobId provided, fetch job details to get department/seniority
-    if (jobId && (!department || !seniority)) {
-      // Try to fetch from job_twin_jobs -> jobs
-      const { data: jobTwinJob } = await supabase
-        .from("job_twin_jobs")
-        .select(`
-          jobs (
-            title,
-            seniority,
-            tags,
-            companies (name)
-          )
-        `)
-        .eq("id", jobId)
-        .single();
-
-      if (jobTwinJob?.jobs) {
-        const job = jobTwinJob.jobs as any;
-        // Infer department from job title or tags
-        const jobTitle = (job.title || "").toLowerCase();
-        const tags = (job.tags || []).map((t: string) => t.toLowerCase());
-        
-        // Map job characteristics to department
-        if (jobTitle.includes("engineer") || jobTitle.includes("developer") || tags.includes("engineering")) {
-          department = department || "Engineering";
-        } else if (jobTitle.includes("sales") || tags.includes("sales")) {
-          department = department || "Sales";
-        } else if (jobTitle.includes("product") || jobTitle.includes("pm")) {
-          department = department || "Product";
-        } else if (jobTitle.includes("design") || jobTitle.includes("ux") || tags.includes("design")) {
-          department = department || "Design";
-        } else if (jobTitle.includes("marketing") || tags.includes("marketing")) {
-          department = department || "Marketing";
-        } else if (jobTitle.includes("operations") || jobTitle.includes("ops")) {
-          department = department || "Operations";
-        } else if (jobTitle.includes("hr") || jobTitle.includes("people") || jobTitle.includes("talent")) {
-          department = department || "HR";
-        } else if (jobTitle.includes("finance") || jobTitle.includes("accounting")) {
-          department = department || "Finance";
-        } else if (jobTitle.includes("lead") || jobTitle.includes("manager") || jobTitle.includes("director") || jobTitle.includes("head")) {
-          department = department || "Leadership";
-        } else {
-          department = department || "General";
-        }
-
-        // Map seniority
-        const seniorityLevel = job.seniority || "";
-        if (seniorityLevel === "junior" || seniorityLevel === "entry") {
-          seniority = seniority || "junior";
-        } else if (seniorityLevel === "senior" || seniorityLevel === "lead") {
-          seniority = seniority || "senior";
-        } else {
-          seniority = seniority || "mid";
-        }
-      }
-    }
-
-    // Default fallbacks
-    department = department || "General";
-    seniority = seniority || "mid";
-
-    console.log(`Fetching warmup for department: ${department}, seniority: ${seniority}, jobId: ${jobId || 'none'}`);
 
     // ACTION: next - Get next scenario for user
     if (action === "next") {
@@ -110,48 +47,40 @@ serve(async (req) => {
 
       const recentScenarioIds = (recentRuns || []).map(r => r.scenario_id);
 
-      // Find an active scenario matching department
+      // Find an active scenario not done recently
       let query = supabase
         .from("scenario_warmups")
-        .select("id, title, scenario_context, choices_json, mapped_role_dna_dimensions, nd_safe_notes, department")
-        .eq("is_active", true);
+        .select("id, title, scenario_context, choices_json, mapped_role_dna_dimensions, nd_safe_notes")
+        .eq("is_active", true)
+        .eq("department", department);
 
-      // Try exact department match first
-      let { data: scenarios, error } = await query
-        .eq("department", department)
-        .not("id", "in", recentScenarioIds.length > 0 ? `(${recentScenarioIds.join(",")})` : "(00000000-0000-0000-0000-000000000000)");
+      if (seniority) {
+        query = query.eq("seniority", seniority);
+      }
+
+      if (recentScenarioIds.length > 0) {
+        query = query.not("id", "in", `(${recentScenarioIds.join(",")})`);
+      }
+
+      const { data: scenarios, error } = await query.limit(10);
 
       if (error) throw error;
 
-      // If no scenarios for exact department, try General
       if (!scenarios || scenarios.length === 0) {
-        const { data: generalScenarios } = await supabase
+        // Fallback: get any scenario for this department
+        const { data: fallbackScenarios } = await supabase
           .from("scenario_warmups")
-          .select("id, title, scenario_context, choices_json, mapped_role_dna_dimensions, nd_safe_notes, department")
+          .select("id, title, scenario_context, choices_json, mapped_role_dna_dimensions, nd_safe_notes")
           .eq("is_active", true)
-          .eq("department", "General")
-          .not("id", "in", recentScenarioIds.length > 0 ? `(${recentScenarioIds.join(",")})` : "(00000000-0000-0000-0000-000000000000)");
-        
-        scenarios = generalScenarios;
-      }
+          .eq("department", department)
+          .limit(5);
 
-      // If still no scenarios, get any active scenario
-      if (!scenarios || scenarios.length === 0) {
-        const { data: anyScenarios } = await supabase
-          .from("scenario_warmups")
-          .select("id, title, scenario_context, choices_json, mapped_role_dna_dimensions, nd_safe_notes, department")
-          .eq("is_active", true)
-          .limit(10);
+        const scenario = fallbackScenarios?.[Math.floor(Math.random() * (fallbackScenarios?.length || 1))] || null;
         
-        scenarios = anyScenarios;
-      }
-
-      if (!scenarios || scenarios.length === 0) {
         return new Response(JSON.stringify({ 
           success: true, 
-          scenario: null,
-          all_completed: true,
-          message: "No scenarios available"
+          scenario,
+          all_completed: true
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -163,8 +92,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         success: true, 
         scenario,
-        department,
-        seniority,
         all_completed: false
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

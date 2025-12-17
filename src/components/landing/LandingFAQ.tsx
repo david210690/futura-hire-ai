@@ -13,15 +13,15 @@ const faqs = [
   },
   {
     question: "Do candidates pay?",
-    answer: "Never. Candidates always access FuturaHire for free. Hiring teams sponsor the system.",
+    answer: "Never. Candidates always access FuturHire for free. Hiring teams sponsor the system.",
   },
   {
     question: "Is the voice practice mandatory?",
     answer: "No. Voice practice is completely optional and supportive. Candidates can skip it entirely.",
   },
   {
-    question: "Does FuturaHire auto-reject candidates?",
-    answer: "Never. FuturaHire provides structured signals and decision support — all hiring decisions are made by humans.",
+    question: "Does FuturHire auto-reject candidates?",
+    answer: "Never. FuturHire provides structured signals and decision support — all hiring decisions are made by humans.",
   },
   {
     question: "When will payments be live?",

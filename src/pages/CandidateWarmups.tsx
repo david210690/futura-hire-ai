@@ -52,8 +52,6 @@ export default function CandidateWarmups() {
   const [scenarioLoading, setScenarioLoading] = useState(false);
   const [showWarmup, setShowWarmup] = useState(false);
   const [activeTab, setActiveTab] = useState("warmup");
-  const [pendingJobs, setPendingJobs] = useState<Array<{id: string, title: string, company: string}>>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -70,19 +68,6 @@ export default function CandidateWarmups() {
 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-
-      // Fetch pending fit requests to get job context
-      const pendingRes = await supabase.functions.invoke("get-pending-fit-requests");
-      if (pendingRes.data?.success && pendingRes.data.requests?.length > 0) {
-        const jobs = pendingRes.data.requests.map((r: any) => ({
-          id: r.jobTwinJobId,
-          title: r.jobTitle,
-          company: r.companyName
-        }));
-        setPendingJobs(jobs);
-        // Default to first pending job
-        setSelectedJobId(jobs[0].id);
-      }
 
       // Fetch status
       const statusRes = await fetch(
@@ -130,18 +115,15 @@ export default function CandidateWarmups() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Build URL with job context if available
-      let url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-scenario-warmup?action=next`;
-      if (selectedJobId) {
-        url += `&jobId=${selectedJobId}`;
-      }
-
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-scenario-warmup?action=next&department=Engineering&seniority=mid`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      });
+      );
       const data = await res.json();
 
       if (data.success && data.scenario) {
@@ -267,81 +249,12 @@ export default function CandidateWarmups() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Job selector if pending jobs exist */}
-                  {pendingJobs.length > 0 && (
-                    <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
-                      <p className="text-sm font-medium mb-2">Preparing for a specific role?</p>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Warm-ups will be tailored to the role you select.
-                      </p>
-                      <div className="space-y-2">
-                        {pendingJobs.map((job) => (
-                          <label 
-                            key={job.id}
-                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                              selectedJobId === job.id 
-                                ? 'border-primary bg-primary/10' 
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="selectedJob"
-                              checked={selectedJobId === job.id}
-                              onChange={() => setSelectedJobId(job.id)}
-                              className="sr-only"
-                            />
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                              selectedJobId === job.id ? 'border-primary' : 'border-muted-foreground'
-                            }`}>
-                              {selectedJobId === job.id && (
-                                <div className="w-2 h-2 rounded-full bg-primary" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">{job.title}</p>
-                              <p className="text-xs text-muted-foreground">{job.company}</p>
-                            </div>
-                          </label>
-                        ))}
-                        <label 
-                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                            selectedJobId === null 
-                              ? 'border-primary bg-primary/10' 
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="selectedJob"
-                            checked={selectedJobId === null}
-                            onChange={() => setSelectedJobId(null)}
-                            className="sr-only"
-                          />
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                            selectedJobId === null ? 'border-primary' : 'border-muted-foreground'
-                          }`}>
-                            {selectedJobId === null && (
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">General practice</p>
-                            <p className="text-xs text-muted-foreground">Not for a specific role</p>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Status */}
                   <div className="p-4 rounded-lg bg-muted/50">
                     {eligible ? (
                       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         <p className="text-sm flex-1">
-                          {selectedJobId && pendingJobs.find(j => j.id === selectedJobId) 
-                            ? `Warm-up tailored for ${pendingJobs.find(j => j.id === selectedJobId)?.title}`
-                            : "You can try a warm-up if you feel like it."}
+                          You can try a warm-up if you feel like it.
                         </p>
                         <Button onClick={fetchScenario} disabled={scenarioLoading}>
                           {scenarioLoading ? (

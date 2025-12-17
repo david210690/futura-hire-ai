@@ -6,12 +6,12 @@ export const LandingFooter = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-foreground">FuturaHire</span>
+            <span className="text-xl font-bold text-foreground">FuturHire</span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground">
-            <a href="mailto:hello@futurahire.app" className="hover:text-foreground transition-colors">
-              hello@futurahire.app
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <a href="mailto:sales@feelivacation.com" className="hover:text-foreground transition-colors">
+              sales@feelivacation.com
             </a>
             <Link to="/privacy" className="hover:text-foreground transition-colors">
               Privacy
@@ -19,19 +19,10 @@ export const LandingFooter = () => {
             <Link to="/terms" className="hover:text-foreground transition-colors">
               Terms
             </Link>
-            <Link to="/refund" className="hover:text-foreground transition-colors">
-              Refunds
-            </Link>
-            <Link to="/shipping" className="hover:text-foreground transition-colors">
-              Shipping
-            </Link>
-            <Link to="/contact" className="hover:text-foreground transition-colors">
-              Contact
-            </Link>
           </div>
 
           <div className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} FuturaHire. All rights reserved.
+            © {new Date().getFullYear()} FuturHire. All rights reserved.
           </div>
         </div>
       </div>

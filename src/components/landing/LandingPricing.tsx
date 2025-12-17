@@ -13,7 +13,7 @@ const plans = [
     name: "Starter",
     description: "For small teams getting started",
     standardPrice: "₹18,000",
-    betaPrice: "₹15,000",
+    founderPrice: "₹15,000",
     features: [
       "Up to 10 hires/year",
       "Role DNA generation",
@@ -25,7 +25,7 @@ const plans = [
     name: "Growth",
     description: "For growing hiring needs",
     standardPrice: "₹36,000",
-    betaPrice: "₹30,000",
+    founderPrice: "₹30,000",
     popular: true,
     features: [
       "Up to 25 hires/year",
@@ -39,7 +39,7 @@ const plans = [
     name: "Scale",
     description: "For high-volume hiring",
     standardPrice: "₹60,000",
-    betaPrice: "₹50,000",
+    founderPrice: "₹50,000",
     features: [
       "Up to 50 hires/year",
       "Everything in Growth",
@@ -54,7 +54,6 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
   return (
     <section className="px-4 py-20">
       <div className="max-w-6xl mx-auto">
-        {/* Value Proposition Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -62,27 +61,9 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-            Pay for outcomes, not pipeline noise.
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Simple, Transparent Pricing
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Most hiring tools charge you for resumes, seats, and activity — even when hiring doesn't happen.
-            <br />
-            <span className="text-foreground font-medium">FuturaHire is different.</span>
-            <br />
-            We count value only when an offer is accepted.
-          </p>
-          
-          {/* Highlight Box */}
-          <div className="inline-block bg-primary/10 border border-primary/20 rounded-xl px-8 py-6 mb-8">
-            <p className="text-lg font-semibold text-foreground mb-2">
-              No offer accepted = no hire counted.
-            </p>
-            <p className="text-muted-foreground">
-              Interview freely. Prepare candidates. Decide calmly.
-            </p>
-          </div>
-
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" />
             <span>Checkout coming soon</span>
@@ -117,8 +98,8 @@ export const LandingPricing = ({ onApplyPilot }: LandingPricingProps) => {
                       <div className="text-2xl font-bold text-foreground">{plan.standardPrice}<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-sm text-primary font-medium">Beta Access</div>
-                      <div className="text-2xl font-bold text-primary">{plan.betaPrice}<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
+                      <div className="text-sm text-primary font-medium">Founding Partner</div>
+                      <div className="text-2xl font-bold text-primary">{plan.founderPrice}<span className="text-sm font-normal text-muted-foreground">/yr</span></div>
                     </div>
                   </div>
 

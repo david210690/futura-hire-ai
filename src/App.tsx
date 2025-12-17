@@ -4,23 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import MarketingLanding from "./pages/MarketingLanding";
+import LandingPage from "./pages/LandingPage";
 import Pricing from "./pages/Pricing";
 import Assessments from "./pages/Assessments";
 import AssessmentDetail from "./pages/AssessmentDetail";
 import { AuthPage } from "./components/auth/AuthPage";
-import Signup from "./pages/Signup";
-import AccountType from "./pages/onboarding/AccountType";
-import Company from "./pages/onboarding/Company";
-import PricingClarity from "./pages/onboarding/PricingClarity";
-import CreateRole from "./pages/onboarding/CreateRole";
-import InterviewKitPreview from "./pages/onboarding/InterviewKitPreview";
-import InviteCandidate from "./pages/onboarding/InviteCandidate";
-import CandidateWelcome from "./pages/candidate/Welcome";
-import CandidateContext from "./pages/candidate/Context";
-import CandidatePrepOptions from "./pages/candidate/PrepOptions";
-import CandidateWarmup from "./pages/candidate/Warmup";
-import CandidateDone from "./pages/candidate/Done";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import CandidateWarmups from "./pages/CandidateWarmups";
@@ -56,12 +44,6 @@ import ApplicationStatusPage from "./pages/careers/ApplicationStatusPage";
 import TakeAssessmentPage from "./pages/careers/TakeAssessmentPage";
 import RecordVideoPage from "./pages/careers/RecordVideoPage";
 import NotFound from "./pages/NotFound";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsAndConditions from "./pages/TermsAndConditions";
-import RefundPolicy from "./pages/RefundPolicy";
-import ShippingPolicy from "./pages/ShippingPolicy";
-import Contact from "./pages/Contact";
-import SalesPitch from "./pages/SalesPitch";
 
 const queryClient = new QueryClient();
 
@@ -72,26 +54,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<MarketingLanding />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/app" element={<Index />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/onboarding/account-type" element={<AccountType />} />
-          <Route path="/onboarding/company" element={<Company />} />
-          <Route path="/onboarding/pricing-clarity" element={<PricingClarity />} />
-          <Route path="/onboarding/create-role" element={<CreateRole />} />
-          <Route path="/onboarding/interview-kit-preview" element={<InterviewKitPreview />} />
-          <Route path="/onboarding/invite-candidate" element={<InviteCandidate />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/assessments" element={<Assessments />} />
           <Route path="/assessments/:id" element={<AssessmentDetail />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/dashboard" element={<RecruiterDashboard />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/candidate/welcome" element={<CandidateWelcome />} />
-          <Route path="/candidate/context" element={<CandidateContext />} />
-          <Route path="/candidate/prep-options" element={<CandidatePrepOptions />} />
-          <Route path="/candidate/warmup" element={<CandidateWarmup />} />
-          <Route path="/candidate/done" element={<CandidateDone />} />
           <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
           <Route path="/candidate/warmups" element={<CandidateWarmups />} />
           <Route path="/candidate/profile" element={<CandidateProfile />} />
@@ -126,14 +96,6 @@ const App = () => (
           <Route path="/c/:orgSlug/apply/status/:token" element={<ApplicationStatusPage />} />
           <Route path="/c/:orgSlug/apply/assessment/:token" element={<TakeAssessmentPage />} />
           <Route path="/c/:orgSlug/apply/video/:token" element={<RecordVideoPage />} />
-          
-          {/* Legal pages */}
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsAndConditions />} />
-          <Route path="/refund" element={<RefundPolicy />} />
-          <Route path="/shipping" element={<ShippingPolicy />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/salespitch" element={<SalesPitch />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
