@@ -195,7 +195,7 @@ export default function Pricing() {
             Need custom pricing or enterprise features?
           </p>
           <Button variant="outline" asChild>
-            <a href="mailto:hello@futurahire.app" className="gap-2">
+            <a href="mailto:support@futurahire.app" className="gap-2">
               <Mail className="h-4 w-4" />
               Contact Sales
             </a>
