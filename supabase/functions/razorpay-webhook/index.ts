@@ -65,9 +65,9 @@ serve(async (req) => {
         const subscription = payload.payload.subscription.entity;
         const notes = subscription.notes || {};
         const orgId = notes.org_id;
-        const plan = notes.plan;
+        const plan = notes.plan || 'growth';
 
-        if (orgId && plan) {
+        if (orgId) {
           // Update subscription in database
           await supabase.from('subscriptions').upsert({
             org_id: orgId,
@@ -75,8 +75,19 @@ serve(async (req) => {
             subscription_id: subscription.id,
             plan,
             status: 'active',
-            current_period_end: new Date(subscription.current_end * 1000).toISOString(),
+            current_period_end: subscription.current_end 
+              ? new Date(subscription.current_end * 1000).toISOString() 
+              : null,
           }, { onConflict: 'org_id' });
+
+          // Update orgs table - convert from pilot to active
+          await supabase.from('orgs').update({
+            plan_status: 'active',
+            plan_tier: 'growth',
+            converted_at: new Date().toISOString(),
+            razorpay_subscription_id: subscription.id,
+            razorpay_customer_id: subscription.customer_id || null,
+          }).eq('id', orgId);
 
           // Apply plan entitlements
           const entitlements = getPlanEntitlements(plan);
@@ -95,7 +106,8 @@ serve(async (req) => {
         break;
       }
 
-      case 'subscription.cancelled': {
+      case 'subscription.cancelled': 
+      case 'subscription.halted': {
         const subscription = payload.payload.subscription.entity;
         const notes = subscription.notes || {};
         const orgId = notes.org_id;
@@ -106,6 +118,11 @@ serve(async (req) => {
             status: 'cancelled',
             plan: 'free',
           }).eq('subscription_id', subscription.id);
+
+          // Update orgs table - lock the org
+          await supabase.from('orgs').update({
+            plan_status: 'locked',
+          }).eq('id', orgId);
 
           // Downgrade to free entitlements
           const freeEntitlements = getPlanEntitlements('free');
@@ -119,7 +136,31 @@ serve(async (req) => {
             { onConflict: 'org_id,feature' }
           );
 
-          console.log('Cancelled subscription for org:', orgId);
+          console.log('Cancelled/halted subscription for org:', orgId);
+        }
+        break;
+      }
+
+      case 'subscription.charged': {
+        const subscription = payload.payload.subscription.entity;
+        const notes = subscription.notes || {};
+        const orgId = notes.org_id;
+
+        if (orgId) {
+          // Update subscription period end
+          await supabase.from('subscriptions').update({
+            status: 'active',
+            current_period_end: subscription.current_end 
+              ? new Date(subscription.current_end * 1000).toISOString() 
+              : null,
+          }).eq('subscription_id', subscription.id);
+
+          // Ensure org is active
+          await supabase.from('orgs').update({
+            plan_status: 'active',
+          }).eq('id', orgId);
+
+          console.log('Subscription charged for org:', orgId);
         }
         break;
       }
@@ -166,6 +207,31 @@ function getPlanEntitlements(plan: string) {
       'feature_basic_shortlist': { enabled: true },
       'limits_ai_shortlist_per_day': { enabled: true, value: '3' },
       'limits_video_analysis_per_day': { enabled: true, value: '0' },
+    },
+    growth: {
+      'feature_copilot': { enabled: true },
+      'feature_predictive': { enabled: true },
+      'feature_gamification': { enabled: true },
+      'feature_assessments': { enabled: true },
+      'feature_culture_dna': { enabled: true },
+      'feature_video_summary': { enabled: true },
+      'feature_marketing_assets': { enabled: true },
+      'feature_role_designer': { enabled: true },
+      'feature_retention': { enabled: true },
+      'feature_team_optimizer': { enabled: true },
+      'feature_share_shortlist': { enabled: true },
+      'feature_role_dna': { enabled: true },
+      'feature_interview_kits': { enabled: true },
+      'feature_decision_room': { enabled: true },
+      'feature_question_bank_admin': { enabled: true },
+      'feature_hiring_autopilot': { enabled: true },
+      'limits_ai_shortlist_per_day': { enabled: true, value: '50' },
+      'limits_video_analysis_per_day': { enabled: true, value: '25' },
+      'limits_coach_runs_per_day': { enabled: true, value: '25' },
+      'limits_bias_runs_per_day': { enabled: true, value: '25' },
+      'limits_marketing_runs_per_day': { enabled: true, value: '25' },
+      'limits_copilot_per_day': { enabled: true, value: '100' },
+      'limits_hires_per_year': { enabled: true, value: '25' },
     },
     pro: {
       'feature_copilot': { enabled: true },

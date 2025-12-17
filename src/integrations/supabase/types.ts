@@ -2454,24 +2454,45 @@ export type Database = {
       }
       orgs: {
         Row: {
+          converted_at: string | null
           created_at: string
           id: string
           name: string
           owner_id: string
+          pilot_end_at: string | null
+          pilot_start_at: string | null
+          plan_status: string
+          plan_tier: string
+          razorpay_customer_id: string | null
+          razorpay_subscription_id: string | null
           slug: string | null
         }
         Insert: {
+          converted_at?: string | null
           created_at?: string
           id?: string
           name: string
           owner_id: string
+          pilot_end_at?: string | null
+          pilot_start_at?: string | null
+          plan_status?: string
+          plan_tier?: string
+          razorpay_customer_id?: string | null
+          razorpay_subscription_id?: string | null
           slug?: string | null
         }
         Update: {
+          converted_at?: string | null
           created_at?: string
           id?: string
           name?: string
           owner_id?: string
+          pilot_end_at?: string | null
+          pilot_start_at?: string | null
+          plan_status?: string
+          plan_tier?: string
+          razorpay_customer_id?: string | null
+          razorpay_subscription_id?: string | null
           slug?: string | null
         }
         Relationships: []
