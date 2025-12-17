@@ -42,6 +42,7 @@ interface Invite {
   role: string;
   expires_at: string;
   created_at: string;
+  created_by: string | null;
 }
 
 export const OrgSettings = () => {
@@ -52,13 +53,22 @@ export const OrgSettings = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<string>("recruiter");
   const [loading, setLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (currentOrg && isAdmin) {
+    const getCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setCurrentUserId(session?.user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (currentOrg) {
       loadMembers();
       loadInvites();
     }
-  }, [currentOrg, isAdmin]);
+  }, [currentOrg]);
 
   const loadMembers = async () => {
     if (!currentOrg) return;
@@ -195,13 +205,13 @@ export const OrgSettings = () => {
     }
   };
 
-  if (!isAdmin) {
+  if (!currentOrg) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Organization Settings</CardTitle>
           <CardDescription>
-            You need admin permissions to manage organization settings.
+            No organization selected.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -211,7 +221,7 @@ export const OrgSettings = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Organization Settings</CardTitle>
+        <CardTitle>Team Management</CardTitle>
         <CardDescription>
           Manage members and invitations for {currentOrg?.name}
         </CardDescription>
@@ -231,7 +241,7 @@ export const OrgSettings = () => {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -240,33 +250,39 @@ export const OrgSettings = () => {
                     <TableCell>{member.users.name}</TableCell>
                     <TableCell>{member.users.email}</TableCell>
                     <TableCell>
-                      <Select
-                        value={member.role}
-                        onValueChange={(value) => updateMemberRole(member.id, value as 'owner' | 'admin' | 'recruiter' | 'viewer')}
-                        disabled={member.role === 'owner'}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="owner">Owner</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="recruiter">Recruiter</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {member.role !== 'owner' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeMember(member.id)}
+                      {isAdmin ? (
+                        <Select
+                          value={member.role}
+                          onValueChange={(value) => updateMemberRole(member.id, value as 'owner' | 'admin' | 'recruiter' | 'viewer')}
+                          disabled={member.role === 'owner'}
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="owner">Owner</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="recruiter">Recruiter</SelectItem>
+                            <SelectItem value="viewer">Viewer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className="capitalize text-muted-foreground">{member.role}</span>
                       )}
                     </TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-right">
+                        {member.role !== 'owner' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeMember(member.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -316,27 +332,32 @@ export const OrgSettings = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invites.map((invite) => (
-                  <TableRow key={invite.id}>
-                    <TableCell className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      {invite.email}
-                    </TableCell>
-                    <TableCell className="capitalize">{invite.role}</TableCell>
-                    <TableCell>
-                      {new Date(invite.expires_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => revokeInvite(invite.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {invites.map((invite) => {
+                  const canDelete = isAdmin || invite.created_by === currentUserId;
+                  return (
+                    <TableRow key={invite.id}>
+                      <TableCell className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        {invite.email}
+                      </TableCell>
+                      <TableCell className="capitalize">{invite.role}</TableCell>
+                      <TableCell>
+                        {new Date(invite.expires_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => revokeInvite(invite.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {invites.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">

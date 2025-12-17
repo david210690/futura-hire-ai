@@ -36,7 +36,7 @@ serve(async (req) => {
 
     const { orgId, email, role } = await req.json();
 
-    // Verify user is admin of org
+    // Verify user is a member of org (any role can invite)
     const { data: membership } = await supabase
       .from('org_members')
       .select('role')
@@ -44,8 +44,8 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
-      throw new Error('Insufficient permissions');
+    if (!membership) {
+      throw new Error('You must be a member of this organization to send invites');
     }
 
     // Generate invite token
