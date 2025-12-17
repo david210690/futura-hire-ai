@@ -273,7 +273,7 @@ export default function BillingSettings() {
   return (
     <div className="container max-w-4xl mx-auto py-8 space-y-6">
       <div className="space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/recruiter/dashboard')} className="gap-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Button>
