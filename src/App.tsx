@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
 import Pricing from "./pages/Pricing";
@@ -47,6 +48,7 @@ import NotFound from "./pages/NotFound";
 import PricingClarity from "./pages/onboarding/PricingClarity";
 import CandidateWelcome from "./pages/onboarding/CandidateWelcome";
 import EmailLogs from "./pages/admin/EmailLogs";
+import UserAnalytics from "./pages/admin/UserAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -56,57 +58,60 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={<Index />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/assessments" element={<Assessments />} />
-          <Route path="/assessments/:id" element={<AssessmentDetail />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/dashboard" element={<RecruiterDashboard />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
-          <Route path="/candidate/warmups" element={<CandidateWarmups />} />
-          <Route path="/candidate/profile" element={<CandidateProfile />} />
-          <Route path="/candidate/video" element={<CandidateVideo />} />
-          <Route path="/create-job" element={<CreateJob />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/jobs/:id" element={<JobDetail />} />
-          <Route path="/jobs/:id/decision-room" element={<DecisionRoom />} />
-          <Route path="/admin/monitor" element={<AdminMonitor />} />
-          <Route path="/admin/email-logs" element={<EmailLogs />} />
-          <Route path="/org/settings" element={<OrgSettingsPage />} />
-          <Route path="/billing" element={<BillingSettings />} />
-          <Route path="/role-designer" element={<RoleDesigner />} />
-          <Route path="/job-twin" element={<JobTwin />} />
-          <Route path="/job-twin/jobs/:id" element={<JobTwinJobDetail />} />
-          <Route path="/interview-practice" element={<InterviewPractice />} />
-          <Route path="/interview-practice/session/:sessionId" element={<InterviewSession />} />
-          <Route path="/interview-practice/session/:sessionId/review" element={<InterviewSessionReview />} />
-          <Route path="/voice-interview" element={<VoiceInterviewList />} />
-          <Route path="/voice-interview/:sessionId" element={<VoiceInterviewDetail />} />
-          <Route path="/opportunity-radar" element={<OpportunityRadar />} />
-          <Route path="/career-trajectory" element={<CareerTrajectory />} />
-          <Route path="/career-blueprint" element={<CareerBlueprint />} />
-          <Route path="/question-bank" element={<QuestionBankLibrary />} />
-          <Route path="/admin/question-bank" element={<AdminQuestionBank />} />
-          <Route path="/recruiter/jobs/:jobId/candidates/:candidateId/interview-kit" element={<InterviewKitPage />} />
-          <Route path="/s/:token" element={<ShareableShortlist />} />
-          
-          {/* Onboarding flows */}
-          <Route path="/onboarding/pricing-clarity" element={<PricingClarity />} />
-          <Route path="/onboarding/candidate-welcome" element={<CandidateWelcome />} />
-          
-          {/* Candidate-facing career pages */}
-          <Route path="/c/:orgSlug" element={<CareersPage />} />
-          <Route path="/c/:orgSlug/jobs/:jobSlug" element={<JobDetailPage />} />
-          <Route path="/c/:orgSlug/jobs/:jobSlug/apply" element={<ApplyPage />} />
-          <Route path="/c/:orgSlug/apply/status/:token" element={<ApplicationStatusPage />} />
-          <Route path="/c/:orgSlug/apply/assessment/:token" element={<TakeAssessmentPage />} />
-          <Route path="/c/:orgSlug/apply/video/:token" element={<RecordVideoPage />} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AnalyticsProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/app" element={<Index />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/assessments" element={<Assessments />} />
+            <Route path="/assessments/:id" element={<AssessmentDetail />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/dashboard" element={<RecruiterDashboard />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+            <Route path="/candidate/warmups" element={<CandidateWarmups />} />
+            <Route path="/candidate/profile" element={<CandidateProfile />} />
+            <Route path="/candidate/video" element={<CandidateVideo />} />
+            <Route path="/create-job" element={<CreateJob />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs/:id" element={<JobDetail />} />
+            <Route path="/jobs/:id/decision-room" element={<DecisionRoom />} />
+            <Route path="/admin/monitor" element={<AdminMonitor />} />
+            <Route path="/admin/email-logs" element={<EmailLogs />} />
+            <Route path="/admin/user-analytics" element={<UserAnalytics />} />
+            <Route path="/org/settings" element={<OrgSettingsPage />} />
+            <Route path="/billing" element={<BillingSettings />} />
+            <Route path="/role-designer" element={<RoleDesigner />} />
+            <Route path="/job-twin" element={<JobTwin />} />
+            <Route path="/job-twin/jobs/:id" element={<JobTwinJobDetail />} />
+            <Route path="/interview-practice" element={<InterviewPractice />} />
+            <Route path="/interview-practice/session/:sessionId" element={<InterviewSession />} />
+            <Route path="/interview-practice/session/:sessionId/review" element={<InterviewSessionReview />} />
+            <Route path="/voice-interview" element={<VoiceInterviewList />} />
+            <Route path="/voice-interview/:sessionId" element={<VoiceInterviewDetail />} />
+            <Route path="/opportunity-radar" element={<OpportunityRadar />} />
+            <Route path="/career-trajectory" element={<CareerTrajectory />} />
+            <Route path="/career-blueprint" element={<CareerBlueprint />} />
+            <Route path="/question-bank" element={<QuestionBankLibrary />} />
+            <Route path="/admin/question-bank" element={<AdminQuestionBank />} />
+            <Route path="/recruiter/jobs/:jobId/candidates/:candidateId/interview-kit" element={<InterviewKitPage />} />
+            <Route path="/s/:token" element={<ShareableShortlist />} />
+            
+            {/* Onboarding flows */}
+            <Route path="/onboarding/pricing-clarity" element={<PricingClarity />} />
+            <Route path="/onboarding/candidate-welcome" element={<CandidateWelcome />} />
+            
+            {/* Candidate-facing career pages */}
+            <Route path="/c/:orgSlug" element={<CareersPage />} />
+            <Route path="/c/:orgSlug/jobs/:jobSlug" element={<JobDetailPage />} />
+            <Route path="/c/:orgSlug/jobs/:jobSlug/apply" element={<ApplyPage />} />
+            <Route path="/c/:orgSlug/apply/status/:token" element={<ApplicationStatusPage />} />
+            <Route path="/c/:orgSlug/apply/assessment/:token" element={<TakeAssessmentPage />} />
+            <Route path="/c/:orgSlug/apply/video/:token" element={<RecordVideoPage />} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AnalyticsProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

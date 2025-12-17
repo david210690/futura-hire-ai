@@ -147,6 +147,93 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          action_name: string | null
+          action_target: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          page_path: string
+          page_title: string | null
+          referrer_path: string | null
+          session_id: string
+          time_on_page_ms: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_name?: string | null
+          action_target?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          page_path: string
+          page_title?: string | null
+          referrer_path?: string | null
+          session_id: string
+          time_on_page_ms?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_name?: string | null
+          action_target?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page_path?: string
+          page_title?: string | null
+          referrer_path?: string | null
+          session_id?: string
+          time_on_page_ms?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      analytics_sessions: {
+        Row: {
+          entry_page: string | null
+          exit_page: string | null
+          id: string
+          last_activity_at: string
+          metadata: Json | null
+          started_at: string
+          total_actions: number | null
+          total_pages_viewed: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          entry_page?: string | null
+          exit_page?: string | null
+          id: string
+          last_activity_at?: string
+          metadata?: Json | null
+          started_at?: string
+          total_actions?: number | null
+          total_pages_viewed?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          entry_page?: string | null
+          exit_page?: string | null
+          id?: string
+          last_activity_at?: string
+          metadata?: Json | null
+          started_at?: string
+          total_actions?: number | null
+          total_pages_viewed?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           ai_version: string | null
