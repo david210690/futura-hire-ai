@@ -72,7 +72,7 @@ serve(async (req: Request): Promise<Response> => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "FuturHire <onboarding@resend.dev>",
+            from: "FuturaHire <hello@futurahire.app>",
             to: ["sales@feelivacation.com"],
             subject: `New Pilot Lead: ${company_name}`,
             html: `
