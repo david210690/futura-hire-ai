@@ -736,6 +736,113 @@ export type Database = {
           },
         ]
       }
+      calendar_connections: {
+        Row: {
+          access_token: string
+          calendar_email: string | null
+          calendar_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          provider: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          calendar_email?: string | null
+          calendar_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          calendar_email?: string | null
+          calendar_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          provider?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      calendar_events: {
+        Row: {
+          attendees: Json | null
+          calendar_connection_id: string
+          created_at: string
+          description: string | null
+          end_time: string
+          event_type: string
+          external_event_id: string | null
+          id: string
+          last_synced_at: string | null
+          location: string | null
+          reference_id: string | null
+          reference_type: string | null
+          start_time: string
+          sync_status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attendees?: Json | null
+          calendar_connection_id: string
+          created_at?: string
+          description?: string | null
+          end_time: string
+          event_type: string
+          external_event_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          location?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          start_time: string
+          sync_status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attendees?: Json | null
+          calendar_connection_id?: string
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          event_type?: string
+          external_event_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          location?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          start_time?: string
+          sync_status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_calendar_connection_id_fkey"
+            columns: ["calendar_connection_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calibration_checks: {
         Row: {
           bias_flags: Json
