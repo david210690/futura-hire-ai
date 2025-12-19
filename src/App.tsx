@@ -7,6 +7,9 @@ import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
 import Pricing from "./pages/Pricing";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Refund from "./pages/Refund";
 import Assessments from "./pages/Assessments";
 import AssessmentDetail from "./pages/AssessmentDetail";
 import { AuthPage } from "./components/auth/AuthPage";
@@ -64,6 +67,9 @@ const App = () => (
             <Route path="/" element={<LandingPage />} />
             <Route path="/app" element={<Index />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/refund" element={<Refund />} />
             <Route path="/assessments" element={<Assessments />} />
             <Route path="/assessments/:id" element={<AssessmentDetail />} />
             <Route path="/auth" element={<AuthPage />} />
