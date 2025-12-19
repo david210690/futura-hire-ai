@@ -7,7 +7,7 @@ export const LandingFooter = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <img src={futurahireLogo} alt="FuturaHire" className="h-6" />
+            <img src={futurahireLogo} alt="FuturaHire" className="h-8" />
           </div>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
