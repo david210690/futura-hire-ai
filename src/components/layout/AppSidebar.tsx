@@ -20,7 +20,8 @@ import {
   Zap,
   ChevronDown,
   Compass,
-  BookOpen
+  BookOpen,
+  Calendar
 } from "lucide-react";
 import {
   Sidebar,
@@ -117,6 +118,13 @@ const candidateNavGroups = [
     items: [
       { label: "Practice Sessions", path: "/interview-practice", icon: Mic, description: "Text-based practice" },
       { label: "Voice Interviews", path: "/voice-interview", icon: Video, description: "AI voice practice" },
+    ],
+  },
+  {
+    label: "Settings",
+    tourId: "sidebar-candidate-settings",
+    items: [
+      { label: "Calendar & Integrations", path: "/candidate/settings", icon: Calendar, description: "Sync your calendar" },
     ],
   },
 ];
