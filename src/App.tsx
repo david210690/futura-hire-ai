@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
@@ -53,6 +53,13 @@ import CandidateWelcome from "./pages/onboarding/CandidateWelcome";
 import EmailLogs from "./pages/admin/EmailLogs";
 import UserAnalytics from "./pages/admin/UserAnalytics";
 import CandidateSettings from "./pages/CandidateSettings";
+import { useLocation } from "react-router-dom";
+
+// Redirect /settings to /candidate/settings preserving query params
+const SettingsRedirect = () => {
+  const location = useLocation();
+  return <Navigate to={`/candidate/settings${location.search}`} replace />;
+};
 
 const queryClient = new QueryClient();
 
@@ -80,6 +87,7 @@ const App = () => (
             <Route path="/candidate/profile" element={<CandidateProfile />} />
             <Route path="/candidate/video" element={<CandidateVideo />} />
             <Route path="/candidate/settings" element={<CandidateSettings />} />
+            <Route path="/settings" element={<SettingsRedirect />} />
             <Route path="/create-job" element={<CreateJob />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
