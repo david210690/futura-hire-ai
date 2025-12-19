@@ -49,6 +49,7 @@ import PricingClarity from "./pages/onboarding/PricingClarity";
 import CandidateWelcome from "./pages/onboarding/CandidateWelcome";
 import EmailLogs from "./pages/admin/EmailLogs";
 import UserAnalytics from "./pages/admin/UserAnalytics";
+import CandidateSettings from "./pages/CandidateSettings";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/candidate/warmups" element={<CandidateWarmups />} />
             <Route path="/candidate/profile" element={<CandidateProfile />} />
             <Route path="/candidate/video" element={<CandidateVideo />} />
+            <Route path="/candidate/settings" element={<CandidateSettings />} />
             <Route path="/create-job" element={<CreateJob />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
