@@ -204,6 +204,16 @@ export default function ApplicationStatusPage() {
               <CardDescription>
                 This company-wide assessment is required before role-specific evaluation and hiring progression.
               </CardDescription>
+              {application.assignments
+                ?.filter((assignment: any) => assignment.assessments?.is_culture_gate)
+                .flatMap((assignment: any) => assignment.attempts || [])
+                .some((attempt: any) => attempt.culture_gate_pass === false) && (
+                <CardContent className="px-0 pb-0">
+                  <p className="text-sm text-destructive">
+                    Your Culture & Values Assessment did not meet the required standard for this role.
+                  </p>
+                </CardContent>
+              )}
             </CardHeader>
           </Card>
         )}
