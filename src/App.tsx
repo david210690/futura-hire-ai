@@ -5,55 +5,57 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SHOW_PRICING } from "@/lib/billing-config";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
-import Index from "./pages/Index";
-import LandingPage from "./pages/LandingPage";
-import Pricing from "./pages/Pricing";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Refund from "./pages/Refund";
-import Assessments from "./pages/Assessments";
-import AssessmentDetail from "./pages/AssessmentDetail";
-import { AuthPage } from "./components/auth/AuthPage";
-import RecruiterDashboard from "./pages/RecruiterDashboard";
-import CandidateDashboard from "./pages/CandidateDashboard";
-import CandidateWarmups from "./pages/CandidateWarmups";
-import CandidateProfile from "./pages/CandidateProfile";
-import CandidateVideo from "./pages/CandidateVideo";
-import CreateJob from "./pages/CreateJob";
-import JobDetail from "./pages/JobDetail";
-import DecisionRoom from "./pages/DecisionRoom";
-import Jobs from "./pages/Jobs";
-import AdminMonitor from "./pages/AdminMonitor";
-import OrgSettingsPage from "./pages/OrgSettingsPage";
-import RoleDesigner from "./pages/RoleDesigner";
-import BillingSettings from "./pages/BillingSettings";
-import ShareableShortlist from "./pages/ShareableShortlist";
-import JobTwin from "./pages/JobTwin";
-import JobTwinJobDetail from "./pages/JobTwinJobDetail";
-import InterviewPractice from "./pages/InterviewPractice";
-import InterviewSession from "./pages/InterviewSession";
-import InterviewSessionReview from "./pages/InterviewSessionReview";
-import VoiceInterviewList from "./pages/VoiceInterviewList";
-import VoiceInterviewDetail from "./pages/VoiceInterviewDetail";
-import OpportunityRadar from "./pages/OpportunityRadar";
-import Analytics from "./pages/Analytics";
-import CareerTrajectory from "./pages/CareerTrajectory";
-import CareerBlueprint from "./pages/CareerBlueprint";
-import QuestionBankLibrary from "./pages/QuestionBankLibrary";
-import AdminQuestionBank from "./pages/AdminQuestionBank";
-import InterviewKitPage from "./pages/InterviewKitPage";
-import CareersPage from "./pages/careers/CareersPage";
-import JobDetailPage from "./pages/careers/JobDetailPage";
-import ApplyPage from "./pages/careers/ApplyPage";
-import ApplicationStatusPage from "./pages/careers/ApplicationStatusPage";
-import TakeAssessmentPage from "./pages/careers/TakeAssessmentPage";
-import RecordVideoPage from "./pages/careers/RecordVideoPage";
-import NotFound from "./pages/NotFound";
-import PricingClarity from "./pages/onboarding/PricingClarity";
-import CandidateWelcome from "./pages/onboarding/CandidateWelcome";
-import EmailLogs from "./pages/admin/EmailLogs";
-import UserAnalytics from "./pages/admin/UserAnalytics";
-import CandidateSettings from "./pages/CandidateSettings";
+import { lazy, Suspense } from "react";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+const Index = lazy(() => import("./pages/Index"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Refund = lazy(() => import("./pages/Refund"));
+const Assessments = lazy(() => import("./pages/Assessments"));
+const AssessmentDetail = lazy(() => import("./pages/AssessmentDetail"));
+const AuthPage = lazy(() => import("./components/auth/AuthPage").then(module => ({ default: module.AuthPage })));
+const RecruiterDashboard = lazy(() => import("./pages/RecruiterDashboard"));
+const CandidateDashboard = lazy(() => import("./pages/CandidateDashboard"));
+const CandidateWarmups = lazy(() => import("./pages/CandidateWarmups"));
+const CandidateProfile = lazy(() => import("./pages/CandidateProfile"));
+const CandidateVideo = lazy(() => import("./pages/CandidateVideo"));
+const CreateJob = lazy(() => import("./pages/CreateJob"));
+const JobDetail = lazy(() => import("./pages/JobDetail"));
+const DecisionRoom = lazy(() => import("./pages/DecisionRoom"));
+const Jobs = lazy(() => import("./pages/Jobs"));
+const AdminMonitor = lazy(() => import("./pages/AdminMonitor"));
+const OrgSettingsPage = lazy(() => import("./pages/OrgSettingsPage"));
+const RoleDesigner = lazy(() => import("./pages/RoleDesigner"));
+const BillingSettings = lazy(() => import("./pages/BillingSettings"));
+const ShareableShortlist = lazy(() => import("./pages/ShareableShortlist"));
+const JobTwin = lazy(() => import("./pages/JobTwin"));
+const JobTwinJobDetail = lazy(() => import("./pages/JobTwinJobDetail"));
+const InterviewPractice = lazy(() => import("./pages/InterviewPractice"));
+const InterviewSession = lazy(() => import("./pages/InterviewSession"));
+const InterviewSessionReview = lazy(() => import("./pages/InterviewSessionReview"));
+const VoiceInterviewList = lazy(() => import("./pages/VoiceInterviewList"));
+const VoiceInterviewDetail = lazy(() => import("./pages/VoiceInterviewDetail"));
+const OpportunityRadar = lazy(() => import("./pages/OpportunityRadar"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const CareerTrajectory = lazy(() => import("./pages/CareerTrajectory"));
+const CareerBlueprint = lazy(() => import("./pages/CareerBlueprint"));
+const QuestionBankLibrary = lazy(() => import("./pages/QuestionBankLibrary"));
+const AdminQuestionBank = lazy(() => import("./pages/AdminQuestionBank"));
+const InterviewKitPage = lazy(() => import("./pages/InterviewKitPage"));
+const CareersPage = lazy(() => import("./pages/careers/CareersPage"));
+const JobDetailPage = lazy(() => import("./pages/careers/JobDetailPage"));
+const ApplyPage = lazy(() => import("./pages/careers/ApplyPage"));
+const ApplicationStatusPage = lazy(() => import("./pages/careers/ApplicationStatusPage"));
+const TakeAssessmentPage = lazy(() => import("./pages/careers/TakeAssessmentPage"));
+const RecordVideoPage = lazy(() => import("./pages/careers/RecordVideoPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PricingClarity = lazy(() => import("./pages/onboarding/PricingClarity"));
+const CandidateWelcome = lazy(() => import("./pages/onboarding/CandidateWelcome"));
+const EmailLogs = lazy(() => import("./pages/admin/EmailLogs"));
+const UserAnalytics = lazy(() => import("./pages/admin/UserAnalytics"));
+const CandidateSettings = lazy(() => import("./pages/CandidateSettings"));
 import { useLocation } from "react-router-dom";
 
 // Redirect /settings to /candidate/settings preserving query params
@@ -69,9 +71,10 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AnalyticsProvider>
-          <Routes>
+          <Suspense fallback={<LoadingSpinner message="Loading FuturaHire" fullScreen />}>
+            <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/app" element={<Index />} />
             <Route path="/pricing" element={SHOW_PRICING ? <Pricing /> : <Navigate to="/" replace />} />
@@ -127,7 +130,8 @@ const App = () => (
             <Route path="/c/:orgSlug/apply/video/:token" element={<RecordVideoPage />} />
             
             <Route path="*" element={<NotFound />} />
-          </Routes>
+            </Routes>
+          </Suspense>
         </AnalyticsProvider>
       </BrowserRouter>
     </TooltipProvider>

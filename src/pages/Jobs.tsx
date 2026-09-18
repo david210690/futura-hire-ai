@@ -60,16 +60,20 @@ export default function Jobs() {
           company:companies(name)
         `)
         .eq('org_id', membership.org_id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 
       // Get application counts
       const jobIds = jobsData?.map(j => j.id) || [];
-      const { data: appCounts } = await supabase
-        .from('applications')
-        .select('job_id')
-        .in('job_id', jobIds);
+      const { data: appCounts } = jobIds.length > 0
+        ? await supabase
+            .from('applications')
+            .select('job_id')
+            .in('job_id', jobIds)
+            .limit(5000)
+        : { data: [] };
 
       const countMap: Record<string, number> = {};
       appCounts?.forEach(app => {

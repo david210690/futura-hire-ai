@@ -3,3 +3,7 @@
 - [x] Link the evaluation to the live job and verify it is available
 - [x] Add the next Feelivacation B2B Travel Partnerships Executive role from the uploaded JD
 - [x] Add the next Feelivacation DMC Supplier Partnerships Executive role from the uploaded JD
+- [x] Reduce analytics tracking requests and remove per-event recount queries
+- [x] Parallelize recruiter dashboard loading and scope pending counts to the organization
+- [x] Add route-level code splitting and shared organization-data caching
+- [x] Fix the landing-page ref warning
