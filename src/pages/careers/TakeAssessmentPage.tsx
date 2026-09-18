@@ -60,16 +60,20 @@ export default function TakeAssessmentPage() {
       if (appError) throw appError;
       setApplication(appData);
 
-      const { data: assignmentData, error: assignmentError } = await supabase
+      const { data: assignmentsData, error: assignmentError } = await supabase
         .from("assignments")
         .select(`
           *,
           assessments(*)
         `)
         .eq("application_id", appData.id)
-        .single();
+        .order("created_at", { ascending: true });
 
       if (assignmentError) throw assignmentError;
+      const assignmentData = (assignmentsData || []).find(
+        (candidateAssignment: any) => ["pending", "invited", "started"].includes(candidateAssignment.status)
+      ) || assignmentsData?.[assignmentsData.length - 1];
+      if (!assignmentData) throw new Error("No assessment assignment available");
       setAssignment(assignmentData);
 
       const { data: questionsData, error: questionsError } = await supabase
@@ -255,7 +259,10 @@ export default function TakeAssessmentPage() {
                   handleAnswer(currentQuestion.question_id, value)
                 }
               >
-                {JSON.parse(currentQuestion.question_bank.options).map(
+                {(Array.isArray(currentQuestion.question_bank.options)
+                  ? currentQuestion.question_bank.options
+                  : JSON.parse(currentQuestion.question_bank.options || "[]")
+                ).map(
                   (option: string, idx: number) => (
                     <div key={idx} className="flex items-center space-x-2">
                       <RadioGroupItem

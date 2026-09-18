@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, Circle, Clock, Video, FileText, Users, Loader2 } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Video, FileText, Users, Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
 
 export default function ApplicationStatusPage() {
   const { orgSlug, token } = useParams();
@@ -69,11 +69,28 @@ export default function ApplicationStatusPage() {
       completed: true,
     },
     {
+      id: "culture",
+      label: "Culture & Values Assessment",
+      icon: ShieldCheck,
+      completed: application.assignments?.some((assignment: any) =>
+        assignment.assessments?.is_culture_gate && assignment.status === "graded"
+      ) && !application.assignments?.some((assignment: any) =>
+        assignment.assessments?.is_culture_gate && assignment.status !== "graded"
+      ),
+      active: application.assignments?.some((assignment: any) =>
+        assignment.assessments?.is_culture_gate && ["pending", "invited", "started"].includes(assignment.status)
+      ),
+    },
+    {
       id: "assessment",
-      label: "Assessment",
+      label: "Role Assessment",
       icon: Clock,
-      completed: application.status !== "assessment_pending",
-      active: application.status === "assessment_pending",
+      completed: application.assignments?.some((assignment: any) =>
+        !assignment.assessments?.is_culture_gate && assignment.status === "graded"
+      ),
+      active: application.assignments?.some((assignment: any) =>
+        !assignment.assessments?.is_culture_gate && ["pending", "invited", "started"].includes(assignment.status)
+      ),
     },
     {
       id: "video",
@@ -156,7 +173,7 @@ export default function ApplicationStatusPage() {
                         >
                           {step.label}
                         </h4>
-                        <p className="text-sm text-muted-foreground">
+                         <p className="text-sm text-muted-foreground">
                           {step.completed
                             ? "Completed"
                             : step.active
@@ -176,6 +193,22 @@ export default function ApplicationStatusPage() {
         </Card>
 
         {/* Next Action */}
+
+        {application.assignments?.some((assignment: any) => assignment.assessments?.is_culture_gate && assignment.status === "graded") && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {application.assignments?.some((assignment: any) => assignment.assessments?.is_culture_gate && assignment.status === "graded")
+                  ? <ShieldCheck className="h-5 w-5 text-primary" />
+                  : <ShieldAlert className="h-5 w-5 text-destructive" />}
+                Culture & Values Review
+              </CardTitle>
+              <CardDescription>
+                This company-wide assessment is required before role-specific evaluation and hiring progression.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
         {nextAction && (
           <Card>
             <CardHeader>

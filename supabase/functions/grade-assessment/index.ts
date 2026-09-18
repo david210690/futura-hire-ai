@@ -20,6 +20,15 @@ serve(async (req) => {
     const { attempt_id } = await req.json();
     console.log('Grading attempt:', attempt_id);
 
+    const normalizeResponse = (value: unknown): any => {
+      if (typeof value !== 'string') return value;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    };
+
     // Get attempt with answers
     const { data: attempt, error: attemptError } = await supabase
       .from('attempts')
@@ -66,11 +75,12 @@ serve(async (req) => {
         const answerKey = typeof question.answer_key === 'string' 
           ? JSON.parse(question.answer_key) 
           : question.answer_key;
-        const response = typeof answer.response === 'string'
-          ? JSON.parse(answer.response)
-          : answer.response;
+        const response = normalizeResponse(answer.response);
+        const selectedIndex = typeof response === 'string'
+          ? response.charCodeAt(0) - 65
+          : response?.index;
         
-        if (response.index === answerKey.index) {
+        if (selectedIndex === answerKey.index) {
           score = question.points;
           feedback = 'Correct answer';
         } else {
@@ -82,9 +92,7 @@ serve(async (req) => {
         const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
         if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-        const response = typeof answer.response === 'string'
-          ? JSON.parse(answer.response)
-          : answer.response;
+         const response = normalizeResponse(answer.response);
 
         const systemPrompt = `You are a strict but fair assessment grader. Grade answers according to the rubric. Award partial credit when appropriate. Return ONLY valid JSON.`;
 
@@ -92,7 +100,7 @@ serve(async (req) => {
 
 Question: ${question.question}
 Rubric: ${JSON.stringify(rubric)}
-Candidate Answer: ${response.text || response}
+           Candidate Answer: ${response?.text || response}
 
 Return JSON: {"score": number, "feedback": "string"}`;
 
