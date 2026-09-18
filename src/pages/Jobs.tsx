@@ -67,11 +67,13 @@ export default function Jobs() {
 
       // Get application counts
       const jobIds = jobsData?.map(j => j.id) || [];
-      const { data: appCounts } = await supabase
-        .from('applications')
-        .select('job_id')
-        .in('job_id', jobIds)
-        .limit(5000);
+      const { data: appCounts } = jobIds.length > 0
+        ? await supabase
+            .from('applications')
+            .select('job_id')
+            .in('job_id', jobIds)
+            .limit(5000)
+        : { data: [] };
 
       const countMap: Record<string, number> = {};
       appCounts?.forEach(app => {

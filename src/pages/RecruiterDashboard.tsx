@@ -125,12 +125,12 @@ export default function RecruiterDashboard() {
     const [{ data: userData }, { data: companies, error: companyError }] = await Promise.all([
       supabase
         .from('users')
-        .select('id, name, email, avatar_url')
+        .select('id, name, email')
         .eq('id', session.user.id)
         .single(),
       supabase
         .from('companies')
-        .select('id, name, logo_url, created_at, org_id')
+        .select('id, name, created_at, org_id')
         .eq('org_id', currentOrg.id)
         .order('created_at', { ascending: false })
         .limit(1),
@@ -159,6 +159,7 @@ export default function RecruiterDashboard() {
       { data: hiresData },
       { count: recentHires },
       { data: recentApps },
+      { data: allJobIds },
     ] = await Promise.all([
       supabase
         .from('jobs')
@@ -194,6 +195,10 @@ export default function RecruiterDashboard() {
         .eq('org_id', currentOrg.id)
         .order('created_at', { ascending: false })
         .limit(5),
+      supabase
+        .from('jobs')
+        .select('id')
+        .eq('org_id', currentOrg.id),
     ]);
 
     setJobs(jobsData || []);
@@ -216,7 +221,7 @@ export default function RecruiterDashboard() {
     const interviewed = appsData?.filter(a => a.stage === 'interview' || a.stage === 'interviewed').length || 0;
     const offered = appsData?.filter(a => a.stage === 'offer' || a.status === 'hired').length || 0;
 
-    const jobIds = (jobsData || []).map(job => job.id);
+    const jobIds = (allJobIds || []).map(job => job.id);
     const [{ count: pendingAssessments }, { count: pendingInterviews }] = jobIds.length > 0
       ? await Promise.all([
           supabase
