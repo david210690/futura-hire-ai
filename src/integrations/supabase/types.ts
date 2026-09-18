@@ -421,6 +421,7 @@ export type Database = {
           description: string | null
           duration_minutes: number
           id: string
+          is_culture_gate: boolean
           name: string
           org_id: string
           passing_score: number
@@ -434,6 +435,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           id?: string
+          is_culture_gate?: boolean
           name: string
           org_id: string
           passing_score?: number
@@ -447,6 +449,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           id?: string
+          is_culture_gate?: boolean
           name?: string
           org_id?: string
           passing_score?: number
