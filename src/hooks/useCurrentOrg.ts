@@ -17,6 +17,35 @@ export interface OrgMember {
   created_at: string;
 }
 
+type OrgCache = {
+  userId: string;
+  orgs: Org[];
+  memberships: Array<Pick<OrgMember, 'org_id' | 'role'>>;
+};
+
+let orgCache: OrgCache | null = null;
+let orgLoadPromise: Promise<OrgCache | null> | null = null;
+
+const fetchOrgData = async (userId: string): Promise<OrgCache | null> => {
+  const { data: memberships, error: memberError } = await supabase
+    .from('org_members')
+    .select('org_id, role')
+    .eq('user_id', userId);
+
+  if (memberError) throw memberError;
+  if (!memberships || memberships.length === 0) {
+    return { userId, orgs: [], memberships: [] };
+  }
+
+  const { data: orgsData, error: orgsError } = await supabase
+    .from('orgs')
+    .select('id, name, slug, owner_id, created_at')
+    .in('id', memberships.map(membership => membership.org_id));
+
+  if (orgsError) throw orgsError;
+  return { userId, orgs: orgsData || [], memberships };
+};
+
 export const useCurrentOrg = () => {
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [currentOrg, setCurrentOrg] = useState<Org | null>(null);
@@ -25,56 +54,39 @@ export const useCurrentOrg = () => {
 
   const loadOrgs = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user.id;
+      if (!userId) {
         setLoading(false);
         return;
       }
 
-      // Get all org memberships
-      const { data: memberships, error: memberError } = await supabase
-        .from('org_members')
-        .select('org_id, role')
-        .eq('user_id', user.id);
-
-      if (memberError) {
-        console.error('Error loading memberships:', memberError);
-        setLoading(false);
-        return;
-      }
-
-      if (memberships && memberships.length > 0) {
-        // Get org details separately
-        const orgIds = memberships.map(m => m.org_id);
-        const { data: orgsData, error: orgsError } = await supabase
-          .from('orgs')
-          .select('*')
-          .in('id', orgIds);
-
-        if (orgsError) {
-          console.error('Error loading orgs:', orgsError);
-          setLoading(false);
-          return;
+      if (!orgCache || orgCache.userId !== userId) {
+        if (!orgLoadPromise) {
+          orgLoadPromise = fetchOrgData(userId).finally(() => {
+            orgLoadPromise = null;
+          });
         }
+        orgCache = await orgLoadPromise;
+      }
 
-        setOrgs(orgsData || []);
-
-        // Get stored org preference or use first org
+      if (orgCache) {
+        setOrgs(orgCache.orgs);
         const storedOrgId = localStorage.getItem('currentOrgId');
-        const selectedOrg = storedOrgId 
-          ? orgsData?.find(o => o.id === storedOrgId) || orgsData?.[0]
-          : orgsData?.[0];
+        const selectedOrg = storedOrgId
+          ? orgCache.orgs.find(org => org.id === storedOrgId) || orgCache.orgs[0]
+          : orgCache.orgs[0];
 
-        if (selectedOrg) {
-          setCurrentOrg(selectedOrg);
-          const membership = memberships.find(m => m.org_id === selectedOrg.id);
-          setCurrentRole(membership?.role || null);
-        }
+        setCurrentOrg(selectedOrg || null);
+        setCurrentRole(
+          orgCache.memberships.find(membership => membership.org_id === selectedOrg?.id)?.role || null,
+        );
       }
 
       setLoading(false);
     } catch (error) {
       console.error('Error in loadOrgs:', error);
+      orgCache = null;
       setLoading(false);
     }
   };

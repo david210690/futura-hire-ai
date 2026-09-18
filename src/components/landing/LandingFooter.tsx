@@ -1,9 +1,10 @@
+import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import futurahireLogo from "@/assets/futurahire-logo.png";
 
-export const LandingFooter = () => {
+export const LandingFooter = forwardRef<HTMLElement>((_, ref) => {
   return (
-    <footer className="px-4 py-12 border-t border-border/50">
+    <footer ref={ref} className="px-4 py-12 border-t border-border/50">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
@@ -32,4 +33,6 @@ export const LandingFooter = () => {
       </div>
     </footer>
   );
-};
+});
+
+LandingFooter.displayName = "LandingFooter";
