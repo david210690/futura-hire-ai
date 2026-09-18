@@ -43,12 +43,13 @@ serve(async (req) => {
     }
 
     // Trigger grading
-    const { error: gradeError } = await supabase.functions.invoke("grade-assessment", {
+    const { data: gradeResult, error: gradeError } = await supabase.functions.invoke("grade-assessment", {
       body: { attempt_id },
     });
 
     if (gradeError) {
       console.error("Grading error:", gradeError);
+      throw new Error("Assessment grading could not be completed. Please try submitting again.");
     }
 
     // Update assignment status
@@ -61,7 +62,7 @@ serve(async (req) => {
     if (attempt) {
       await supabase
         .from("assignments")
-        .update({ status: gradeError ? "submitted" : "graded" })
+        .update({ status: "graded" })
         .eq("id", attempt.assignment_id);
 
       // Update application stage
@@ -81,15 +82,16 @@ serve(async (req) => {
         if (assignmentDetails?.assessments?.is_culture_gate) {
           const { data: gradedAttempt } = await supabase
             .from("attempts")
-            .select("culture_gate_pass")
+            .select("culture_gate_pass, decision")
             .eq("id", attempt_id)
             .single();
 
+          const decision = gradedAttempt?.decision ?? gradeResult?.decision;
           await supabase
             .from("applications")
             .update({
-              status: gradedAttempt?.culture_gate_pass ? "assessment_pending" : "rejected",
-              stage: gradedAttempt?.culture_gate_pass ? "assessment_complete" : "rejected",
+              status: decision === "failed" ? "rejected" : "review",
+              stage: decision === "passed" ? "assessment_complete" : "new",
             })
             .eq("id", assignment.application_id);
         } else {
