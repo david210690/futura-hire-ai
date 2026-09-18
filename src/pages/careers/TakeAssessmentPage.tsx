@@ -192,6 +192,10 @@ export default function TakeAssessmentPage() {
   }
 
   const currentQuestion = questions[currentIndex];
+  const isPsychometric = assignment.assessments?.is_culture_gate;
+  const rubric = typeof currentQuestion.question_bank.rubric === "string"
+    ? JSON.parse(currentQuestion.question_bank.rubric)
+    : currentQuestion.question_bank.rubric;
   const progress = ((currentIndex + 1) / questions.length) * 100;
   const minutes = Math.floor(timeRemaining / 60);
   const seconds = timeRemaining % 60;
@@ -217,6 +221,23 @@ export default function TakeAssessmentPage() {
           </div>
         </div>
       </div>
+
+      {isPsychometric && currentIndex === 0 && (
+        <div className="container mx-auto px-4 pt-6 max-w-4xl">
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="text-base">Before you begin</CardTitle>
+              <CardDescription>
+                Answer based on how you normally behave at work, not what you think an employer wants to hear.
+                This is a non-clinical workplace assessment and should take about 25–30 minutes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 text-sm text-muted-foreground">
+              Questions 1–30 use a five-point scale. Questions 31–40 ask you to choose the response closest to how you would actually act.
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Progress */}
       <div className="border-b bg-muted/20">
@@ -245,10 +266,10 @@ export default function TakeAssessmentPage() {
                 {currentQuestion.question_bank.points} pts
               </Badge>
             </div>
-            <CardDescription>
-              Type: {currentQuestion.question_bank.type.toUpperCase()} • 
-              Difficulty: {currentQuestion.question_bank.difficulty}
-            </CardDescription>
+             <CardDescription>
+               {rubric?.section_label ?? "Assessment question"}
+               {rubric?.reverse_scored ? " • Your response is scored using the official reverse-scoring rule." : ""}
+             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* MCQ */}
@@ -270,7 +291,7 @@ export default function TakeAssessmentPage() {
                         id={`option-${idx}`}
                       />
                       <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer">
-                        {String.fromCharCode(65 + idx)}. {option}
+                         {rubric?.scale ? `${idx + 1}. ${option}` : `${String.fromCharCode(65 + idx)}. ${option}`}
                       </Label>
                     </div>
                   )
