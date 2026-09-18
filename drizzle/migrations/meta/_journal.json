@@ -8,6 +8,13 @@
       "when": 1789729287719,
       "tag": "0000_add_culture_gate_enforcement",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789729330931,
+      "tag": "0001_store_culture_gate_results",
+      "breakpoints": true
     }
   ]
 }
