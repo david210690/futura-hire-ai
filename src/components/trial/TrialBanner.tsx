@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Crown, X } from "lucide-react";
 import { getTrialStatus, type TrialStatus } from "@/lib/trial";
 import { cn } from "@/lib/utils";
+import { SHOW_PRICING } from "@/lib/billing-config";
+
 
 interface TrialBannerProps {
   orgId: string;
@@ -24,7 +26,7 @@ export const TrialBanner = ({ orgId, onDismiss }: TrialBannerProps) => {
     loadTrialStatus();
   }, [orgId]);
 
-  if (!trialStatus || trialStatus.state === "paid" || dismissed) {
+  if (!SHOW_PRICING || !trialStatus || trialStatus.state === "paid" || dismissed) {
     return null;
   }
 

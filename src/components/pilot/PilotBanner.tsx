@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Calendar, Clock, Crown, Lock, Sparkles } from "lucide-react";
 import { getOrgPilotStatus, checkAndLockExpiredPilot, type OrgPilotStatus } from "@/lib/pilot";
+import { SHOW_PRICING } from "@/lib/billing-config";
+
 
 interface PilotBannerProps {
   orgId: string;
@@ -34,7 +36,7 @@ export function PilotBanner({ orgId, onLocked }: PilotBannerProps) {
     loadStatus();
   }, [orgId, onLocked]);
 
-  if (loading || !status) return null;
+  if (!SHOW_PRICING || loading || !status) return null;
 
   // Don't show banner for active paid subscribers
   if (status.planStatus === 'active') return null;

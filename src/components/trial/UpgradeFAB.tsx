@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Crown } from "lucide-react";
 import { PlanPickerModal } from "./PlanPickerModal";
 import { cn } from "@/lib/utils";
+import { SHOW_PRICING } from "@/lib/billing-config";
+
 
 interface UpgradeFABProps {
   orgId: string;
@@ -12,7 +14,7 @@ interface UpgradeFABProps {
 export const UpgradeFAB = ({ orgId, show }: UpgradeFABProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (!show) return null;
+  if (!SHOW_PRICING || !show) return null;
 
   return (
     <>
