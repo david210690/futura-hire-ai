@@ -31,6 +31,7 @@ interface Application {
     headline: string;
     skills: string;
   };
+  culture_gate_pass?: boolean | null;
 }
 
 interface CandidatePipelineViewProps {
@@ -125,6 +126,23 @@ export function CandidatePipelineView({ applications, jobId, jobTitle, onRefresh
   const moveToStage = async (applicationId: string, candidateId: string, newStage: string) => {
     setUpdating(applicationId);
     try {
+      const protectedStage = ['shortlisted', 'interview', 'offer', 'hired'].includes(newStage);
+      if (protectedStage) {
+        const { data: applicationGate, error: gateError } = await supabase
+          .from('assignments')
+          .select('assessments!inner(is_culture_gate), attempts(culture_gate_pass)')
+          .eq('application_id', applicationId)
+          .eq('assessments.is_culture_gate', true);
+
+        if (gateError) throw gateError;
+        const hasPassedCulture = applicationGate?.some((assignment: any) =>
+          assignment.attempts?.some((attempt: any) => attempt.culture_gate_pass === true)
+        );
+        if (!hasPassedCulture) {
+          throw new Error('This candidate must pass the Culture & Values Assessment before progressing.');
+        }
+      }
+
       const { error } = await supabase
         .from('applications')
         .update({ stage: newStage })
@@ -249,6 +267,9 @@ export function CandidatePipelineView({ applications, jobId, jobTitle, onRefresh
                                 <span className="text-xs text-muted-foreground">Skills:</span>
                                 <ScoreBadge score={app.skill_fit_score} size="sm" />
                               </div>
+                              <Badge variant={app.culture_gate_pass === true ? "default" : "outline"} className="text-xs">
+                                {app.culture_gate_pass === true ? "Culture passed" : "Culture gate required"}
+                              </Badge>
                             </div>
                           </div>
                         </div>
