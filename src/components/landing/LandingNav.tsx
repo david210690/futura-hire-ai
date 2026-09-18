@@ -24,9 +24,6 @@ export const LandingNav = ({ onApplyPilot }: LandingNavProps) => {
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Features
             </a>
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Pricing
-            </a>
             <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               FAQ
             </a>
@@ -57,13 +54,6 @@ export const LandingNav = ({ onApplyPilot }: LandingNavProps) => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Features
-              </a>
-              <a 
-                href="#pricing" 
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Pricing
               </a>
               <a 
                 href="#faq" 

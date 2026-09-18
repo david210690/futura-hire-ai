@@ -22,6 +22,7 @@ import {
   Percent
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { SHOW_PRICING } from "@/lib/billing-config";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { CopilotPanel } from "@/components/recruiter/CopilotPanel";
