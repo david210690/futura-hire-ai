@@ -2,3 +2,4 @@
 - [x] Add the structured hiring evaluation, interview questions, rubrics, and weighted scorecard
 - [x] Link the evaluation to the live job and verify it is available
 - [x] Add the next Feelivacation B2B Travel Partnerships Executive role from the uploaded JD
+- [x] Add the next Feelivacation DMC Supplier Partnerships Executive role from the uploaded JD
