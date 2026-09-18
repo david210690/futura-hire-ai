@@ -7,3 +7,6 @@
 - [x] Parallelize recruiter dashboard loading and scope pending counts to the organization
 - [x] Add route-level code splitting and shared organization-data caching
 - [x] Fix the landing-page ref warning
+ - [x] Add the 12 remaining unique Feelivacation JD roles without duplicating existing titles
+ - [x] Create linked hiring evaluations with structured questions, rubrics, and scoring for all 12 roles
+ - [x] Verify all 15 Feelivacation roles are open and linked to assessments
