@@ -86,6 +86,14 @@ serve(async (req) => {
       }
     }
 
+    // The Feelivacation culture gate always comes before the role assessment.
+    const { data: cultureAssessment } = await supabase
+      .from("assessments")
+      .select("id, name, duration_minutes")
+      .eq("org_id", job.org_id)
+      .eq("is_culture_gate", true)
+      .maybeSingle();
+
     // Create application
     const { data: application, error: appError } = await supabase
       .from("applications")
@@ -93,16 +101,28 @@ serve(async (req) => {
         org_id: job.org_id,
         job_id: job.id,
         candidate_id: candidate.id,
-        status: job.default_assessment_id ? "assessment_pending" : "review",
+        status: cultureAssessment || job.default_assessment_id ? "assessment_pending" : "review",
         video_required: job.video_required || false,
-        stage: job.default_assessment_id ? "assessment_pending" : "applied",
+        stage: cultureAssessment || job.default_assessment_id ? "assessment_pending" : "applied",
       })
       .select()
       .single();
 
     if (appError) throw appError;
 
-    // Create assessment assignment if job has default assessment
+    // Create the culture assignment first, then the role-specific assignment.
+    if (cultureAssessment) {
+      await supabase
+        .from("assignments")
+        .insert({
+          assessment_id: cultureAssessment.id,
+          candidate_id: candidate.id,
+          job_id: job.id,
+          application_id: application.id,
+          status: "pending",
+        });
+    }
+
     if (job.default_assessment_id) {
       await supabase
         .from("assignments")
@@ -142,7 +162,7 @@ serve(async (req) => {
         });
 
         // If there's an assessment, send invitation email
-        if (job.default_assessment_id) {
+        if (cultureAssessment || job.default_assessment_id) {
           await supabase.functions.invoke("send-application-email", {
             body: {
               type: "assessment_invitation",
@@ -151,7 +171,7 @@ serve(async (req) => {
                 candidateName: candidateUser.name || candidateData.name,
                 jobTitle: job.title,
                 assessmentUrl: `${statusUrl}`,
-                duration: "60",
+                duration: String(cultureAssessment?.duration_minutes || 60),
               },
             },
           });

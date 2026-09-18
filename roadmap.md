@@ -9,4 +9,7 @@
 - [x] Fix the landing-page ref warning
  - [x] Add the 12 remaining unique Feelivacation JD roles without duplicating existing titles
  - [x] Create linked hiring evaluations with structured questions, rubrics, and scoring for all 12 roles
- - [x] Verify all 15 Feelivacation roles are open and linked to assessments
+  - [x] Verify all 15 Feelivacation roles are open and linked to assessments
+  - [x] Add the mandatory Feelivacation Culture & Values Assessment with 40 ordered questions
+  - [x] Enforce culture-gate scoring, red flags, and progression blocking
+  - [x] Show culture assessment sequencing and status in candidate and recruiter flows

@@ -421,6 +421,7 @@ export type Database = {
           description: string | null
           duration_minutes: number
           id: string
+          is_culture_gate: boolean
           name: string
           org_id: string
           passing_score: number
@@ -434,6 +435,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           id?: string
+          is_culture_gate?: boolean
           name: string
           org_id: string
           passing_score?: number
@@ -447,6 +449,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           id?: string
+          is_culture_gate?: boolean
           name?: string
           org_id?: string
           passing_score?: number
@@ -575,6 +578,10 @@ export type Database = {
         Row: {
           ai_grade: number | null
           assignment_id: string
+          critical_red_flags: Json | null
+          culture_gate_pass: boolean | null
+          decision: string | null
+          dimension_scores: Json | null
           final_grade: number | null
           human_override_grade: number | null
           id: string
@@ -589,6 +596,10 @@ export type Database = {
         Insert: {
           ai_grade?: number | null
           assignment_id: string
+          critical_red_flags?: Json | null
+          culture_gate_pass?: boolean | null
+          decision?: string | null
+          dimension_scores?: Json | null
           final_grade?: number | null
           human_override_grade?: number | null
           id?: string
@@ -603,6 +614,10 @@ export type Database = {
         Update: {
           ai_grade?: number | null
           assignment_id?: string
+          critical_red_flags?: Json | null
+          culture_gate_pass?: boolean | null
+          decision?: string | null
+          dimension_scores?: Json | null
           final_grade?: number | null
           human_override_grade?: number | null
           id?: string

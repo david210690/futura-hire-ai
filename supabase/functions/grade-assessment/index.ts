@@ -20,6 +20,15 @@ serve(async (req) => {
     const { attempt_id } = await req.json();
     console.log('Grading attempt:', attempt_id);
 
+    const normalizeResponse = (value: unknown): any => {
+      if (typeof value !== 'string') return value;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    };
+
     // Get attempt with answers
     const { data: attempt, error: attemptError } = await supabase
       .from('attempts')
@@ -32,13 +41,31 @@ serve(async (req) => {
     // Get passing score
     const { data: assessment, error: assessmentError } = await supabase
       .from('assessments')
-      .select('passing_score, total_points')
+      .select('passing_score, total_points, is_culture_gate')
       .eq('id', attempt.assignments.assessment_id)
       .single();
 
     if (assessmentError) throw assessmentError;
 
+    const { data: assessmentQuestions, error: assessmentQuestionsError } = await supabase
+      .from('assessment_questions')
+      .select('question_id, question_bank(id, points, rubric)')
+      .eq('assessment_id', attempt.assignments.assessment_id);
+
+    if (assessmentQuestionsError) throw assessmentQuestionsError;
+
     let totalScore = 0;
+    const dimensionScores: Record<string, { score: number; max: number }> = {};
+    const criticalRedFlags: Array<{ question_id: string; reason: string }> = [];
+
+    for (const assessmentQuestion of assessmentQuestions || []) {
+      const question = assessmentQuestion.question_bank as any;
+      const rubric = typeof question?.rubric === 'string' ? JSON.parse(question.rubric) : question?.rubric;
+      if (rubric?.dimension) {
+        if (!dimensionScores[rubric.dimension]) dimensionScores[rubric.dimension] = { score: 0, max: 0 };
+        dimensionScores[rubric.dimension].max += question.points;
+      }
+    }
 
     // Grade each answer
     for (const answer of attempt.attempt_answers) {
@@ -51,6 +78,10 @@ serve(async (req) => {
 
       if (questionError) continue;
 
+      const rubric = typeof question.rubric === 'string' ? JSON.parse(question.rubric) : question.rubric;
+      const dimension = rubric?.dimension;
+      if (dimension && !dimensionScores[dimension]) dimensionScores[dimension] = { score: 0, max: question.points };
+
       let score = 0;
       let feedback = '';
 
@@ -59,29 +90,27 @@ serve(async (req) => {
         const answerKey = typeof question.answer_key === 'string' 
           ? JSON.parse(question.answer_key) 
           : question.answer_key;
-        const response = typeof answer.response === 'string'
-          ? JSON.parse(answer.response)
-          : answer.response;
+        const response = normalizeResponse(answer.response);
+        const selectedIndex = typeof response === 'string'
+          ? response.charCodeAt(0) - 65
+          : response?.index;
         
-        if (response.index === answerKey.index) {
+        if (selectedIndex === answerKey.index) {
           score = question.points;
           feedback = 'Correct answer';
         } else {
           score = 0;
           feedback = 'Incorrect answer';
+          if (rubric?.critical_red_flag) {
+            criticalRedFlags.push({ question_id: question.id, reason: 'Critical culture question was answered in a way that requires review' });
+          }
         }
       } else {
         // AI-grade free_text and coding
         const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
         if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-        const rubric = typeof question.rubric === 'string'
-          ? JSON.parse(question.rubric)
-          : question.rubric;
-
-        const response = typeof answer.response === 'string'
-          ? JSON.parse(answer.response)
-          : answer.response;
+         const response = normalizeResponse(answer.response);
 
         const systemPrompt = `You are a strict but fair assessment grader. Grade answers according to the rubric. Award partial credit when appropriate. Return ONLY valid JSON.`;
 
@@ -89,7 +118,7 @@ serve(async (req) => {
 
 Question: ${question.question}
 Rubric: ${JSON.stringify(rubric)}
-Candidate Answer: ${response.text || response}
+           Candidate Answer: ${response?.text || response}
 
 Return JSON: {"score": number, "feedback": "string"}`;
 
@@ -118,6 +147,9 @@ Return JSON: {"score": number, "feedback": "string"}`;
             const gradeResult = JSON.parse(jsonStr);
             score = Math.min(gradeResult.score, question.points);
             feedback = gradeResult.feedback;
+            if (rubric?.critical_red_flag && score <= 1) {
+              criticalRedFlags.push({ question_id: question.id, reason: feedback || "Critical culture response requires review" });
+            }
           } catch (e) {
             console.error('Failed to parse AI grading:', content);
             score = 0;
@@ -136,11 +168,26 @@ Return JSON: {"score": number, "feedback": "string"}`;
         .eq('id', answer.id);
 
       totalScore += score;
+      if (dimension) dimensionScores[dimension].score += score;
+    }
+
+    const answeredQuestionIds = new Set(attempt.attempt_answers.map((answer: any) => answer.question_id));
+    for (const assessmentQuestion of assessmentQuestions || []) {
+      const question = assessmentQuestion.question_bank as any;
+      const rubric = typeof question?.rubric === 'string' ? JSON.parse(question.rubric) : question?.rubric;
+      if (rubric?.critical_red_flag && !answeredQuestionIds.has(assessmentQuestion.question_id)) {
+        criticalRedFlags.push({ question_id: assessmentQuestion.question_id, reason: 'Critical culture question was not answered' });
+      }
     }
 
     // Calculate final grade
     const finalGrade = Math.round((totalScore / assessment.total_points) * 100);
-    const pass = finalGrade >= assessment.passing_score;
+    const dimensionPass = !assessment.is_culture_gate || Object.values(dimensionScores).every(({ score, max }) => score >= max * 0.5);
+    const noCriticalFlags = criticalRedFlags.length === 0;
+    const cultureGatePass = assessment.is_culture_gate
+      ? finalGrade >= assessment.passing_score && dimensionPass && noCriticalFlags
+      : null;
+    const pass = assessment.is_culture_gate ? cultureGatePass : finalGrade >= assessment.passing_score;
 
     // Update attempt
     await supabase
@@ -148,7 +195,13 @@ Return JSON: {"score": number, "feedback": "string"}`;
       .update({
         ai_grade: finalGrade,
         final_grade: finalGrade,
-        pass
+        pass,
+        dimension_scores: dimensionScores,
+        critical_red_flags: criticalRedFlags,
+        culture_gate_pass: cultureGatePass,
+        decision: assessment.is_culture_gate
+          ? (cultureGatePass ? 'passed' : 'failed')
+          : (pass ? 'passed' : 'failed')
       })
       .eq('id', attempt_id);
 
@@ -159,7 +212,7 @@ Return JSON: {"score": number, "feedback": "string"}`;
       .eq('id', attempt.assignment_id);
 
     return new Response(
-      JSON.stringify({ final_grade: finalGrade, pass, total_score: totalScore }),
+      JSON.stringify({ final_grade: finalGrade, pass, total_score: totalScore, culture_gate_pass: cultureGatePass }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
