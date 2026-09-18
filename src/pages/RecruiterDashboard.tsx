@@ -122,22 +122,21 @@ export default function RecruiterDashboard() {
       return;
     }
 
-    // Load user data
-    const { data: userData } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
+    const [{ data: userData }, { data: companies, error: companyError }] = await Promise.all([
+      supabase
+        .from('users')
+        .select('id, name, email, avatar_url')
+        .eq('id', session.user.id)
+        .single(),
+      supabase
+        .from('companies')
+        .select('id, name, logo_url, created_at, org_id')
+        .eq('org_id', currentOrg.id)
+        .order('created_at', { ascending: false })
+        .limit(1),
+    ]);
 
     setUser(userData);
-
-    // Load company for this org - get the first one
-    const { data: companies, error: companyError } = await supabase
-      .from('companies')
-      .select('*')
-      .eq('org_id', currentOrg.id)
-      .order('created_at', { ascending: false })
-      .limit(1);
 
     if (companyError) {
       console.error('Error loading company:', companyError);
@@ -153,33 +152,57 @@ export default function RecruiterDashboard() {
     setHasCompany(true);
     setCompany(companyData);
 
-    // Load jobs for this org
-    const { data: jobsData } = await supabase
-      .from('jobs')
-      .select('*')
-      .eq('org_id', currentOrg.id)
-      .order('created_at', { ascending: false })
-      .limit(5);
+    const [
+      { data: jobsData },
+      { count: openCount },
+      { data: appsData },
+      { data: hiresData },
+      { count: recentHires },
+      { data: recentApps },
+    ] = await Promise.all([
+      supabase
+        .from('jobs')
+        .select('*')
+        .eq('org_id', currentOrg.id)
+        .order('created_at', { ascending: false })
+        .limit(5),
+      supabase
+        .from('jobs')
+        .select('id', { count: 'exact', head: true })
+        .eq('org_id', currentOrg.id)
+        .eq('status', 'open'),
+      supabase
+        .from('applications')
+        .select('culture_fit_score, job_id, status, stage, created_at, candidate_id')
+        .eq('org_id', currentOrg.id),
+      supabase
+        .from('hires')
+        .select('created_at, application_id, applications!inner(created_at)')
+        .eq('org_id', currentOrg.id),
+      supabase
+        .from('hires')
+        .select('id', { count: 'exact', head: true })
+        .eq('org_id', currentOrg.id)
+        .gte('created_at', (() => {
+          const date = new Date();
+          date.setDate(date.getDate() - 30);
+          return date.toISOString();
+        })()),
+      supabase
+        .from('applications')
+        .select('id, created_at, stage, status, job_id, jobs!inner(title)')
+        .eq('org_id', currentOrg.id)
+        .order('created_at', { ascending: false })
+        .limit(5),
+    ]);
 
     setJobs(jobsData || []);
-
-    // Load stats
-    const { count: openCount } = await supabase
-      .from('jobs')
-      .select('*', { count: 'exact', head: true })
-      .eq('org_id', currentOrg.id)
-      .eq('status', 'open');
-
-    const { data: appsData } = await supabase
-      .from('applications')
-      .select('culture_fit_score, job_id, status, stage, created_at, candidate_id')
-      .eq('org_id', currentOrg.id);
 
     const avgCulture = appsData && appsData.length > 0
       ? Math.round(appsData.reduce((sum, app) => sum + (app.culture_fit_score || 0), 0) / appsData.length)
       : 0;
 
-    const uniqueCandidates = new Set(appsData?.map(app => app.job_id)).size;
+    const uniqueCandidates = new Set(appsData?.map(app => app.candidate_id)).size;
 
     setStats({
       openJobs: openCount || 0,
@@ -193,17 +216,21 @@ export default function RecruiterDashboard() {
     const interviewed = appsData?.filter(a => a.stage === 'interview' || a.stage === 'interviewed').length || 0;
     const offered = appsData?.filter(a => a.stage === 'offer' || a.status === 'hired').length || 0;
 
-    // Pending assessments
-    const { count: pendingAssessments } = await supabase
-      .from('assignments')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
-
-    // Pending interviews
-    const { count: pendingInterviews } = await supabase
-      .from('interviews')
-      .select('*', { count: 'exact', head: true })
-      .is('ended_at', null);
+    const jobIds = (jobsData || []).map(job => job.id);
+    const [{ count: pendingAssessments }, { count: pendingInterviews }] = jobIds.length > 0
+      ? await Promise.all([
+          supabase
+            .from('assignments')
+            .select('id', { count: 'exact', head: true })
+            .in('job_id', jobIds)
+            .eq('status', 'pending'),
+          supabase
+            .from('interviews')
+            .select('id', { count: 'exact', head: true })
+            .in('job_id', jobIds)
+            .is('ended_at', null),
+        ])
+      : [{ count: 0 }, { count: 0 }];
 
     setPipelineStats({
       newApplications: newApps,
@@ -213,13 +240,6 @@ export default function RecruiterDashboard() {
       pendingAssessments: pendingAssessments || 0,
       pendingInterviews: pendingInterviews || 0
     });
-
-    // Calculate richer metrics
-    // Get hires data for time-to-hire calculation
-    const { data: hiresData } = await supabase
-      .from('hires')
-      .select('created_at, application_id, applications!inner(created_at)')
-      .eq('org_id', currentOrg.id);
 
     // Average time to hire (days from application to hire)
     let avgTimeToHire = 0;
@@ -234,14 +254,6 @@ export default function RecruiterDashboard() {
     }
 
     // Hiring velocity (hires in last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const { count: recentHires } = await supabase
-      .from('hires')
-      .select('*', { count: 'exact', head: true })
-      .eq('org_id', currentOrg.id)
-      .gte('created_at', thirtyDaysAgo.toISOString());
-
     // Conversion rate (hired / total applications)
     const totalApps = appsData?.length || 0;
     const hiredCount = hiresData?.length || 0;
@@ -259,21 +271,6 @@ export default function RecruiterDashboard() {
       conversionRate,
       interviewToOfferRate
     });
-
-    // Recent activity - get recent applications with job info
-    const { data: recentApps } = await supabase
-      .from('applications')
-      .select(`
-        id,
-        created_at,
-        stage,
-        status,
-        job_id,
-        jobs!inner(title)
-      `)
-      .eq('org_id', currentOrg.id)
-      .order('created_at', { ascending: false })
-      .limit(5);
 
     const activities = (recentApps || []).map(app => ({
       id: app.id,
