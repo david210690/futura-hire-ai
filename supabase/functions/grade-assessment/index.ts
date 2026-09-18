@@ -47,9 +47,25 @@ serve(async (req) => {
 
     if (assessmentError) throw assessmentError;
 
+    const { data: assessmentQuestions, error: assessmentQuestionsError } = await supabase
+      .from('assessment_questions')
+      .select('question_id, question_bank(id, points, rubric)')
+      .eq('assessment_id', attempt.assignments.assessment_id);
+
+    if (assessmentQuestionsError) throw assessmentQuestionsError;
+
     let totalScore = 0;
     const dimensionScores: Record<string, { score: number; max: number }> = {};
     const criticalRedFlags: Array<{ question_id: string; reason: string }> = [];
+
+    for (const assessmentQuestion of assessmentQuestions || []) {
+      const question = assessmentQuestion.question_bank as any;
+      const rubric = typeof question?.rubric === 'string' ? JSON.parse(question.rubric) : question?.rubric;
+      if (rubric?.dimension) {
+        if (!dimensionScores[rubric.dimension]) dimensionScores[rubric.dimension] = { score: 0, max: 0 };
+        dimensionScores[rubric.dimension].max += question.points;
+      }
+    }
 
     // Grade each answer
     for (const answer of attempt.attempt_answers) {
@@ -64,8 +80,7 @@ serve(async (req) => {
 
       const rubric = typeof question.rubric === 'string' ? JSON.parse(question.rubric) : question.rubric;
       const dimension = rubric?.dimension;
-      if (dimension && !dimensionScores[dimension]) dimensionScores[dimension] = { score: 0, max: 0 };
-      if (dimension) dimensionScores[dimension].max += question.points;
+      if (dimension && !dimensionScores[dimension]) dimensionScores[dimension] = { score: 0, max: question.points };
 
       let score = 0;
       let feedback = '';
@@ -86,6 +101,9 @@ serve(async (req) => {
         } else {
           score = 0;
           feedback = 'Incorrect answer';
+          if (rubric?.critical_red_flag) {
+            criticalRedFlags.push({ question_id: question.id, reason: 'Critical culture question was answered in a way that requires review' });
+          }
         }
       } else {
         // AI-grade free_text and coding
@@ -151,6 +169,15 @@ Return JSON: {"score": number, "feedback": "string"}`;
 
       totalScore += score;
       if (dimension) dimensionScores[dimension].score += score;
+    }
+
+    const answeredQuestionIds = new Set(attempt.attempt_answers.map((answer: any) => answer.question_id));
+    for (const assessmentQuestion of assessmentQuestions || []) {
+      const question = assessmentQuestion.question_bank as any;
+      const rubric = typeof question?.rubric === 'string' ? JSON.parse(question.rubric) : question?.rubric;
+      if (rubric?.critical_red_flag && !answeredQuestionIds.has(assessmentQuestion.question_id)) {
+        criticalRedFlags.push({ question_id: assessmentQuestion.question_id, reason: 'Critical culture question was not answered' });
+      }
     }
 
     // Calculate final grade

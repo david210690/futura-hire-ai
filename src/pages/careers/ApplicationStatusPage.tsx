@@ -73,9 +73,7 @@ export default function ApplicationStatusPage() {
       label: "Culture & Values Assessment",
       icon: ShieldCheck,
       completed: application.assignments?.some((assignment: any) =>
-        assignment.assessments?.is_culture_gate && assignment.status === "graded"
-      ) && !application.assignments?.some((assignment: any) =>
-        assignment.assessments?.is_culture_gate && assignment.status !== "graded"
+        assignment.assessments?.is_culture_gate && assignment.attempts?.some((attempt: any) => attempt.culture_gate_pass === true)
       ),
       active: application.assignments?.some((assignment: any) =>
         assignment.assessments?.is_culture_gate && ["pending", "invited", "started"].includes(assignment.status)
@@ -198,7 +196,7 @@ export default function ApplicationStatusPage() {
           <Card className="mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {application.assignments?.some((assignment: any) => assignment.assessments?.is_culture_gate && assignment.status === "graded")
+                {application.assignments?.some((assignment: any) => assignment.assessments?.is_culture_gate && assignment.attempts?.some((attempt: any) => attempt.culture_gate_pass === true))
                   ? <ShieldCheck className="h-5 w-5 text-primary" />
                   : <ShieldAlert className="h-5 w-5 text-destructive" />}
                 Culture & Values Review

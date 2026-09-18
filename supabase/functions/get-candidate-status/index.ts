@@ -27,7 +27,7 @@ serve(async (req) => {
         jobs(id, title, slug, location),
         orgs(id, name, slug),
         candidates(id, full_name, skills),
-        assignments(id, status, assessment_id, assessments(name, description, duration_minutes, is_culture_gate)),
+        assignments(id, status, assessment_id, assessments(name, description, duration_minutes, is_culture_gate), attempts(id, pass, culture_gate_pass, final_grade)),
         videos(id, status, created_at)
       `)
       .eq("apply_token", token)
@@ -46,11 +46,17 @@ serve(async (req) => {
     let nextAction = null;
     let nextActionLabel = null;
 
+    const cultureAssignment = application.assignments?.find((assignment: any) => assignment.assessments?.is_culture_gate);
+    const cultureAttempt = cultureAssignment?.attempts?.[cultureAssignment.attempts.length - 1];
+    const cultureFailed = Boolean(cultureAttempt && cultureAttempt.culture_gate_pass === false);
     const pendingAssignment = application.assignments?.find(
       (assignment: any) => assignment.status === "pending" || assignment.status === "invited" || assignment.status === "started"
     );
 
-    if (pendingAssignment) {
+    if (cultureFailed) {
+      nextAction = null;
+      nextActionLabel = null;
+    } else if (pendingAssignment) {
       nextAction = "assessment";
       nextActionLabel = pendingAssignment.assessments?.is_culture_gate
         ? "Start Culture & Values Assessment"
