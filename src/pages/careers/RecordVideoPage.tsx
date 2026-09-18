@@ -272,7 +272,7 @@ export default function RecordVideoPage() {
         .insert({
           candidate_id: application.candidate_id,
           file_url: publicUrl,
-          duration_sec: 120,
+
         })
         .select()
         .single();

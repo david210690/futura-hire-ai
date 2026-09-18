@@ -270,7 +270,7 @@ export default function CandidateVideo() {
         .insert({
           candidate_id: candidate.id,
           file_url: publicUrl,
-          duration_sec: 120, // You can calculate actual duration if needed
+
         })
         .select()
         .single();
