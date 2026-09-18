@@ -80,9 +80,8 @@ const recruiterNavGroups = [
     tourId: "sidebar-settings",
     items: [
       { label: "Organization", path: "/org/settings", icon: Settings },
-      { label: "Billing", path: "/billing", icon: DollarSign },
-      { label: "Pricing Plans", path: "/pricing", icon: FileText },
       { label: "Email Logs", path: "/admin/email-logs", icon: Zap, description: "Monitor delivery" },
+
     ],
   },
 ];

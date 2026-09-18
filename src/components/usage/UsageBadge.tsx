@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { getCurrentUsage } from "@/lib/entitlements";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { SHOW_PRICING } from "@/lib/billing-config";
+
 
 interface UsageBadgeProps {
   metric: string;
@@ -33,7 +35,10 @@ export const UsageBadge = ({ metric, limit, label }: UsageBadgeProps) => {
     fetchUsage();
   }, [currentOrg, metric]);
 
+  if (!SHOW_PRICING) return null;
+
   if (loading) {
+
     return (
       <Badge variant="outline" className="gap-1">
         <Loader2 className="h-3 w-3 animate-spin" />

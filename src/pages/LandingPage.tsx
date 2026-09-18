@@ -11,6 +11,8 @@ import { LandingFAQ } from "@/components/landing/LandingFAQ";
 import { PilotLeadForm } from "@/components/landing/PilotLeadForm";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { SEOHead } from "@/components/shared/SEOHead";
+import { SHOW_PRICING } from "@/lib/billing-config";
+
 
 const LandingPage = () => {
   const formRef = useRef<HTMLDivElement>(null);
@@ -36,9 +38,12 @@ const LandingPage = () => {
           </div>
           <HowItWorks />
           <ForRecruitersAndCandidates />
-          <div id="pricing">
-            <LandingPricing onApplyPilot={scrollToForm} />
-          </div>
+          {SHOW_PRICING && (
+            <div id="pricing">
+              <LandingPricing onApplyPilot={scrollToForm} />
+            </div>
+          )}
+
           <TrustSection />
           <div id="faq">
             <LandingFAQ />

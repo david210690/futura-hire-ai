@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkAndLockExpiredPilot, getOrgPilotStatus, type OrgPilotStatus } from "@/lib/pilot";
+import { SHOW_PRICING } from "@/lib/billing-config";
 
 interface UsePilotGuardResult {
   status: OrgPilotStatus | null;
@@ -32,7 +33,15 @@ export function usePilotGuard(orgId: string | undefined, options?: {
 
     const checkStatus = async () => {
       setLoading(true);
-      
+
+      // While pricing is disabled, never lock or redirect anyone
+      if (!SHOW_PRICING) {
+        const pilotStatus = await getOrgPilotStatus(orgId);
+        setStatus(pilotStatus);
+        setLoading(false);
+        return;
+      }
+
       // Check and lock if expired
       await checkAndLockExpiredPilot(orgId);
       
@@ -46,6 +55,7 @@ export function usePilotGuard(orgId: string | undefined, options?: {
       
       setLoading(false);
     };
+
 
     checkStatus();
   }, [orgId, navigate, redirectOnLock, allowedWhenLocked]);

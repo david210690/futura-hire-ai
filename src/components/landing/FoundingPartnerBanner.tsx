@@ -33,8 +33,8 @@ export const FoundingPartnerBanner = ({ onApplyPilot }: FoundingPartnerBannerPro
             </h2>
             
             <p className="text-muted-foreground text-lg mb-6 max-w-2xl">
-              First 50 teams get up to 3 months of pilot access. Convert within 14 days 
-              of pilot completion to unlock Founding Partner pricing for 12 months.
+              First 50 teams get early access to the full FuturaHire hiring OS.
+
             </p>
             
             

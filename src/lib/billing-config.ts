@@ -19,8 +19,13 @@ export const BILLING_CONFIG = {
   razorpayKeyId: 'rzp_live_RsgzehTjp7oAAK',
 };
 
+// Master switch for all pricing/billing UI.
+// Set to true when selling FuturaHire as SaaS again.
+export const SHOW_PRICING = false;
+
 // Helper to check if we're in demo mode
 export const isDemoMode = () => !BILLING_CONFIG.enabled;
+
 
 // Helper to check if billing is configured
 export const isBillingConfigured = () => {

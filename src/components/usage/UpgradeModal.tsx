@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, X } from "lucide-react";
+import { SHOW_PRICING } from "@/lib/billing-config";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -17,6 +18,9 @@ interface UpgradeModalProps {
 }
 
 export const UpgradeModal = ({ open, onOpenChange, feature, quotaExceeded }: UpgradeModalProps) => {
+  if (!SHOW_PRICING) return null;
+
+
   const plans = [
     {
       name: "Free",

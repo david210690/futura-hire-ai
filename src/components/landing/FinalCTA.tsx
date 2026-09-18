@@ -29,7 +29,7 @@ export const FinalCTA = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/pricing">
+            <Link to="/auth">
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 shadow-[var(--glow-blue)]">
                 Request Live Demo
                 <ArrowRight className="ml-2" />

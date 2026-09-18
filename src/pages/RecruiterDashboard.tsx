@@ -22,6 +22,7 @@ import {
   Percent
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { SHOW_PRICING } from "@/lib/billing-config";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { CopilotPanel } from "@/components/recruiter/CopilotPanel";
@@ -394,24 +395,27 @@ export default function RecruiterDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" data-tour="dashboard-stats">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
-              <Building2 className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold capitalize">
-                {pilotStatus?.planTier || 'Growth'}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {pilotStatus?.planStatus === 'pilot' && `Pilot • ${pilotStatus.daysRemaining}d remaining`}
-                {pilotStatus?.planStatus === 'active' && '₹30,000/year'}
-                {pilotStatus?.planStatus === 'locked' && 'Subscription required'}
-                {!pilotStatus && 'Loading...'}
-              </p>
-            </CardContent>
-          </Card>
+        <div className={`grid grid-cols-1 gap-6 mb-8 ${SHOW_PRICING ? 'md:grid-cols-4' : 'md:grid-cols-3'}`} data-tour="dashboard-stats">
+          {SHOW_PRICING && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
+                <Building2 className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold capitalize">
+                  {pilotStatus?.planTier || 'Growth'}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {pilotStatus?.planStatus === 'pilot' && `Pilot • ${pilotStatus.daysRemaining}d remaining`}
+                  {pilotStatus?.planStatus === 'active' && '₹30,000/year'}
+                  {pilotStatus?.planStatus === 'locked' && 'Subscription required'}
+                  {!pilotStatus && 'Loading...'}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -540,20 +544,23 @@ export default function RecruiterDashboard() {
             </CardContent>
           </Card>
 
-          <Card 
-            className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
-            onClick={() => navigate('/billing')}
-          >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Upgrade</p>
-                <p className="text-xs text-muted-foreground">Plans & billing</p>
-              </div>
-            </CardContent>
-          </Card>
+          {SHOW_PRICING && (
+            <Card 
+              className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
+              onClick={() => navigate('/billing')}
+            >
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Upgrade</p>
+                  <p className="text-xs text-muted-foreground">Plans & billing</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
         </div>
 
         {/* Pipeline Summary */}

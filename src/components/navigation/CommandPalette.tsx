@@ -49,9 +49,8 @@ const recruiterCommands = [
   { group: "Analytics & Settings", items: [
     { label: "Analytics", path: "/analytics", icon: BarChart3, description: "Hiring metrics & trends" },
     { label: "Team Management", path: "/org/settings", icon: Users, description: "Manage team members" },
-    { label: "Billing", path: "/billing", icon: DollarSign },
-    { label: "Pricing Plans", path: "/pricing", icon: Settings },
   ]},
+
 ];
 
 const candidateCommands = [

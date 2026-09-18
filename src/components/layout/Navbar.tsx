@@ -40,7 +40,6 @@ const recruiterNavItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Role Designer", path: "/role-designer", icon: Briefcase },
   { label: "Assessments", path: "/assessments", icon: ClipboardList },
-  { label: "Pricing", path: "/pricing", icon: DollarSign },
 ];
 
 const candidateNavItems = [

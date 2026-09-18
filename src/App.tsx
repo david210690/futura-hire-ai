@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SHOW_PRICING } from "@/lib/billing-config";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
@@ -73,7 +74,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/app" element={<Index />} />
-            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/pricing" element={SHOW_PRICING ? <Pricing /> : <Navigate to="/" replace />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/refund" element={<Refund />} />
@@ -96,7 +97,7 @@ const App = () => (
             <Route path="/admin/email-logs" element={<EmailLogs />} />
             <Route path="/admin/user-analytics" element={<UserAnalytics />} />
             <Route path="/org/settings" element={<OrgSettingsPage />} />
-            <Route path="/billing" element={<BillingSettings />} />
+            <Route path="/billing" element={SHOW_PRICING ? <BillingSettings /> : <Navigate to="/dashboard" replace />} />
             <Route path="/role-designer" element={<RoleDesigner />} />
             <Route path="/job-twin" element={<JobTwin />} />
             <Route path="/job-twin/jobs/:id" element={<JobTwinJobDetail />} />
@@ -114,7 +115,7 @@ const App = () => (
             <Route path="/s/:token" element={<ShareableShortlist />} />
             
             {/* Onboarding flows */}
-            <Route path="/onboarding/pricing-clarity" element={<PricingClarity />} />
+            <Route path="/onboarding/pricing-clarity" element={SHOW_PRICING ? <PricingClarity /> : <Navigate to="/dashboard" replace />} />
             <Route path="/onboarding/candidate-welcome" element={<CandidateWelcome />} />
             
             {/* Candidate-facing career pages */}
