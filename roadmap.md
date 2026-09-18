@@ -1,0 +1,3 @@
+- [x] Add the first Feelivacation Travel Consultant - Domestic Sales role from the uploaded JD
+- [x] Add the structured hiring evaluation, interview questions, rubrics, and weighted scorecard
+- [x] Link the evaluation to the live job and verify it is available
