@@ -61,7 +61,7 @@ serve(async (req) => {
     if (attempt) {
       await supabase
         .from("assignments")
-        .update({ status: "completed" })
+        .update({ status: gradeError ? "submitted" : "graded" })
         .eq("id", attempt.assignment_id);
 
       // Update application stage
@@ -72,10 +72,32 @@ serve(async (req) => {
         .single();
 
       if (assignment) {
-        await supabase
-          .from("applications")
-          .update({ stage: "assessment_complete" })
-          .eq("id", assignment.application_id);
+        const { data: assignmentDetails } = await supabase
+          .from("assignments")
+          .select("assessment_id, assessments(is_culture_gate)")
+          .eq("id", attempt.assignment_id)
+          .single();
+
+        if (assignmentDetails?.assessments?.is_culture_gate) {
+          const { data: gradedAttempt } = await supabase
+            .from("attempts")
+            .select("culture_gate_pass")
+            .eq("id", attempt_id)
+            .single();
+
+          await supabase
+            .from("applications")
+            .update({
+              status: gradedAttempt?.culture_gate_pass ? "assessment_pending" : "rejected",
+              stage: gradedAttempt?.culture_gate_pass ? "assessment_complete" : "rejected",
+            })
+            .eq("id", assignment.application_id);
+        } else {
+          await supabase
+            .from("applications")
+            .update({ stage: "assessment_complete" })
+            .eq("id", assignment.application_id);
+        }
       }
     }
 

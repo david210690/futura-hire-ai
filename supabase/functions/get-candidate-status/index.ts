@@ -27,7 +27,7 @@ serve(async (req) => {
         jobs(id, title, slug, location),
         orgs(id, name, slug),
         candidates(id, full_name, skills),
-        assignments(id, status, assessment_id, assessments(name, description)),
+        assignments(id, status, assessment_id, assessments(name, description, duration_minutes, is_culture_gate)),
         videos(id, status, created_at)
       `)
       .eq("apply_token", token)
@@ -46,9 +46,15 @@ serve(async (req) => {
     let nextAction = null;
     let nextActionLabel = null;
 
-    if (application.status === "assessment_pending") {
+    const pendingAssignment = application.assignments?.find(
+      (assignment: any) => assignment.status === "pending" || assignment.status === "invited" || assignment.status === "started"
+    );
+
+    if (pendingAssignment) {
       nextAction = "assessment";
-      nextActionLabel = "Start Assessment";
+      nextActionLabel = pendingAssignment.assessments?.is_culture_gate
+        ? "Start Culture & Values Assessment"
+        : "Start Role Assessment";
     } else if (application.status === "video_pending") {
       nextAction = "video";
       nextActionLabel = "Record Video Introduction";
