@@ -44,7 +44,7 @@ export const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/pricing">
+              <Link to="/auth">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 shadow-[var(--glow-blue)]">
                   Book Demo
                   <ArrowRight className="ml-2" />

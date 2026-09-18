@@ -9,6 +9,7 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { CopilotAvatar } from "@/components/landing/CopilotAvatar";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
+import { SHOW_PRICING } from "@/lib/billing-config";
 
 const Landing = () => {
   return (
@@ -21,7 +22,7 @@ const Landing = () => {
       <CopilotDemo />
       <ModulesCarousel />
       <Testimonials />
-      <PricingSection />
+      {SHOW_PRICING && <PricingSection />}
       <FinalCTA />
       <CopilotAvatar />
     </main>
